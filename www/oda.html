@@ -39,6 +39,19 @@ html,body{margin:0;height:100%;overflow:hidden;background:#bfe3ff;font-family:'B
 #bJump{right:0;bottom:0;width:96px;height:96px}
 #bSpin{right:104px;bottom:8px;width:74px;height:74px}
 #bDash{right:14px;bottom:106px;width:62px;height:62px;background:#4f8cff;font-size:24px}
+
+/* B tasarımı */
+.pill{background:#fff;border:3.5px solid #2b2340;box-shadow:0 4px 0 #2b2340;border-radius:14px;color:#2b2340}
+#hp{background:#ffe3ea}
+#toast{background:#fffbea;color:#2b2340;border:3.5px solid #2b2340;box-shadow:0 4px 0 #2b2340}
+.b{border:4px solid #2b2340!important;box-shadow:0 6px 0 #2b2340, inset 0 7px 0 rgba(255,255,255,.35)!important;text-shadow:0 2px 0 #2b2340}
+.b.down{transform:translateY(5px);box-shadow:0 1px 0 #2b2340!important}
+#stick{background:rgba(255,255,255,.55)!important;border:3.5px solid #2b2340!important;box-shadow:0 4px 0 #2b2340}
+#knob{background:#ff7a2f!important;border:3.5px solid #2b2340;box-shadow:0 4px 0 #2b2340, inset 0 6px 0 rgba(255,255,255,.35)!important;left:27px!important;top:27px!important}
+#pauseBtn{background:#ffd166!important;border:3.5px solid #2b2340!important;box-shadow:0 4px 0 #2b2340!important}
+.box{border:4px solid #2b2340;box-shadow:0 8px 0 #2b2340}
+.go{border:4px solid #2b2340;box-shadow:0 5px 0 #2b2340;text-shadow:0 2px 0 #2b2340}
+.sec{text-shadow:none}
 </style>
 </head>
 <body>
@@ -68,12 +81,14 @@ html,body{margin:0;height:100%;overflow:hidden;background:#bfe3ff;font-family:'B
   <p style="font-size:13px;color:#7a6f8f">Sol taraf: yürü · Sağ taraf: kamerayı çevir<br>Havadayken 🌀 = yere çakıl · 💨 = atıl<br>Bilgisayarda: WASD, Boşluk zıpla, F dön, Shift atıl, Q/E kamera</p>
   <button class="go" id="start">▶ Oyna</button>
 </div></div>
+<div class="screen" id="sleepR" style="display:none;background:rgba(30,25,70,.8)"><div class="box"><div style="font-size:64px">😴🌙</div><h1>Robi'nin uyku zamanı<small>Bugünlük oyun süresi bitti</small></h1><button class="go" id="sleepRMenu">🏠 Ana menü</button></div></div>
 <div class="screen" id="win" style="display:none"><div class="box">
   <h1>🎉 Tebrikler!<small>Bütün arkadaşlar kurtuldu</small></h1>
   <p id="winStats"></p>
   <button class="go" id="keep">Keşfetmeye devam</button>
   <button class="go sec" id="again">Baştan oyna</button>
 </div></div>
+<script src="ortak.js"></script>
 <script>/**
  * @license
  * Copyright 2010-2023 Three.js Authors
@@ -720,10 +735,13 @@ function defeat(m) {
 }
 function winGame() {
   if (won) return; won = true;
+  try { window.RobiOrtak && window.RobiOrtak.award('room'); } catch (e) {}
   const total = gears.length;
   $('winStats').innerHTML = `⚙️ ${gearCount} dişli topladın<br>🦖 ${dinoCount}/${dinos.length} dinozor yakaladın<br>⏱ ${Math.floor(elapsed / 60)} dk ${Math.floor(elapsed % 60)} sn`;
   $('win').style.display = 'flex';
 }
+setInterval(() => { if (!started || paused || !window.RobiOrtak) return; if (window.RobiOrtak.tick(5) <= 0) { paused = true; document.getElementById('sleepR').style.display = 'flex'; } }, 5000);
+document.getElementById('sleepRMenu').onclick = () => { try { if (window.parent !== window) { parent.postMessage('robi-menu', '*'); return; } } catch (e) {} location.reload(); };
 $('keep').onclick = () => { $('win').style.display = 'none'; toast('Odayı keşfetmeye devam! Kalan dişlileri ve dinozorları bul.', 3); };
 $('again').onclick = () => location.reload();
 
