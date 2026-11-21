@@ -27,6 +27,9 @@ const STICKERS = [
   { id: 'gears500', e: '⚙️', name: 'Dişli Kralı', hint: 'Toplam 500 dişliye ulaş' },
   { id: 'photo', e: '📸', name: 'Fotoğrafçı', hint: 'Fotoğraf modunda bir fotoğraf çek' },
   { id: 'daily7', e: '🎁', name: '7 Gün Seri', hint: '7 gün üst üste sandık aç' },
+  { id: 'dragon', e: '🐉', name: 'Ejder Dostu', hint: 'Ateş Ejderini yen' },
+  { id: 'builder', e: '🧱', name: 'Mimar', hint: 'Kendi parkurunu bitir' },
+  { id: 'voice', e: '🎤', name: 'Seslendirmen', hint: 'Robi için sesini kaydet' },
   { id: 'petter', e: '💗', name: 'Hayvan Dostu', hint: 'Koruma bahçesinde 10 hayvan sev' },
 ];
 const QUEST_POOL = [
@@ -80,6 +83,30 @@ const Robi = window.RobiOrtak = {
   setParent(p) { const s = load(); s.parent = Object.assign(Robi.parent(), p); store(s); },
   tick(sec) { const s = load(); const p = Robi.parent(); p.used += sec; s.parent = p; store(s); return Robi.timeLeft(); },
   timeLeft() { const p = Robi.parent(); if (!p.limit) return Infinity; return (p.limit + (p.bonus || 0)) * 60 - p.used; },
+  // Robi'nin sesi (çocuğun kaydı)
+  VOICE_SLOTS: [{ id: 'jump', name: 'Zıplarken', ex: '“Hop!”' }, { id: 'catch', name: 'Yakalayınca', ex: '“Yakaladım!”' }, { id: 'power', name: 'Süper güç anında', ex: '“Süper Robi!”' }],
+  voices() { try { return JSON.parse(localStorage.getItem('robi_voice') || '{}'); } catch (e) { return {}; } },
+  setVoice(slot, url) { const v = Robi.voices(); if (url) v[slot] = url; else delete v[slot]; try { localStorage.setItem('robi_voice', JSON.stringify(v)); return true; } catch (e) { return false; } },
+  _buf: {},
+  async playVoice(ctx, slot, dest, opts = {}) {
+    const v = Robi.voices(); const url = opts.url || v[slot]; if (!url || !ctx) return false;
+    try {
+      let buf = Robi._buf[url];
+      if (!buf) { const ab = await (await fetch(url)).arrayBuffer(); buf = await ctx.decodeAudioData(ab); Robi._buf[url] = buf; }
+      const robot = v.robot !== false && opts.robot !== false;
+      const src = ctx.createBufferSource(); src.buffer = buf; src.playbackRate.value = robot ? 1.18 : 1;
+      const out = ctx.createGain(); out.gain.value = 1.4; out.connect(dest || ctx.destination);
+      if (robot) {
+        const ring = ctx.createGain(); ring.gain.value = 0;
+        const mod = ctx.createOscillator(); mod.frequency.value = 55; mod.connect(ring.gain); mod.start(); mod.stop(ctx.currentTime + buf.duration + .3);
+        const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1400; bp.Q.value = .6;
+        const dry = ctx.createGain(); dry.gain.value = .45;
+        const delay = ctx.createDelay(); delay.delayTime.value = .06; const fb = ctx.createGain(); fb.gain.value = .3;
+        src.connect(ring); ring.connect(bp); src.connect(dry); dry.connect(bp); bp.connect(out); bp.connect(delay); delay.connect(fb); fb.connect(out);
+      } else src.connect(out);
+      src.start(); return true;
+    } catch (e) { return false; }
+  },
   // fotoğraflar
   photos() { try { return JSON.parse(localStorage.getItem('robi_photos') || '[]'); } catch (e) { return []; } },
   addPhoto(url) { const a = Robi.photos(); a.unshift({ url, date: today() }); while (a.length > 12) a.pop(); try { localStorage.setItem('robi_photos', JSON.stringify(a)); return true; } catch (e) { a.pop(); try { localStorage.setItem('robi_photos', JSON.stringify(a)); } catch (e2) {} return false; } },

@@ -22,12 +22,13 @@ h1{margin:2px 0 0;font-size:clamp(24px,5.5vh,38px);line-height:1;color:#ffd166;-
 .tool.has .dot{display:block;animation:pulse 1s infinite}
 @keyframes pulse{50%{transform:scale(1.25)}}
 .tool.parent{background:#e9e5f2;width:40px;height:40px;font-size:18px;border-radius:12px;align-self:center}
-.worlds{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:min(64vw,460px)}
+.worlds{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:min(66vw,480px)}
+.worlds .world:last-child{grid-column:1/-1}
 .world{border:3.5px solid var(--ink);border-radius:18px;padding:0;overflow:hidden;background:#fff;box-shadow:0 5px 0 var(--ink);font-family:inherit;text-align:left;cursor:pointer;color:var(--ink);display:flex}
 .world:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
-.art{width:38%;min-height:min(19vh,86px);display:flex;align-items:center;justify-content:center;font-size:min(6vh,30px);border-right:3.5px solid var(--ink);flex:none}
+.art{width:38%;min-height:min(15vh,64px);display:flex;align-items:center;justify-content:center;font-size:min(6vh,30px);border-right:3.5px solid var(--ink);flex:none}
 .room .art{background:linear-gradient(#cfe8f7,#e2b47c)}.forest .art{background:linear-gradient(#9fd8ff 40%,#6ab84a 40%)}
-.learn .art{background:linear-gradient(135deg,#ffd6f0,#c9b8ff)}.garden .art{background:linear-gradient(135deg,#ffe3f1,#bff0c9)}
+.learn .art{background:linear-gradient(135deg,#ffd6f0,#c9b8ff)}.build .art{background:linear-gradient(135deg,#bde0ff,#ffd166)}.garden .art{background:linear-gradient(135deg,#ffe3f1,#bff0c9)}
 .wt{padding:5px 9px;display:flex;flex-direction:column;justify-content:center;min-width:0}.wt b{font-size:16px;line-height:1.05}.wt small{color:#5a4f70;font-size:12px;line-height:1.15;font-weight:700}
 .play{display:inline-block;margin-top:3px;background:#ff7a2f;color:#fff;border:2.5px solid var(--ink);border-radius:9px;padding:0 9px;font-weight:800;font-size:13px;align-self:flex-start;text-shadow:0 1px 0 var(--ink)}
 .world.locked{filter:grayscale(.75)}
@@ -95,6 +96,7 @@ select{font-family:inherit;font-weight:800;font-size:15px;border:3px solid var(-
     <div class="tools">
       <button class="tool" id="tDaily">🎁<span class="dot"></span></button>
       <button class="tool" id="tAlbum">📒</button>
+      <button class="tool" id="tVoice">🎤</button>
       <button class="tool parent" id="tParent">⚙️</button>
     </div>
   </div>
@@ -102,6 +104,7 @@ select{font-family:inherit;font-weight:800;font-size:15px;border:3px solid var(-
     <button class="world learn" data-src="macera.html#ogren"><div class="art">🎓🪽</div><div class="wt"><b>Eğitim Bahçesi</b><small>Bütün kostümleri bedava dene</small><span class="play">▶ Oyna</span></div></button>
     <button class="world forest" data-src="macera.html#orman" id="wForest"><div class="art">🌲🔥</div><div class="wt"><b>Büyülü Orman</b><small id="forestSub">Yangın söndür, hayvan kurtar</small><span class="play" id="forestPlay">▶ Oyna</span></div></button>
     <button class="world garden" data-src="macera.html#bahce"><div class="art">🌳💗</div><div class="wt"><b>Koruma Bahçesi</b><small id="gardenSub">Kurtardığın hayvanları sev</small><span class="play">▶ Oyna</span></div></button>
+    <button class="world build" data-src="macera.html#tasarla"><div class="art">🧱⭐</div><div class="wt"><b>Parkur Atölyesi</b><small>Kendi parkurunu kur, oyna</small><span class="play">▶ Oyna</span></div></button>
     <button class="world room" data-src="oda.html"><div class="art">🛏️🧸</div><div class="wt"><b>Dev Oda</b><small>Arkadaşlarını kurtar</small><span class="play">▶ Oyna</span></div></button>
   </div>
 </div>
@@ -130,6 +133,14 @@ select{font-family:inherit;font-weight:800;font-size:15px;border:3px solid var(-
   <div id="parentBody"></div>
 </div></div>
 
+<div class="screen" id="sVoice"><div class="box">
+  <button class="x" data-close>✖</button>
+  <h2>🎤 Robi'nin Sesi</h2>
+  <p style="font-weight:700;margin:2px 0 6px;font-size:14px">Kendi sesini kaydet, Robi oyunda senin sesinle konuşsun! Her kayıt en fazla 2,5 saniye.</p>
+  <div id="voiceBody"></div>
+  <div class="row" style="border:0"><div><b>🤖 Robot efekti</b><small>Sesin robot gibi çıksın</small></div><button class="btn sec" id="vRobot"></button></div>
+  <small id="vMsg" style="font-weight:800;color:#e53935"></small>
+</div></div>
 <div class="screen" id="sSleep"><div class="box">
   <div style="font-size:64px">😴🌙</div>
   <h2>Robi'nin uyku zamanı</h2>
@@ -234,6 +245,31 @@ function renderParent() {
   $('mus').onclick = () => { const s2 = RO.load(); s2.muted = !s2.muted; RO.store(s2); renderParent(); };
 }
 $('tParent').onclick = () => { renderGate(); openS('sParent'); };
+
+
+// Robi'nin sesi
+let recState = null;
+function renderVoice() {
+  const v = RO.voices();
+  $('voiceBody').innerHTML = RO.VOICE_SLOTS.map(sl => `<div class="row"><div><b>${sl.name}</b><small>Örnek: ${sl.ex} · ${v[sl.id] ? '✅ Kayıtlı' : 'Boş'}</small></div><div style="display:flex;gap:5px"><button class="btn" data-rec="${sl.id}" style="background:${recState && recState.slot === sl.id ? '#e53935' : '#ff7a2f'};padding:4px 10px">${recState && recState.slot === sl.id ? '⏹ Dur' : '🔴 Kaydet'}</button><button class="btn sec" data-play="${sl.id}" ${v[sl.id] ? '' : 'disabled'} style="padding:4px 10px">▶</button><button class="btn sec" data-del="${sl.id}" ${v[sl.id] ? '' : 'disabled'} style="padding:4px 10px">🗑️</button></div></div>`).join('');
+  $('vRobot').textContent = v.robot === false ? 'Kapalı' : '✅ Açık';
+  $('voiceBody').querySelectorAll('[data-rec]').forEach(b => b.onclick = () => recState ? stopRec() : startRec(b.dataset.rec));
+  $('voiceBody').querySelectorAll('[data-play]').forEach(b => b.onclick = () => { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); AC.resume && AC.resume(); RO.playVoice(AC, b.dataset.play); });
+  $('voiceBody').querySelectorAll('[data-del]').forEach(b => b.onclick = () => { RO.setVoice(b.dataset.del, null); renderVoice(); });
+}
+async function startRec(slot) {
+  $('vMsg').textContent = '';
+  try {
+    const st = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mr = new MediaRecorder(st); const chunks = [];
+    mr.ondataavailable = e => e.data.size && chunks.push(e.data);
+    mr.onstop = () => { st.getTracks().forEach(t => t.stop()); const blob = new Blob(chunks, { type: mr.mimeType || 'audio/webm' }); const fr = new FileReader(); fr.onload = () => { if (!RO.setVoice(slot, fr.result)) $('vMsg').textContent = 'Kayıt çok büyük oldu, daha kısa dene.'; else { RO.award('voice'); tone(1046, .12); } recState = null; renderVoice(); }; fr.readAsDataURL(blob); };
+    mr.start(); recState = { slot, mr, t: setTimeout(() => stopRec(), 2500) }; renderVoice();
+  } catch (e) { $('vMsg').textContent = '🎤 Mikrofon açılamadı. Uygulamada mikrofon iznini ver (bu özellik tarayıcı önizlemesinde çalışmayabilir).'; recState = null; renderVoice(); }
+}
+function stopRec() { if (!recState) return; clearTimeout(recState.t); try { recState.mr.state === 'recording' && recState.mr.stop(); } catch (e) {} }
+$('vRobot').onclick = () => { const v = RO.voices(); try { v.robot = v.robot === false; localStorage.setItem('robi_voice', JSON.stringify(v)); } catch (e) {} renderVoice(); };
+$('tVoice').onclick = () => { renderVoice(); openS('sVoice'); };
 
 // Güncelleme kontrolü (uygulamada çalışır; internet yoksa sessizce geçer)
 (async function checkUpdate() {

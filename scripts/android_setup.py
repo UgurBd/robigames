@@ -23,7 +23,12 @@ def edit(path, fn):
 def manifest(s):
     s = re.sub(r'android:screenOrientation="[^"]*"\s*', '', s)
     return s.replace('android:name=".MainActivity"', 'android:name=".MainActivity"\n            android:screenOrientation="sensorLandscape"', 1)
-edit(os.path.join(APP, 'AndroidManifest.xml'), manifest)
+def perms(s):
+    for perm in ['android.permission.RECORD_AUDIO', 'android.permission.MODIFY_AUDIO_SETTINGS']:
+        if perm not in s:
+            s = s.replace('</manifest>', f'    <uses-permission android:name="{perm}" />\n</manifest>')
+    return s
+edit(os.path.join(APP, 'AndroidManifest.xml'), lambda s: perms(manifest(s)))
 
 # 2) Uygulama adı
 def strings(s):

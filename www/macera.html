@@ -114,6 +114,17 @@ body.photo #photoTop{display:block}
 #stickerPop .se{font-size:34px;width:48px;height:48px;border-radius:50%;background:#fff3c4;border:3px solid var(--ink);display:flex;align-items:center;justify-content:center}
 #stickerPop small{display:block;font-size:12px;color:#ff7a2f;font-weight:800}#stickerPop b{font-size:17px}
 #sleep .moon{font-size:70px;animation:bob 2s ease-in-out infinite}@keyframes bob{50%{transform:translateY(-8px)}}
+
+#bossBar{position:fixed;top:46px;left:50%;transform:translateX(-50%);z-index:5;display:none;align-items:center;gap:8px;background:#fff;border:3.5px solid var(--ink);box-shadow:0 4px 0 var(--ink);border-radius:14px;padding:2px 10px;font-weight:800;font-size:15px;pointer-events:none}
+#bossBar .shb{width:110px;height:12px;border:2.5px solid var(--ink);border-radius:7px;background:#eee;overflow:hidden}#bossSh{display:block;height:100%;background:linear-gradient(90deg,#ffd166,#ff3d00)}
+body.editing #btns,body.editing #stick,body.editing #suitBar,body.editing #toast{display:none!important}
+#editUI{position:fixed;left:50%;bottom:8px;transform:translateX(-50%);z-index:8;display:none;gap:5px;background:#fff7e0;border:3.5px solid var(--ink);box-shadow:0 4px 0 var(--ink);border-radius:18px;padding:5px 6px;max-width:98vw;overflow-x:auto}
+#editUI button{flex:none;font-family:inherit;font-weight:800;font-size:11px;border:3px solid var(--ink);border-radius:12px;background:#fff;box-shadow:0 3px 0 var(--ink);width:56px;height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05;cursor:pointer;color:var(--ink);padding:0}
+#editUI button i{font-style:normal;font-size:21px}
+#editUI button.on{background:#ffd166;transform:translateY(-3px)}
+#editUI button.play{background:#22b573;color:#fff;text-shadow:0 1px 0 var(--ink)}
+#editBtn{position:fixed;top:60px;right:8px;z-index:7;display:none;align-items:center;gap:4px;font-family:inherit;font-weight:800;font-size:15px;border:3.5px solid var(--ink);border-radius:14px;background:#ffd166;box-shadow:0 4px 0 var(--ink);padding:4px 10px;cursor:pointer;color:var(--ink)}
+body:not(.playing) #editBtn{display:none!important}
 </style>
 </head>
 <body>
@@ -140,6 +151,8 @@ body.photo #photoTop{display:block}
   <button class="b" id="bJump"><i>⤒</i><span>Zıpla</span></button>
 </div>
 <div id="suitBar"></div>
+<div id="bossBar">🐉 Ateş Ejderi <span id="bossHp">❤️❤️❤️</span><span class="shb"><i id="bossSh"></i></span>🔥</div>
+<div id="editUI"></div><button id="editBtn">✏️ Düzenle</button>
 <div id="altWrap"><div id="alt"><div id="altFill"></div></div><div id="altTxt"></div></div>
 <div id="combo"></div><div id="confetti"></div>
 <div id="stickerPop"></div>
@@ -196,6 +209,7 @@ body.photo #photoTop{display:block}
 'use strict';
 const LEARN = location.hash === '#ogren';
 const BAHCE = location.hash === '#bahce';
+const BUILD = location.hash === '#tasarla';
 const RO = window.RobiOrtak || { award: () => null, quest: () => [], tick: () => Infinity, timeLeft: () => Infinity, load: () => ({}), addPhoto: () => true };
 const $ = id => document.getElementById(id);
 
@@ -279,7 +293,7 @@ const SAVE = 'robi_orman_v1';
 let SV = { gears: 0, xp: 0, pets: {}, pet: null, suits: {}, hats: {}, capes: {}, suit: 'white', hat: null, cape: 'blue', trained: false, muted: false };
 try { const r = localStorage.getItem(SAVE); if (r) SV = Object.assign(SV, JSON.parse(r)); } catch (e) {}
 SV.suits = SV.suits || {}; SV.hats = SV.hats || {}; SV.capes = SV.capes || {};
-const MINE = ['gears', 'xp', 'pets', 'pet', 'suits', 'hats', 'capes', 'suit', 'hat', 'cape', 'trained', 'muted', 'sanctuary', 'petCount'];
+const MINE = ['dragonFriend', 'gears', 'xp', 'pets', 'pet', 'suits', 'hats', 'capes', 'suit', 'hat', 'cape', 'trained', 'muted', 'sanctuary', 'petCount'];
 const save = () => { try { const cur = JSON.parse(localStorage.getItem(SAVE) || '{}'); for (const k of MINE) if (SV[k] !== undefined) cur[k] = SV[k]; localStorage.setItem(SAVE, JSON.stringify(cur)); } catch (e) {} };
 SV.sanctuary = SV.sanctuary || { rabbit: 0, fox: 0, deer: 0, giant: 0 }; SV.petCount = SV.petCount || 0;
 const xpNeed = l => 30 * l * (l + 1) / 2;
@@ -293,6 +307,7 @@ const SUITS = {
   red: { name: 'Ateş Kostümü', body: '#e53935', acc: '#ffd166', power: 'fire', e: '🔥', price: 80, desc: 'Uzun lav akıtır, her şeyi yakar' },
   blue: { name: 'Su Kostümü', body: '#2e8bff', acc: '#bff3ff', power: 'water', e: '💧', price: 60, desc: 'Su fışkırtır, her şeyi söndürür' },
   orange: { name: 'Uçuş Kostümü', body: '#ff8a1f', acc: '#ffe066', power: 'fly', e: '🪽', price: 100, desc: 'Uçar! Güç topu alırsa uçarken de kullanır' },
+  dragon: { name: 'Ejder Kostümü', body: '#7b2cbf', acc: '#ffd166', power: 'fire', e: '🐉', price: 0, boss: true, desc: 'Ejderin hediyesi: hem uçar hem ateş akıtır!' },
   green: { name: 'Avcı Kostümü', body: '#22a861', acc: '#e8ffe0', power: 'net', e: '🕸️', price: 50, desc: 'Ağ atar + 🎈 neşe topları: hayvanlar sevinip 10 kat büyür!' },
 };
 const CAPES = { blue: { name: 'Mavi', c: '#2e6bff', price: 0 }, match: { name: 'Kostüm rengi', c: null, price: 0 }, gold: { name: 'Altın', c: '#ffc928', price: 60 }, rainbow: { name: 'Gökkuşağı', c: 'rainbow', price: 90 } };
@@ -310,7 +325,7 @@ const canvas = $('c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(LEARN ? '#a8e0ff' : BAHCE ? '#ffe3f1' : '#9fd8ff');
+scene.background = new THREE.Color(LEARN ? '#a8e0ff' : BAHCE ? '#ffe3f1' : BUILD ? '#bde0ff' : '#9fd8ff');
 scene.fog = new THREE.Fog(scene.background, 55, 130);
 const camera = new THREE.PerspectiveCamera(60, 1, .1, 300);
 scene.add(new THREE.HemisphereLight('#ffffff', '#6aa84f', .85));
@@ -323,7 +338,7 @@ const mat = c => mats[c] || (mats[c] = new THREE.MeshLambertMaterial({ color: c 
 const emissive = c => new THREE.MeshBasicMaterial({ color: c });
 let seed = 7;
 const rnd = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
-const W = LEARN ? 34 : BAHCE ? 26 : 68;
+const W = LEARN ? 34 : BAHCE ? 26 : BUILD ? 16 : 68;
 const colliders = [];
 function box(x0, y0, z0, x1, y1, z1, color, opt = {}) {
   let mesh = null;
@@ -593,6 +608,92 @@ function updateVehicles(dt) {
   else rb.style.display = 'none';
   $('btns').classList.toggle('riding', !!riding);
 }
+// =============== ATEŞ EJDERİ (boss) ===============
+let dragon = null;
+function makeDragonBoss(center) {
+  const g = new THREE.Group(), bodyMat = new THREE.MeshLambertMaterial({ color: '#d62828' }), belly = mat('#ffb703'), dark = mat('#2b2340');
+  const body = new THREE.Mesh(new THREE.SphereGeometry(1.6, 16, 12), bodyMat); body.scale.set(1, .85, 1.6); g.add(body);
+  const bel = new THREE.Mesh(new THREE.SphereGeometry(1.3, 14, 10), belly); bel.scale.set(.85, .7, 1.4); bel.position.set(0, -.4, .15); g.add(bel);
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(.45, .6, 1.8, 10), bodyMat); neck.position.set(0, .9, 2.1); neck.rotation.x = .75; g.add(neck);
+  const head = new THREE.Group(); head.position.set(0, 1.75, 2.85); g.add(head);
+  head.add(new THREE.Mesh(new THREE.BoxGeometry(1.1, .95, 1.2), bodyMat));
+  head.add(at(new THREE.Mesh(new THREE.BoxGeometry(.85, .55, .9), bodyMat), 0, -.15, .9));
+  head.add(at(new THREE.Mesh(new THREE.BoxGeometry(.75, .12, .85), belly), 0, -.42, .9));
+  [-.32, .32].forEach(x => { head.add(at(new THREE.Mesh(new THREE.SphereGeometry(.2, 10, 8), mat('#fff')), x, .25, .58)); head.add(at(new THREE.Mesh(new THREE.SphereGeometry(.1, 8, 6), dark), x, .25, .76)); const h = at(new THREE.Mesh(new THREE.ConeGeometry(.13, .6, 6), mat('#ffd166')), x * .9, .7, -.2); h.rotation.x = -.5; head.add(h); head.add(at(new THREE.Mesh(new THREE.SphereGeometry(.05, 6, 4), dark), x * .5, -.05, 1.36)); });
+  const mkWing = s => { const sh = new THREE.Shape(); sh.moveTo(0, 0); sh.lineTo(3.2 * s, 1.2); sh.lineTo(3.6 * s, -.2); sh.lineTo(2.6 * s, -.6); sh.lineTo(1.8 * s, -1.1); sh.lineTo(.9 * s, -.8); sh.lineTo(0, -1); const m = new THREE.Mesh(new THREE.ShapeGeometry(sh), new THREE.MeshLambertMaterial({ color: '#ff6b6b', side: THREE.DoubleSide })); m.rotation.x = -Math.PI / 2; const p = new THREE.Group(); p.position.set(s * .9, .8, .1); p.add(m); g.add(p); return p; };
+  const wL = mkWing(-1), wR = mkWing(1);
+  const tail = []; let prev = g;
+  for (let i = 0; i < 6; i++) { const seg = new THREE.Mesh(new THREE.SphereGeometry(.55 - i * .07, 10, 8), bodyMat); seg.position.set(0, i ? 0 : 0, i ? -.75 : -2.4); prev.add(seg); tail.push(seg); prev = seg; }
+  const tip = new THREE.Mesh(new THREE.ConeGeometry(.3, .7, 4), mat('#ffd166')); tip.rotation.x = -Math.PI / 2; tip.position.z = -.6; prev.add(tip);
+  for (let i = 0; i < 5; i++) { const sp = new THREE.Mesh(new THREE.ConeGeometry(.18, .5, 4), mat('#ffd166')); sp.position.set(0, 1.25 - Math.abs(i - 2) * .08, 1.2 - i * .7); g.add(sp); }
+  [[-.8, 1], [.8, 1], [-.8, -1], [.8, -1]].forEach(([x, z]) => g.add(at(new THREE.Mesh(new THREE.BoxGeometry(.4, .8, .45), bodyMat), x, -1.2, z)));
+  const shield = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: '#ff5a00', blending: THREE.AdditiveBlending, transparent: true, depthWrite: false })); shield.scale.setScalar(9); g.add(shield);
+  const dizzy = new THREE.Group(); for (let i = 0; i < 4; i++) { const st = new THREE.Sprite(new THREE.SpriteMaterial({ map: emojiTex('⭐'), transparent: true })); st.scale.setScalar(.7); dizzy.add(st); } dizzy.position.set(0, 3, 2.8); dizzy.visible = false; g.add(dizzy);
+  g.scale.setScalar(1.25); scene.add(g);
+  const friend = !!SV.dragonFriend;
+  dragon = { g, head, wL, wR, tail, shield, dizzy, bodyMat, center, pos: center.clone().add(V(0, 10, 0)), ang: 0, t: 0, hp: 3, sh: 25, shMax: 25, state: 'fly', stT: 0, breathCd: 4, frozen: 0, dome: null, hitCd: 0, friend, shadow: blobShadow(2.6), yaw: 0 };
+  if (friend) befriendLook();
+}
+function befriendLook() { dragon.bodyMat.color.set('#2bb673'); dragon.shield.visible = false; }
+function dragonMouth() { const v = V(0, -.1, 1.5); dragon.head.localToWorld(v); return v; }
+function dragonHit() {
+  const d = dragon; if (d.hitCd > 0) return;
+  d.hp--; d.hitCd = 1.5; shake = .5; SFX.stomp(); try { const t = ac().currentTime; note(110, t, .6, 'sawtooth', .12, .5); } catch (e) {}
+  burst(d.pos.clone().add(V(0, 1, 0)), '#ffd166', 30); hud();
+  if (d.dome) { scene.remove(d.dome); d.dome = null; } d.frozen = 0;
+  if (d.hp <= 0) {
+    d.friend = true; d.state = 'friend'; SV.dragonFriend = true; SV.suits.dragon = true; save(); befriendLook(); d.dizzy.visible = false;
+    sticker('dragon'); checkMissions(); buildSuitBar();
+    for (let i = 0; i < 12; i++) gear(d.center.x + Math.cos(i) * 4, 0, d.center.z + Math.sin(i) * 4);
+    powerMoment('🐉 EJDER DOSTUN OLDU!', 'Ejder Kostümü kazandın: hem uçar hem ateş akıtır!');
+  } else { celebrate(`EJDER ${d.hp}❤️ KALDI!`, 'Tekrar suyla söndür!'); d.state = 'takeoff'; d.stT = 0; d.sh = d.shMax = 25 + (3 - d.hp) * 8; }
+}
+function updateDragon(dt) {
+  const d = dragon; if (!d) return;
+  d.t += dt; d.stT += dt; if (d.hitCd > 0) d.hitCd -= dt;
+  const distP = Math.hypot(P.pos.x - d.center.x, P.pos.z - d.center.z);
+  const flap = d.state === 'tired' ? .1 : Math.sin(d.t * (d.state === 'swoop' ? 14 : 8)) * .7;
+  d.wL.rotation.z = flap; d.wR.rotation.z = -flap;
+  d.tail.forEach((s, i) => s.rotation.y = Math.sin(d.t * 3 - i * .6) * .25);
+  let target = null;
+  if (d.state === 'fly' || d.state === 'friend') {
+    d.ang += dt * (d.friend ? .25 : .4 + (3 - d.hp) * .12);
+    target = V(d.center.x + Math.cos(d.ang) * 14, 9 + Math.sin(d.t * .8) * 2, d.center.z + Math.sin(d.ang) * 14);
+    if (!d.friend) { d.breathCd -= dt; if (d.breathCd <= 0 && distP < 30 && P.pos.y < 20) { d.state = 'swoop'; d.stT = 0; d.swoopTo = P.pos.clone(); try { const t = ac().currentTime; note(140, t, .8, 'sawtooth', .1, .6); noise(.8, .1, 600, t); } catch (e) {} } }
+  } else if (d.state === 'swoop') {
+    target = V(d.swoopTo.x - Math.sin(d.yaw) * 6, d.swoopTo.y + 7, d.swoopTo.z - Math.cos(d.yaw) * 6);
+    if (d.stT > .7 && d.stT < 2.3) {
+      const m = dragonMouth(), tp = P.pos.clone().add(V(0, .8, 0)), dir = tp.sub(m).normalize();
+      for (let i = 0; i < 3; i++) fx({ pos: m.clone(), vel: dir.clone().multiplyScalar(14).add(V((Math.random() - .5) * 2, (Math.random() - .5) * 2, (Math.random() - .5) * 2)), life: 1, size: .5, size2: 1.8, color: '#fff3b0', color2: '#ff2a00', add: true, grav: 3, kind: 'dfire' });
+    }
+    if (d.stT > 3) { d.state = 'fly'; d.breathCd = 4 + Math.random() * 3 - (3 - d.hp); }
+  } else if (d.state === 'land') {
+    target = V(d.center.x, 1.9, d.center.z);
+    if (d.pos.distanceTo(target) < .6) { d.state = 'tired'; d.stT = 0; d.dizzy.visible = true; SFX.stomp(); shake = .4; toast('🐉 Ejder yere indi, başı dönüyor! 🕸️ Ağ at, sonra kafasına zıpla!', 3); }
+  } else if (d.state === 'tired') {
+    target = V(d.center.x, 1.9, d.center.z);
+    d.dizzy.rotation.y += dt * 4; d.dizzy.children.forEach((c, i) => { const a = i / 4 * Math.PI * 2; c.position.set(Math.cos(a) * 1, 0, Math.sin(a) * 1); });
+    if (d.frozen > 0) d.frozen -= dt;
+    if (d.stT > 7 && d.frozen <= 0) { d.state = 'takeoff'; d.stT = 0; d.sh = d.shMax * .6; d.dizzy.visible = false; if (d.dome) { scene.remove(d.dome); d.dome = null; } toast('🐉 Ejder yeniden havalandı! Tekrar suyla söndür.'); }
+    // zıplayarak vurma
+    const hd = Math.hypot(P.pos.x - d.pos.x, P.pos.z - d.pos.z);
+    if (hd < 3 && P.vel.y < 0 && P.pos.y > d.pos.y + .8 && P.pos.y < d.pos.y + 4) { P.vel.y = 14; dragonHit(); }
+  } else if (d.state === 'takeoff') {
+    target = V(d.center.x, 10, d.center.z); d.dizzy.visible = false;
+    if (d.stT > 2) { d.state = 'fly'; d.breathCd = 3; }
+  }
+  if (target) { const k = Math.min(1, dt * (d.state === 'swoop' ? 2.2 : 1.6)); const prev = d.pos.clone(); d.pos.lerp(target, k); const mv = d.pos.clone().sub(prev); if (Math.hypot(mv.x, mv.z) > .01 && d.state !== 'tired') d.yaw = Math.atan2(mv.x, mv.z); if (d.state === 'tired' || d.state === 'land') { const ty = Math.atan2(P.pos.x - d.pos.x, P.pos.z - d.pos.z); d.yaw += (ty - d.yaw) * 0; } }
+  d.g.position.copy(d.pos); d.g.rotation.y = d.yaw; d.g.rotation.z = d.state === 'tired' ? Math.sin(d.t * 2) * .08 : 0;
+  d.shadow.position.set(d.pos.x, .08, d.pos.z); d.shadow.scale.setScalar(Math.max(.4, 1.2 - d.pos.y * .05));
+  if (!d.friend) {
+    d.shield.visible = d.sh > 0; d.shield.material.opacity = .25 + .35 * d.sh / d.shMax + Math.sin(d.t * 15) * .05;
+    if (d.sh > 0 && Math.random() < .4) fx({ pos: d.pos.clone().add(V((Math.random() - .5) * 3, (Math.random() - .5) * 2, (Math.random() - .5) * 3)), vel: V(0, 2, 0), life: .5, size: .8, size2: .1, color: '#ffcc33', color2: '#ff3300', add: true });
+    const show = distP < 42;
+    $('bossBar').style.display = show ? 'flex' : 'none';
+    if (show) { $('bossHp').textContent = '❤️'.repeat(d.hp) + '🖤'.repeat(3 - d.hp); $('bossSh').style.width = Math.max(0, d.sh / d.shMax * 100) + '%'; }
+  } else $('bossBar').style.display = 'none';
+}
+function dragonWater() { const d = dragon; if (!d || d.friend || !(d.state === 'fly' || d.state === 'swoop')) return; d.sh -= .35; if (Math.random() < .3) fx({ pos: d.pos.clone(), vel: V(0, 2.5, 0), life: 1.2, size: 1, size2: 3, color: '#ffffff', alpha: .5 }); if (d.sh <= 0) { d.state = 'land'; d.stT = 0; SFX.steam(); toast('💧 Ejderin ateşi söndü! Yere iniyor...', 2.5); } }
 // =============== DÜNYA: ÇİM ZEMİN ===============
 (function ground() {
   const cv = document.createElement('canvas'); cv.width = cv.height = 128; const g = cv.getContext('2d');
@@ -682,6 +783,74 @@ function buildBahce() {
   animals.forEach(a => { a.tame = true; a.leash = 10; a.petCd = 0; });
   MISSIONS = {};
 }
+
+// =============== DÜNYA 4: PARKUR ATÖLYESİ ===============
+const PK = 'robi_parkur', N = 15, CELL = 2;
+let layout = {}, editMode = false, tool = 'block', buildRoot = new THREE.Group(), builtCols = [], pads = [], cursor = null, parkurT = 0;
+const TOOLS = [['block', '🧱', 'Blok'], ['pad', '🟦', 'Zıpzıp'], ['ring', '⭕', 'Halka'], ['fire', '🔥', 'Ateş'], ['monster', '👾', 'Canavar'], ['gear', '⚙️', 'Dişli'], ['star', '⭐', 'Bitiş'], ['start', '🚩', 'Başlangıç'], ['erase', '🧽', 'Sil']];
+const SAMPLE = { '7,13': { h: 0, o: 'start' }, '7,11': { h: 1 }, '7,10': { h: 2 }, '7,9': { h: 3, o: 'gear' }, '9,9': { h: 0, o: 'pad' }, '9,7': { h: 0, o: 'ring' }, '7,6': { h: 2, o: 'monster' }, '5,6': { h: 0, o: 'fire' }, '7,4': { h: 3 }, '7,3': { h: 4 }, '7,2': { h: 4, o: 'star' }, '5,10': { h: 0, o: 'gear' }, '9,11': { h: 0, o: 'gear' } };
+const cellPos = (i, j) => V((i - (N - 1) / 2) * CELL, 0, (j - (N - 1) / 2) * CELL);
+const BLK = ['#ff7a2f', '#2e8bff', '#22a861', '#a259ff'];
+function loadLayout() { try { layout = JSON.parse(localStorage.getItem(PK) || 'null') || JSON.parse(JSON.stringify(SAMPLE)); } catch (e) { layout = JSON.parse(JSON.stringify(SAMPLE)); } }
+function saveLayout() { try { localStorage.setItem(PK, JSON.stringify(layout)); } catch (e) {} }
+function buildBuilder() {
+  START = new THREE.Vector3(0, 0, 12);
+  const grid = new THREE.GridHelper(N * CELL, N, '#5a7fb0', '#8fb3dc'); grid.position.y = .03; scene.add(grid);
+  const plate = new THREE.Mesh(new THREE.PlaneGeometry(N * CELL, N * CELL), mat('#e8f4ff')); plate.rotation.x = -Math.PI / 2; plate.position.y = .02; scene.add(plate);
+  for (let i = -W; i <= W; i += 2) [[i, -W], [i, W], [-W, i], [W, i]].forEach(([x, z]) => add(new THREE.BoxGeometry(.3, 1, .3), '#ffd166', x, .5, z));
+  for (let a = 0; a < Math.PI * 2; a += .2) tree(Math.cos(a) * (W + 6), Math.sin(a) * (W + 6), 1.3, false);
+  cursor = new THREE.Mesh(new THREE.BoxGeometry(CELL, .1, CELL), new THREE.MeshBasicMaterial({ color: '#ff5ad8', transparent: true, opacity: .5 })); cursor.visible = false; scene.add(cursor);
+  scene.add(buildRoot); loadLayout(); rebuildParkur();
+  MISSIONS = { star: { e: '⭐', label: 'Bitiş yıldızı', done: false, check: () => stars.length > 0 && stars.every(s => !s.alive) } };
+}
+function detach(o) { if (o && o.parent) o.parent.remove(o); }
+function rebuildParkur() {
+  scene.remove(buildRoot); buildRoot = new THREE.Group(); scene.add(buildRoot);
+  builtCols.forEach(removeCol); builtCols = []; pads = [];
+  gears.forEach(g => detach(g.obj)); gears.length = 0;
+  fires.forEach(f => detach(f.g)); fires.length = 0;
+  monsters.forEach(m => { detach(m.g); detach(m.shadow); if (m.dome) detach(m.dome); }); monsters.length = 0;
+  rings.forEach(r => detach(r.m)); rings.length = 0;
+  stars.forEach(s => detach(s.s)); stars.length = 0;
+  let startSet = false;
+  for (const [k, c] of Object.entries(layout)) {
+    const [i, j] = k.split(',').map(Number), p = cellPos(i, j), top = (c.h || 0) * 1.2;
+    for (let lv = 0; lv < (c.h || 0); lv++) { const b = new THREE.Mesh(new THREE.BoxGeometry(CELL, 1.2, CELL), mat(BLK[lv % 4])); b.position.set(p.x, lv * 1.2 + .6, p.z); buildRoot.add(b); const e = new THREE.LineSegments(new THREE.EdgesGeometry(b.geometry), new THREE.LineBasicMaterial({ color: '#2b2340' })); e.position.copy(b.position); buildRoot.add(e); }
+    if (c.h) { const col = { x0: p.x - CELL / 2, y0: 0, z0: p.z - CELL / 2, x1: p.x + CELL / 2, y1: top, z1: p.z + CELL / 2 }; colliders.push(col); builtCols.push(col); }
+    const o = c.o;
+    if (o === 'pad') { const m = new THREE.Mesh(new THREE.CylinderGeometry(.85, .95, .35, 20), mat('#2e8bff')); m.position.set(p.x, top + .17, p.z); buildRoot.add(m); const r = new THREE.Mesh(new THREE.TorusGeometry(.8, .1, 8, 24), mat('#ffd166')); r.rotation.x = Math.PI / 2; r.position.set(p.x, top + .36, p.z); buildRoot.add(r); pads.push({ x: p.x, z: p.z, top: top + .35, m }); const col = { x0: p.x - .85, y0: top, z0: p.z - .85, x1: p.x + .85, y1: top + .35, z1: p.z + .85 }; colliders.push(col); builtCols.push(col); }
+    else if (o === 'ring') { const r = new THREE.Mesh(new THREE.TorusGeometry(1.7, .22, 10, 28), new THREE.MeshLambertMaterial({ color: '#ffd166', emissive: '#7a4a00' })); r.position.set(p.x, top + 4, p.z); buildRoot.add(r); rings.push({ m: r, pos: r.position.clone(), done: false }); }
+    else if (o === 'fire') { fire(p.x, p.z, 6, top); buildRoot.add(fires[fires.length - 1].g); }
+    else if (o === 'monster') { const m = monster(p.x, p.z, top); buildRoot.add(m.g); buildRoot.add(m.shadow); }
+    else if (o === 'gear') { for (let q = 0; q < 3; q++) { gear(p.x + (q - 1) * .7, top, p.z); buildRoot.add(gears[gears.length - 1].obj); } }
+    else if (o === 'star') { bigStar(p.x, top, p.z); buildRoot.add(stars[stars.length - 1].s); }
+    else if (o === 'start') { START = V(p.x, top, p.z); startSet = true; const pole = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, 2.2), mat('#2b2340')); pole.position.set(p.x + .7, top + 1.1, p.z); buildRoot.add(pole); const fl = new THREE.Mesh(new THREE.PlaneGeometry(.8, .5), new THREE.MeshLambertMaterial({ color: '#e53935', side: THREE.DoubleSide })); fl.position.set(p.x + 1.1, top + 1.9, p.z); buildRoot.add(fl); }
+  }
+  if (!startSet) START = V(0, 0, 12);
+  if (MISSIONS && MISSIONS.star) MISSIONS.star.done = false;
+}
+function applyTool(i, j) {
+  const k = `${i},${j}`, c = layout[k] || { h: 0 };
+  if (tool === 'erase') { delete layout[k]; SFX.bad(); }
+  else if (tool === 'block') { c.h = ((c.h || 0) % 4) + 1; layout[k] = c; tone(300 + c.h * 120, .08, 'square', .05); }
+  else {
+    if (tool === 'star' || tool === 'start') for (const kk in layout) if (layout[kk].o === tool) { delete layout[kk].o; if (!layout[kk].h) delete layout[kk]; }
+    c.o = c.o === tool ? undefined : tool; if (!c.o && !c.h) delete layout[k]; else layout[k] = c; tone(700, .08, 'triangle', .06);
+  }
+  const p = cellPos(i, j); cursor.visible = true; cursor.position.set(p.x, ((layout[k] && layout[k].h) || 0) * 1.2 + .06, p.z);
+  saveLayout(); rebuildParkur();
+}
+function setEdit(on) {
+  editMode = on; document.body.classList.toggle('editing', on);
+  $('editUI').style.display = on ? 'flex' : 'none'; $('editBtn').style.display = on ? 'none' : 'flex';
+  if (on) { if (riding) dismount(); P.flying && setFlight(false); rebuildParkur(); cursor.visible = false; }
+  else { rebuildParkur(); won = false; P.pos.copy(START); P.vel.set(0, 0, 0); P.hp = 3; parkurT = 0; camYaw = 0; hud(); toast('🏁 Parkur başladı! ⭐ Bitiş yıldızına ulaş!', 2.5); }
+}
+function editUpdate(dt) {
+  camera.position.lerp(V(0, 27, 15.5), Math.min(1, dt * 4)); camera.lookAt(0, 0, -.8);
+  gears.forEach(g => g.obj.rotation.y += dt * 3); rings.forEach(r => r.m.rotation.y += dt); stars.forEach(s => s.s.position.y = s.pos.y + 1.4 + Math.sin(elapsed * 3) * .2);
+  elapsed += dt; robi.position.copy(START); robiShadow.position.set(START.x, START.y + .07, START.z);
+}
 // =============== DÜNYA 2: BÜYÜLÜ ORMAN ===============
 function buildForest() {
   START = new THREE.Vector3(0, 0, 13);
@@ -694,7 +863,7 @@ function buildForest() {
   [-7.6, -5, -2.4].forEach(z => { box(-26, 0, z - .9, -24.2, .6, z + .9, null); add(new THREE.CylinderGeometry(1, 1.1, .7, 9), '#9aa3ad', -25.1, .3, z); });
   box(19, 0, -10, 21, .7, 0, null);
   const log = add(new THREE.CylinderGeometry(1, 1, 10.5, 12), '#8b5a2b', 20, .2, -5); log.rotation.x = Math.PI / 2; log.scale.set(1, 1, .5);
-  const noTree = (x, z) => isWater(x, z) || Math.abs(z + 5) < 7 || (z > 8 && z < 40 && Math.abs(x) < 42) || Math.hypot(x, z - 12) < 10 || Math.hypot(x + 40, z + 32) < 9;
+  const noTree = (x, z) => Math.hypot(x - 40, z + 52) < 15 || isWater(x, z) || Math.abs(z + 5) < 7 || (z > 8 && z < 40 && Math.abs(x) < 42) || Math.hypot(x, z - 12) < 10 || Math.hypot(x + 40, z + 32) < 9;
   for (let i = 0; i < 95; i++) { const x = (rnd() * 2 - 1) * (W - 4), z = (rnd() * 2 - 1) * (W - 4); if (!noTree(x, z)) tree(x, z, .8 + rnd() * .6); }
   for (let a = 0; a < Math.PI * 2; a += .09) tree(Math.max(-W - 2, Math.min(W + 2, Math.cos(a) * (W + 3))), Math.max(-W - 2, Math.min(W + 2, Math.sin(a) * (W + 3))), 1.5);
   rock(-47, -28, -43, -24, 1.5); rock(-47, -32, -43, -28, 3); rock(-47, -36, -43, -32, 4.5); rock(-43, -38, -35, -28, 6, '#8d96a0');
@@ -738,13 +907,18 @@ function buildForest() {
   [[-10, -15], [8, -20], [25, -28], [-30, -25], [-5, -45], [22, -45], [-45, -50], [45, -35], [-20, 30], [40, 10], [-40, -20]].forEach(([x, z]) => monster(x, z));
   monster(-38, -31, 6);
   [['rabbit', 0, -32], ['rabbit', 6, -38], ['rabbit', -6, -36], ['rabbit', -2, -28], ['fox', -30, -18], ['fox', 32, -42], ['deer', 42, -52], ['deer', -50, -55]].forEach(([k, x, z]) => animal(k, x, z));
+  for (let a = 0; a < Math.PI * 2; a += .5) rock(40 + Math.cos(a) * 11 - 1.2, -52 + Math.sin(a) * 11 - 1.2, 40 + Math.cos(a) * 11 + 1.2, -52 + Math.sin(a) * 11 + 1.2, 1.2 + (a * 7 % 1.5), '#a0614a');
+  const lair = new THREE.Mesh(new THREE.CircleGeometry(9, 24), mat('#c9a07a')); lair.rotation.x = -Math.PI / 2; lair.position.set(40, .04, -52); scene.add(lair);
+  sign(28, -42, '🐉 Ejder Yuvası', 'Dikkat: ateş!', '🐉 Ateş Ejderi burada! 💧 Suyla ateşini söndür, yere inince 🕸️ ağ at ve kafasına zıpla ya da 🌀 havadan çakıl!', .8);
+  makeDragonBoss(V(40, 0, -52));
   MISSIONS = {
     fire: { e: '🔥', label: 'Yangın', count: true, done: false, check: () => fires.every(f => !f.alive), n: () => `${fires.filter(f => !f.alive).length}/${fires.length}` },
     net: { e: '🐰', label: 'Hayvan', count: true, done: false, check: () => animals.every(a => !a.alive), n: () => `${animals.filter(a => !a.alive).length}/${animals.length}` },
-    suits: { e: '👕', label: 'Kostüm', count: true, done: false, check: () => ['red', 'blue', 'orange', 'green'].every(k => SV.suits[k]), n: () => `${['red', 'blue', 'orange', 'green'].filter(k => SV.suits[k]).length}/4` },
+    dragon: { e: '🐉', label: 'Ejder', count: true, bonus: true, done: false, check: () => dragon && dragon.friend, n: () => dragon && dragon.friend ? 'dost' : `${dragon ? dragon.hp : 3}❤️` },
+    suits: { e: '👕', label: 'Kostüm', count: true, bonus: true, done: false, check: () => ['red', 'blue', 'orange', 'green'].every(k => SV.suits[k]), n: () => `${['red', 'blue', 'orange', 'green'].filter(k => SV.suits[k]).length}/4` },
   };
 }
-BAHCE ? buildBahce() : LEARN ? buildLearn() : buildForest();
+BUILD ? buildBuilder() : BAHCE ? buildBahce() : LEARN ? buildLearn() : buildForest();
 
 // =============== ROBİ ===============
 const suitMat = new THREE.MeshLambertMaterial({ color: '#f4f6fb' }), accMat = new THREE.MeshLambertMaterial({ color: '#ff7a2f' }), darkMat = mat('#2b2340');
@@ -806,7 +980,7 @@ applyLook();
 const P = { flying: false, altT: 0, altUp: false, altDown: false, pos: START.clone(), vel: new THREE.Vector3(), r: .42, h: 1.7, yaw: Math.PI, onGround: false, jumps: 0, spin: 0, spinCd: 0, dash: 0, dashCd: 0, pound: false, poundT: 0, hp: 3, inv: 0, t: 0, safe: START.clone(), safeT: 0, emitT: 0, netCd: 0 };
 const orbActive = { fire: 0, water: 0, net: 0, joy: 0 };
 let powerSel = 0;
-const canFly = () => SV.suit === 'orange' || (typeof riding !== 'undefined' && riding && VEH[riding.kind].fly);
+const canFly = () => SV.suit === 'orange' || SV.suit === 'dragon' || (typeof riding !== 'undefined' && riding && VEH[riding.kind].fly);
 function powersList() { const l = []; const sp = SUITS[SV.suit].power; if (sp && sp !== 'fly') l.push(sp); if (sp === 'net') l.push('joy'); for (const k of ['fire', 'water', 'net', 'joy']) if (orbActive[k] > 0 && !l.includes(k)) l.push(k); return l; }
 function currentPower() { const l = powersList(); if (!l.length) return null; return l[powerSel % l.length]; }
 
@@ -833,6 +1007,7 @@ function makePet(kind) {
   scene.add(g); return g;
 }
 function setPet(kind) { if (petObj) scene.remove(petObj); petObj = null; pet.kind = kind; SV.pet = kind; save(); if (kind) { petObj = makePet(kind); pet.pos.copy(P.pos).add(V(1.5, 0, 1.5)); } }
+
 
 
 // =============== HUD ===============
@@ -874,9 +1049,9 @@ function addGears(n) { SV.gears += n; save(); hud(); if (SV.gears >= 500) sticke
 
 
 function setSuit(k, silent) {
-  if (!ownsSuit(k)) { SFX.bad(); toast(`🔒 ${SUITS[k].name}: ${LEARN ? '' : 'ormanda sandığını bul ya da 👕 gardıroptan ⚙️ ' + SUITS[k].price + ' ile al'}`); return false; }
+  if (!ownsSuit(k)) { SFX.bad(); toast(`🔒 ${SUITS[k].name}: ${SUITS[k].boss ? 'Büyülü Ormandaki Ateş Ejderini yen!' : 'ormanda sandığını bul ya da 👕 gardıroptan ⚙️ ' + SUITS[k].price + ' ile al'}`); return false; }
   if (SV.suit === k) return true;
-  SV.suit = k; powerSel = 0; if (k !== 'orange' && P.flying && !canFly()) setFlight(false); questEv('suit');
+  SV.suit = k; powerSel = 0; if (P.flying && !canFly()) setFlight(false); questEv('suit');
   save(); applyLook(); refreshPowerUI(); hud(); SFX.suit();
   neonBurst(SUITS[k].power || 'white'); buildSuitBar();
   if (!silent) toast(`${SUITS[k].e} ${SUITS[k].name}: ${SUITS[k].desc}`, 2.4);
@@ -891,7 +1066,7 @@ let paused = false;
 function openWardrobe() {
   paused = true; SFX.buy();
   const free = LEARN ? '<div class="note">🎓 Eğitimde her şey bedava, hepsini dene!</div>' : '';
-  const card = (type, k, label, swatch, owned, price, sel, extra = '') => `<button class="opt ${sel ? 'sel' : ''} ${owned ? '' : 'locked'}" data-t="${type}" data-k="${k}"><span class="sw" style="${swatch}">${extra}</span><b>${label}</b><small>${sel ? '✓ Giyili' : owned ? 'Seç' : '⚙️ ' + price}</small></button>`;
+  const card = (type, k, label, swatch, owned, price, sel, extra = '') => `<button class="opt ${sel ? 'sel' : ''} ${owned ? '' : 'locked'}" data-t="${type}" data-k="${k}"><span class="sw" style="${swatch}">${extra}</span><b>${label}</b><small>${sel ? '✓ Giyili' : owned ? 'Seç' : type === 'suit' && SUITS[k].boss ? '🐉 Ejderi yen' : '⚙️ ' + price}</small></button>`;
   $('wList').innerHTML = free +
     '<h3>Kostüm</h3><div class="opts">' + Object.entries(SUITS).map(([k, s]) => card('suit', k, s.name, `background:${s.body}`, ownsSuit(k), s.price, SV.suit === k, s.e)).join('') + '</div>' +
     `<div class="desc">${SUITS[SV.suit].e} ${SUITS[SV.suit].desc}</div>` +
@@ -902,6 +1077,7 @@ function openWardrobe() {
   $('wList').querySelectorAll('.opt').forEach(b => b.onclick = () => {
     const t = b.dataset.t, k = b.dataset.k;
     const T = { suit: [SUITS, ownsSuit, 'suits'], cape: [CAPES, ownsCape, 'capes'], hat: [HATS, ownsHat, 'hats'] }[t];
+    if (t === 'suit' && SUITS[k].boss && !ownsSuit(k)) { SFX.bad(); toast('🐉 Bu kostüm satılmaz: Büyülü Ormandaki Ateş Ejderini yen!', 3); return; }
     if (!T[1](k)) { const pr = T[0][k].price; if (SV.gears < pr) { SFX.bad(); toast('⚙️ Yeterli dişli yok! Topla ya da bul.'); return; } SV.gears -= pr; SV[T[2]][k] = true; SFX.buy(); if (t === 'suit') sticker('suit_' + k); }
     if (t === 'suit') { setSuit(k, true); }
     else if (t === 'cape') SV.cape = k; else SV.hat = k === 'none' ? null : k;
@@ -973,6 +1149,7 @@ const zone = $('touch'), stickEl = $('stick'), knobEl = $('knob');
 function stickHome() { stickEl.style.left = '22px'; stickEl.style.top = (innerHeight - 146) + 'px'; knobEl.style.transform = 'translate(0,0)'; }
 addEventListener('resize', () => { if (joy.id === null) stickHome(); });
 zone.addEventListener('pointerdown', e => {
+  if (BUILD && editMode) { ndc.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); raycaster.setFromCamera(ndc, camera); const o = raycaster.ray.origin, d = raycaster.ray.direction; let best = null; for (let lv = 4; lv >= 0; lv--) { const y = lv * 1.2; const t = (y - o.y) / d.y; if (t <= 0) continue; const p = o.clone().addScaledVector(d, t); const i = Math.round(p.x / CELL + (N - 1) / 2), j = Math.round(p.z / CELL + (N - 1) / 2); if (i < 0 || j < 0 || i >= N || j >= N) continue; const c = layout[`${i},${j}`]; if (((c && c.h) || 0) * 1.2 >= y - .01) { best = [i, j]; break; } } if (best) applyTool(best[0], best[1]); return; }
   if (photo) { look.id = e.pointerId; look.lx = e.clientX; look.ly = e.clientY; try { zone.setPointerCapture(e.pointerId); } catch (err) {} return; }
   if (e.clientX < innerWidth * .45 && joy.id === null) { joy.id = e.pointerId; joy.cx = e.clientX; joy.cy = e.clientY; stickEl.style.left = e.clientX - 60 + 'px'; stickEl.style.top = e.clientY - 60 + 'px'; knobEl.style.transform = 'translate(0,0)'; }
   else if (P.flying && currentPower() && aim.id === null) { aim.id = e.pointerId; aim.point = screenToWorld(e.clientX, e.clientY); input.power = true; input.powerHeld = true; }
@@ -1050,7 +1227,7 @@ function movePlayer(dt) {
   P.vel.x += (wx * SPEED - P.vel.x) * Math.min(1, acc * dt); P.vel.z += (wz * SPEED - P.vel.z) * Math.min(1, acc * dt);
   if (Math.hypot(wx, wz) > .1 && !(input.powerHeld && currentPower())) { const tgt = Math.atan2(wx, wz); let d = tgt - P.yaw; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; P.yaw += d * Math.min(1, 12 * dt); }
   if (input.jump) {
-    if (P.onGround) { P.vel.y = RV ? RV.jump : JUMP; P.jumps = RV ? 2 : 1; SFX.jump(); puff(P.pos, 6); }
+    if (P.onGround) { P.vel.y = RV ? RV.jump : JUMP; P.jumps = RV ? 2 : 1; SFX.jump(); puff(P.pos, 6); voice('jump'); }
     else if (P.flying) { P.altT += 3; SFX.flap(); }
     else if (flying) { setFlight(true); }
     else if (P.jumps < 2) { P.vel.y = DJUMP; P.jumps = 2; SFX.djump(); puff(P.pos, 8, '#38e1ff'); }
@@ -1093,6 +1270,7 @@ function movePlayer(dt) {
   if (P.pos.y <= 0) { P.pos.y = 0; P.vel.y = 0; P.onGround = true; }
   if (P.onGround) { P.jumps = 0; if (!was) puff(P.pos, 4); if (P.pound) { P.pound = false; poundImpact(); } }
   if (P.flying && P.onGround && P.vel.y <= 0) P.onGround = false;
+  if (P.onGround && pads.length) for (const pd of pads) if (Math.abs(P.pos.x - pd.x) < 1 && Math.abs(P.pos.z - pd.z) < 1 && Math.abs(P.pos.y - pd.top) < .15) { P.vel.y = 17; P.onGround = false; P.jumps = 1; pd.m.scale.y = .4; setTimeout(() => pd.m.scale.y = 1, 150); try { const t = ac().currentTime; note(200, t, .3, 'sine', .12, 4); } catch (e) {} puff(P.pos, 8, '#bfe3ff'); }
   if (P.onGround && P.pos.y < .05 && isWater(P.pos.x, P.pos.z)) {
     SFX.splash(); for (let i = 0; i < 20; i++) fx({ pos: P.pos.clone().add(V(0, .3, 0)), vel: V((Math.random() - .5) * 6, 4 + Math.random() * 4, (Math.random() - .5) * 6), life: .9, size: .35, drop: true, grav: 14 });
     P.pos.copy(P.safe); P.vel.set(0, 0, 0); P.inv = 1;
@@ -1105,6 +1283,7 @@ function poundImpact() {
   for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2; fx({ pos: V(P.pos.x + Math.cos(a) * .6, P.pos.y + .15, P.pos.z + Math.sin(a) * .6), vel: V(Math.cos(a) * 7, .5, Math.sin(a) * 7), life: .45, size: .6, size2: 1.2, color: '#fff2c4', alpha: .8, drag: 3 }); }
   for (const m of monsters) if (m.alive && Math.abs(m.pos.y - P.pos.y) < 1.5 && Math.hypot(m.pos.x - P.pos.x, m.pos.z - P.pos.z) < 3.4) killMonster(m);
   for (const c of crates) if (c.alive && Math.hypot(c.pos.x - P.pos.x, c.pos.z - P.pos.z) < 2.6) breakCrate(c);
+  if (dragon && dragon.state === 'tired' && Math.hypot(dragon.pos.x - P.pos.x, dragon.pos.z - P.pos.z) < 4.8) dragonHit();
 }
 
 // =============== GÜÇLER: ATEŞ AKIŞI, SU, AĞ ===============
@@ -1213,7 +1392,7 @@ function celebrate(text, sub, big = false) {
 }
 function onCatch(a) {
   combo.n = combo.t > 0 ? combo.n + 1 : 1; combo.t = 8;
-  questEv('catch'); sticker(a.kind); if (a.scale >= 5) { sticker('giant'); SV.sanctuary.giant = (SV.sanctuary.giant || 0) + 1; }
+  questEv('catch'); sticker(a.kind); voice('catch'); if (a.scale >= 5) { sticker('giant'); SV.sanctuary.giant = (SV.sanctuary.giant || 0) + 1; }
   SV.sanctuary[a.kind] = (SV.sanctuary[a.kind] || 0) + 1; save();
   if (combo.n === 3) sticker('combo3'); if (combo.n === 5) sticker('combo5');
   neonBurst(a.scale >= 3 ? 'joy' : 'net', a.scale >= 3 ? 7 : 4);
@@ -1236,6 +1415,8 @@ function updateStickerPop(dt) {
   if (stickerQ.length) { const st = stickerQ.shift(); $('stickerPop').innerHTML = `<span class="se">${st.e}</span><span><small>📒 Yeni çıkartma!</small><b>${st.name}</b></span>`; $('stickerPop').classList.add('on'); stickerT = 3; tone(1046, .1, 'triangle', .08); setTimeout(() => tone(1568, .2, 'triangle', .08), 90); }
 }
 let flyQuestDone = false;
+let voiceT = 0;
+function voice(slot) { if (!RO.playVoice) return; const now = performance.now(); if (slot === 'jump' && now - voiceT < 1500) return; voiceT = now; try { RO.playVoice(ac(), slot, master); } catch (e) {} }
 // =============== HASAR & ÖDÜLLER ===============
 function hurt(from) {
   if (P.inv > 0 || P.spin > 0 || P.dash > 0 || P.pound || moment) return;
@@ -1290,9 +1471,10 @@ function checkMissions() {
   hud();
   if (changed && Object.values(MISSIONS).filter(m => !m.count || k2(m)).every(m => m.done)) finishWorld();
 }
-const k2 = m => m !== MISSIONS.suits; // orman: kostüm toplamak bonus görev
+const k2 = m => !m.bonus; // orman: kostüm toplamak bonus görev
 function finishWorld() {
   if (won) return; won = true;
+  if (BUILD) { sticker('builder'); celebrate('PARKUR BİTTİ!', `⏱ ${parkurT.toFixed(1)} saniye`, true); voice('power'); setTimeout(() => toast('✏️ Düzenle ile parkuru değiştir ya da 🔁 tekrar dene!', 4), 2200); return; }
   if (LEARN) { SV.trained = true; save(); sticker('trained'); } else sticker('forest');
   setTimeout(() => {
     $('winTitle').innerHTML = LEARN ? '🎓 Eğitim tamam!<small>Büyülü Orman açıldı</small>' : '🎉 Orman kurtuldu!<small>Harika iş çıkardın Robi</small>';
@@ -1359,7 +1541,7 @@ function powerMoment(title, sub) {
   if (moment) return;
   moment = { t: 0, title, sub, camFrom: camera.position.clone(), flashes: [.45, 1.1, 1.7, 2.3] };
   $('mTitle').textContent = title; $('mSub').textContent = sub;
-  $('moment').classList.add('on'); SFX.fanfare(); setTimeout(SFX.thunder, 400); neonBurst('white', 6);
+  $('moment').classList.add('on'); SFX.fanfare(); setTimeout(() => voice('power'), 700); setTimeout(SFX.thunder, 400); neonBurst('white', 6);
   musicGain && (musicGain.gain.value = .15);
 }
 function updateMoment(dt) {
@@ -1456,7 +1638,7 @@ function update(dt) {
     if (!g.alive) continue; g.obj.rotation.y += dt * 3;
     const dd = g.obj.position.distanceTo(pc);
     if (magnetR && petObj && (petObj.position.distanceTo(g.obj.position) < magnetR || dd < 3)) g.obj.position.lerp(pc, Math.min(1, dt * 6));
-    if (dd < 1.1) { g.alive = false; scene.remove(g.obj); SFX.gear(); sparkle(g.obj.position, '#ffd84a', 3); addGears(1); addXP(1); questEv('gear'); }
+    if (dd < 1.1) { g.alive = false; detach(g.obj); SFX.gear(); sparkle(g.obj.position, '#ffd84a', 3); addGears(1); addXP(1); questEv('gear'); }
   }
   for (const h of hearts) { if (!h.alive) continue; h.obj.rotation.y += dt * 2; if (h.obj.position.distanceTo(pc) < 1.3 && P.hp < 3) { h.alive = false; scene.remove(h.obj); P.hp = 3; SFX.heart(); hud(); toast('❤️ Pil doldu!'); } }
   for (const o of orbs) {
@@ -1475,7 +1657,7 @@ function update(dt) {
   }
   for (const s of signs) { const d = Math.hypot(s.pos.x - P.pos.x, s.pos.z - P.pos.z); if (d < 3.2 && !s.shown) { s.shown = true; toast(s.msg, 5); } else if (d > 6) s.shown = false; }
   for (const r of rings) { r.m.rotation.y += dt * (r.done ? 3 : .8); if (!r.done && r.pos.distanceTo(V(P.pos.x, P.pos.y + .9, P.pos.z)) < 1.6) { r.done = true; r.m.material = new THREE.MeshLambertMaterial({ color: '#2bb673', emissive: '#0a5a2a' }); SFX.ring(); sparkle(r.pos, '#b9ffb0', 16); addXP(3); toast(`🪽 Halka ${rings.filter(x => x.done).length}/${rings.length}`); checkMissions(); } }
-  for (const s of stars) { if (!s.alive) continue; s.s.position.y = s.pos.y + 1.4 + Math.sin(elapsed * 3) * .2; if (s.s.position.distanceTo(pc) < 1.6) { s.alive = false; scene.remove(s.s); SFX.ring(); sparkle(s.pos.clone().add(V(0, 1, 0)), '#fff06a', 30); addGears(10); addXP(5); checkMissions(); } }
+  for (const s of stars) { if (!s.alive) continue; s.s.position.y = s.pos.y + 1.4 + Math.sin(elapsed * 3) * .2; if (s.s.position.distanceTo(pc) < 1.6) { s.alive = false; detach(s.s); SFX.ring(); sparkle(s.pos.clone().add(V(0, 1, 0)), '#fff06a', 30); addGears(10); addXP(5); checkMissions(); } }
 
   // Yangınlar (gerçekçi alev parçacıkları)
   for (const f of fires) {
@@ -1560,7 +1742,8 @@ function update(dt) {
     if (hit || b.life <= 0 || sp.y <= groundAt(sp.x, sp.z, sp.y)) { if (!hit) burst(sp, b.c, 4); scene.remove(b.m); joyBalls.splice(i, 1); }
   }
   if (combo.t > 0) combo.t -= dt;
-  updateStickerPop(dt); updateVehicles(dt);
+  if (BUILD && !won) parkurT += dt;
+  updateStickerPop(dt); updateVehicles(dt); updateDragon(dt);
   parentT += dt; if (parentT >= 5) { parentT = 0; const left = RO.tick(5); if (left <= 0) sleepTime(); else if (left <= 60 && !warned) { warned = true; toast('⏰ Robi yakında uyuyacak: 1 dakika kaldı!', 4); } }
   updateNeon(dt);
   if (aimActive() && currentPower()) { aimRing.visible = true; aimRing.position.set(aim.point.x, aim.point.y + .08, aim.point.z); aimRing.material.color.set(POWER[currentPower()].color); const s = 1 + Math.sin(elapsed * 10) * .1; aimRing.scale.set(s, s, s); } else aimRing.visible = false;
@@ -1572,6 +1755,7 @@ function update(dt) {
     let hit = false; const sp = n.m.position;
     for (const a of animals) if (a.alive && !a.frozen && !a.tame && Math.hypot(sp.x - a.pos.x, sp.z - a.pos.z) < 1.5 * Math.max(1, a.scale * .7) && sp.y < 2.6 * a.scale) { freezeAnimal(a); hit = true; break; }
     if (!hit) for (const m of monsters) if (m.alive && !m.dummy && m.frozen <= 0 && Math.hypot(sp.x - m.pos.x, sp.z - m.pos.z) < 1.2 && sp.y < m.pos.y + 2) { m.frozen = 5; m.dome = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), n.m.material); m.dome.position.copy(m.pos); scene.add(m.dome); SFX.freeze(); toast('🕸️ Canavar ağa takıldı! Şimdi zıpla ya da dön!', 2); hit = true; break; }
+    if (!hit && dragon && dragon.state === 'tired' && sp.distanceTo(dragon.pos) < 3.8) { dragon.frozen = 6; dragon.stT = Math.min(dragon.stT, 3); if (!dragon.dome) { dragon.dome = new THREE.Mesh(new THREE.SphereGeometry(3.2, 14, 10, 0, Math.PI * 2, 0, Math.PI / 2), n.m.material); dragon.dome.position.set(dragon.pos.x, 0, dragon.pos.z); scene.add(dragon.dome); } SFX.freeze(); toast('🕸️ Ejder ağa takıldı! Şimdi kafasına zıpla ya da havadan 🌀 çakıl!', 2.5); hit = true; }
     if (hit || n.life <= 0 || sp.y <= groundAt(sp.x, sp.z, sp.y)) { scene.remove(n.m); nets.splice(i, 1); }
   }
 
@@ -1583,6 +1767,7 @@ function update(dt) {
     p.sp.position.addScaledVector(p.vel, dt);
     const k = 1 - p.life / p.max; p.sp.scale.setScalar(p.s0 + (p.s1 - p.s0) * k);
     p.sp.material.color.copy(p.c0).lerp(p.c1, k); p.sp.material.opacity = p.a0 * Math.min(1, p.life / p.max * 2.2);
+    if (p.kind === 'dfire') { const pp = p.sp.position; if (Math.hypot(pp.x - P.pos.x, pp.z - P.pos.z) < .9 && pp.y > P.pos.y - .2 && pp.y < P.pos.y + 1.9) { hurt(dragon ? dragon.pos : pp); killFX(p); } else if (pp.y <= groundAt(pp.x, pp.z, pp.y)) killFX(p); continue; }
     if (p.kind === 'pfire' || p.kind === 'pwater' || p.kind === 'lava') {
       const pp = p.sp.position;
       if (p.kind !== 'lava' && pp.y <= groundAt(pp.x, pp.z, pp.y) + .1) {
@@ -1604,7 +1789,7 @@ function update(dt) {
           f.hp -= .12; killFX(p);
           if (Math.random() < .3) fx({ pos: pp.clone(), vel: V(0, 2.5, 0), life: 1, size: .6, size2: 2, color: '#ffffff', alpha: .5 });
           if (f.hp <= 0) {
-            f.alive = false; scene.remove(f.g); SFX.steam();
+            f.alive = false; detach(f.g); SFX.steam();
             for (let j = 0; j < 30; j++) fx({ pos: f.pos.clone().add(V((Math.random() - .5) * 2, .5, (Math.random() - .5) * 2)), vel: V((Math.random() - .5) * 2, 2 + Math.random() * 3, (Math.random() - .5) * 2), life: 1.8, size: .8, size2: 3, color: '#ffffff', color2: '#dfe8ee', alpha: .6, drag: .5 });
             addXP(8); questEv('fire'); for (let j = 0; j < 3; j++) gear(f.pos.x + (j - 1) * 1.2, f.pos.y, f.pos.z + 1);
             if (!LEARN && fires.every(x => !x.alive)) sticker('firefighter');
@@ -1615,6 +1800,7 @@ function update(dt) {
         }
         if (!p.alive) continue;
         for (const m of monsters) if (m.alive && !m.dummy && Math.hypot(pp.x - m.pos.x, pp.z - m.pos.z) < .9 && pp.y < m.pos.y + m.h + .3) { m.stun = 2; m.heat = 0; killFX(p); break; }
+        if (p.alive && dragon && pp.distanceTo(dragon.pos) < 3.6) { dragonWater(); killFX(p); }
       }
     }
   }
@@ -1639,14 +1825,15 @@ function frame(now) {
     for (const p of FX) { if (!p.alive) continue; p.life -= dt; if (p.life <= 0) { killFX(p); continue; } if (p.grav) p.vel.y -= p.grav * dt; p.sp.position.addScaledVector(p.vel, dt); const k = 1 - p.life / p.max; p.sp.scale.setScalar(p.s0 + (p.s1 - p.s0) * k); p.sp.material.opacity = p.a0 * Math.min(1, p.life / p.max * 2.2); }
   }
   else if (started && photo) { photoUpdate(rawDt); updateNeon(rawDt); updateStickerPop(rawDt); }
+  else if (started && BUILD && editMode && !paused) editUpdate(dt);
   else if (started && !paused) update(dt);
   else if (!started) { camYaw += dt * .12; const t = V(START.x, 3, START.z + (LEARN ? -8 : 9)); camera.position.set(t.x + Math.sin(camYaw) * 18, 9, t.z + Math.cos(camYaw) * 18); camera.lookAt(t); robi.position.copy(P.pos); robiShadow.position.set(P.pos.x, .07, P.pos.z); for (const f of fires) { f.t += dt; if (Math.random() < .5) fx({ pos: V(f.pos.x + (Math.random() - .5), .3, f.pos.z + (Math.random() - .5)), vel: V(0, 3, 0), life: .7, size: 1.2, size2: .2, color: '#ffe680', color2: '#ff2a00', add: true }); } for (const p of FX) { if (!p.alive) continue; p.life -= dt; if (p.life <= 0) { killFX(p); continue; } p.sp.position.addScaledVector(p.vel, dt); const k = 1 - p.life / p.max; p.sp.scale.setScalar(p.s0 + (p.s1 - p.s0) * k); p.sp.material.color.copy(p.c0).lerp(p.c1, k); } }
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }
 // Giriş ekranı içeriği
-$('introTitle').innerHTML = BAHCE ? 'Robi\'nin Macerası<small>🌳 Koruma Bahçesi</small>' : LEARN ? 'Robi\'nin Macerası<small>🎓 Eğitim Bahçesi</small>' : 'Robi\'nin Macerası<small>🌲 Büyülü Orman</small>';
-$('introText').innerHTML = BAHCE ? (animals.length ? `<p>Kurtardığın <b>${animals.length}</b> hayvan burada mutlu yaşıyor! Yanlarına git, dokun ve sev. 💗</p><ul><li>Her sevgi 1 dişli kazandırır</li><li>Dev yakaladığın hayvanlar burada da büyük</li><li>📸 Fotoğraf modunda onlarla poz ver!</li></ul>` : '<p>Bahçe henüz boş! 🌱</p><ul><li>Büyülü Ormanda hayvanları ağla yakala</li><li>Yakaladığın her hayvan buraya gelir</li></ul>') : LEARN
+$('introTitle').innerHTML = BUILD ? 'Robi\'nin Macerası<small>🧱 Parkur Atölyesi</small>' : BAHCE ? 'Robi\'nin Macerası<small>🌳 Koruma Bahçesi</small>' : LEARN ? 'Robi\'nin Macerası<small>🎓 Eğitim Bahçesi</small>' : 'Robi\'nin Macerası<small>🌲 Büyülü Orman</small>';
+$('introText').innerHTML = BUILD ? '<p>Kendi parkurunu kur, sonra Robi ile oyna!</p><ul><li>🧱 Blok: aynı kareye tekrar dokun, yükselsin (4 kata kadar)</li><li>🟦 Zıpzıp, ⭕ halka, 🔥 ateş, 👾 canavar, ⚙️ dişli koy</li><li>🚩 Başlangıç ve ⭐ Bitiş yıldızını yerleştir</li><li>▶ Dene ile oyna, ✏️ Düzenle ile geri dön</li></ul>' : BAHCE ? (animals.length ? `<p>Kurtardığın <b>${animals.length}</b> hayvan burada mutlu yaşıyor! Yanlarına git, dokun ve sev. 💗</p><ul><li>Her sevgi 1 dişli kazandırır</li><li>Dev yakaladığın hayvanlar burada da büyük</li><li>📸 Fotoğraf modunda onlarla poz ver!</li></ul>` : '<p>Bahçe henüz boş! 🌱</p><ul><li>Büyülü Ormanda hayvanları ağla yakala</li><li>Yakaladığın her hayvan buraya gelir</li></ul>') : LEARN
   ? '<p>Burada bütün kostümleri <b>bedava</b> deneyebilirsin! 4 alanı tamamla, ormana hazır ol.</p><ul><li>🔥 <b>Kırmızı</b>: lav akıt, korkulukları yak</li><li>💧 <b>Mavi</b>: su fışkırt, ateşleri söndür</li><li>🪽 <b>Turuncu</b>: uç, halkalardan geç</li><li>🕸️ <b>Yeşil</b>: ağ at, tavşanları dondur ve topla</li></ul>'
   : '<p>Ormanda yangın var, hayvanlar kaçışıyor! Kostümleri sandıklarda bul ya da dişliyle al.</p><ul><li>🔥 6 yangını söndür (💧 mavi kostüm)</li><li>🐾 8 hayvanı ağla dondur ve topla (🕸️ yeşil)</li><li>👕 4 kostüm sandığını bul (biri pasta evin tepesinde!)</li><li>⚡ Güç topu alınca her kostümde o gücü kullan</li></ul>';
 $('lvlIntro').textContent = `⭐ Seviye ${LVL} · ⚙️ ${SV.gears}`;
@@ -1655,12 +1842,13 @@ $('start').onclick = () => {
   ac(); musicStart();
   $('intro').style.display = 'none'; ['hud', 'btns', 'topR', 'stick', 'missions'].forEach(id => $(id).style.display = ''); document.body.classList.add('playing');
   stickHome(); started = true; camYaw = 0; hud(); refreshPowerUI(); buildSuitBar();
+  if (BUILD) { $('editUI').innerHTML = TOOLS.map(([k, e, n]) => `<button data-tool="${k}" class="${k === tool ? 'on' : ''}"><i>${e}</i>${n}</button>`).join('') + '<button id="eSample"><i>📋</i>Örnek</button><button id="eClear"><i>🗑️</i>Temizle</button><button id="ePlay" class="play"><i>▶</i>Dene</button>'; $('editUI').querySelectorAll('[data-tool]').forEach(b => b.onclick = () => { tool = b.dataset.tool; $('editUI').querySelectorAll('[data-tool]').forEach(x => x.classList.toggle('on', x === b)); tone(600, .05, 'triangle', .05); }); $('ePlay').onclick = () => { if (!Object.values(layout).some(c => c.o === 'star')) { toast('⭐ Önce bir Bitiş yıldızı koy!'); SFX.bad(); return; } setEdit(false); }; $('eClear').onclick = () => { layout = {}; saveLayout(); rebuildParkur(); }; $('eSample').onclick = () => { layout = JSON.parse(JSON.stringify(SAMPLE)); saveLayout(); rebuildParkur(); }; $('editBtn').onclick = () => setEdit(true); setEdit(true); }
   if (SV.pet) setPet(SV.pet);
-  toast(BAHCE ? '🌳 Koruma Bahçesine hoş geldin! Hayvanlara dokun ve sev.' : LEARN ? '🎓 Eğitim Bahçesine hoş geldin! Önce 👕 butonuna bas ve bir kostüm seç.' : '🌲 Orman yanıyor! Kostüm sandıklarını bul, ateşleri söndür, hayvanları kurtar!', 5);
+  toast(BUILD ? '🧱 Bir araç seç ve kareye dokun! Hazır olunca ▶ Dene.' : BAHCE ? '🌳 Koruma Bahçesine hoş geldin! Hayvanlara dokun ve sev.' : LEARN ? '🎓 Eğitim Bahçesine hoş geldin! Önce 👕 butonuna bas ve bir kostüm seç.' : '🌲 Orman yanıyor! Kostüm sandıklarını bul, ateşleri söndür, hayvanları kurtar!', 5);
 };
 hud();
 requestAnimationFrame(frame);
-window.__game = { vehicles, mount, dismount, get riding() { return riding; }, photoOpen, photoShoot, photoClose, sticker, questEv, setSuit, setFlight, aim, screenToWorld, celebrate, neonBurst, cam: (y, p) => { camYaw = y; camPitch = p; }, P, SV, orbActive, giveOrb, fires, animals, monsters, rings, setPet, powerMoment, applyLook, refreshPowerUI, input, openWardrobe, get state() { return { LVL, missions: Object.fromEntries(Object.entries(MISSIONS).map(([k, m]) => [k, m.done])), moment: !!moment }; } };
+window.__game = { get layout() { return layout; }, applyTool, setEdit, setTool: t => tool = t, get dragon() { return dragon; }, dragonHit, vehicles, mount, dismount, get riding() { return riding; }, photoOpen, photoShoot, photoClose, sticker, questEv, setSuit, setFlight, aim, screenToWorld, celebrate, neonBurst, cam: (y, p) => { camYaw = y; camPitch = p; }, P, SV, orbActive, giveOrb, fires, animals, monsters, rings, setPet, powerMoment, applyLook, refreshPowerUI, input, openWardrobe, get state() { return { LVL, missions: Object.fromEntries(Object.entries(MISSIONS).map(([k, m]) => [k, m.done])), moment: !!moment }; } };
 })();
 </script>
 </body>
