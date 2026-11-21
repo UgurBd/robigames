@@ -125,6 +125,25 @@ body.editing #btns,body.editing #stick,body.editing #suitBar,body.editing #toast
 #editUI button.play{background:#22b573;color:#fff;text-shadow:0 1px 0 var(--ink)}
 #editBtn{position:fixed;top:60px;right:8px;z-index:7;display:none;align-items:center;gap:4px;font-family:inherit;font-weight:800;font-size:15px;border:3.5px solid var(--ink);border-radius:14px;background:#ffd166;box-shadow:0 4px 0 var(--ink);padding:4px 10px;cursor:pointer;color:var(--ink)}
 body:not(.playing) #editBtn{display:none!important}
+
+#jelly{position:fixed;inset:0;z-index:11;display:none;flex-direction:column;align-items:center;justify-content:space-between;padding:14px;pointer-events:none;background:radial-gradient(circle,transparent 30%,rgba(43,35,64,.35))}
+#jelly h1{margin:0;font-size:clamp(28px,8vh,52px);color:#ff5ad8;-webkit-text-stroke:3px var(--ink);text-shadow:0 6px 0 var(--ink);text-align:center;line-height:1;animation:pop .6s cubic-bezier(.2,1.6,.4,1)}
+#jelly .sub{background:#fff;border:3.5px solid var(--ink);box-shadow:0 4px 0 var(--ink);border-radius:16px;padding:6px 14px;font-weight:800;text-align:center;font-size:16px;pointer-events:auto;max-width:92vw}
+#jelly .sub small{display:block;color:#7a4a00;font-size:14px}
+#jelly .row2{display:flex;gap:8px;margin-top:8px;justify-content:center}
+#jelly button{pointer-events:auto;font-family:inherit;font-weight:800;font-size:17px;border:3.5px solid var(--ink);border-radius:14px;box-shadow:0 4px 0 var(--ink);padding:6px 16px;cursor:pointer;background:#22b573;color:#fff;text-shadow:0 1px 0 var(--ink)}
+#jelly button.sec{background:#fff;color:var(--ink);text-shadow:none}
+
+#tut{position:fixed;left:0;right:0;top:56px;z-index:9;display:none;pointer-events:none}
+#tutBox{margin:0 auto;width:min(560px,74vw);display:flex;align-items:center;gap:10px;background:#fff;border:3.5px solid var(--ink);box-shadow:0 5px 0 var(--ink);border-radius:20px;padding:6px 10px;pointer-events:auto}
+#tutBox.pop{animation:pop .4s cubic-bezier(.2,1.6,.4,1)}
+#tutBox svg{width:58px;height:72px;flex:none;animation:bob 1.2s ease-in-out infinite}
+#tutSay{flex:1;font-weight:800;font-size:16px;line-height:1.2}
+#tutStep{font-size:11px;font-weight:800;color:#7a6f8f;display:block}
+#tutBox button{font-family:inherit;font-weight:800;border:3px solid var(--ink);border-radius:12px;box-shadow:0 3px 0 var(--ink);padding:3px 10px;cursor:pointer}
+#tutOk{background:#22b573;color:#fff;font-size:16px}
+#tutSkip{background:#fff;font-size:12px;color:var(--ink)}
+#tutHand{position:fixed;z-index:12;font-size:44px;display:none;pointer-events:none;filter:drop-shadow(0 3px 0 rgba(0,0,0,.25));transform:rotate(180deg)}
 </style>
 </head>
 <body>
@@ -158,6 +177,8 @@ body:not(.playing) #editBtn{display:none!important}
 <div id="stickerPop"></div>
 <div id="photoTop">📸 Fotoğraf modu · sürükle: döndür</div><div id="photoMsg"></div>
 <div id="photoUI"><div class="grp"><button data-pose="hero">💪 Kahraman</button><button data-pose="wave">👋 Selam</button><button data-pose="dance">🕺 Dans</button><button data-pose="jump">🙌 Zıpla</button></div><button id="pShoot">📸</button><div class="grp"><button id="pZoomIn">➕</button><button id="pZoomOut">➖</button><button id="pClose">✖ Çık</button></div></div>
+<div id="jelly"><h1>🍬 JELİBON HAKKI<br>KAZANDIN!</h1><div class="sub">Odayı tertemiz topladın! 🧸🧺<br>Anne ya da babana göster, gerçek jelibonunu al 😊<small id="jellyCount"></small><div class="row2"><button id="jellyOk">Yaşasın! 🎉</button><button class="sec" id="jellyMenu">🏠 Menü</button></div></div></div>
+<div id="tut"><div id="tutBox"><svg viewBox="0 0 120 150"><line x1="60" y1="14" x2="60" y2="30" stroke="#2b2340" stroke-width="5"/><circle cx="60" cy="11" r="8" fill="#ff7a2f" stroke="#2b2340" stroke-width="3"/><rect x="22" y="28" width="76" height="54" rx="15" fill="#f4f6fb" stroke="#2b2340" stroke-width="5"/><rect x="32" y="42" width="56" height="26" rx="11" fill="#2b2340"/><circle cx="47" cy="55" r="7" fill="#38e1ff"/><circle cx="73" cy="55" r="7" fill="#38e1ff"/><rect x="32" y="86" width="56" height="38" rx="10" fill="#f4f6fb" stroke="#2b2340" stroke-width="5"/><rect x="32" y="108" width="56" height="9" fill="#ff7a2f"/><rect x="40" y="124" width="14" height="18" rx="6" fill="#2b2340"/><rect x="66" y="124" width="14" height="18" rx="6" fill="#2b2340"/></svg><div id="tutSay"></div><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end"><span id="tutStep"></span><button id="tutOk">Tamam! 🎉</button><button id="tutSkip">Atla ⏭</button></div></div></div><div id="tutHand">👆</div>
 <div id="moment"><div class="rays"></div><div id="mTitle"></div><div id="mSub" class="glass"></div></div>
 <div id="flash"></div>
 <div class="screen" id="intro"><div class="box">
@@ -181,6 +202,7 @@ body:not(.playing) #editBtn{display:none!important}
   <h1>⏸ Durdu</h1>
   <button class="go" id="pResume">▶ Devam et</button>
   <button class="go sec" id="pMusic">🎵 Müzik açık</button>
+  <button class="go sec" id="pTut">❓ Nasıl oynanır?</button>
   <button class="go sec" id="pMenu">🏠 Ana menü</button>
   <button class="go sec" id="pRestart">↺ Baştan başla</button>
 </div></div>
@@ -211,6 +233,7 @@ const LEARN = location.hash === '#ogren';
 const BAHCE = location.hash === '#bahce';
 const BUILD = location.hash === '#tasarla';
 const WID = (location.hash || '#orman').slice(1);
+const TOPLA = WID === 'toplama';
 const DENIZ = WID === 'deniz', OKUL = WID === 'okul', UCURUM = WID === 'ucurum', UZAY = WID === 'uzay';
 const VOID = UCURUM || UZAY, GMUL = UZAY ? .42 : 1;
 const WNAME = { ogren: 'Eğitim Bahçesi', orman: 'Büyülü Orman', bahce: 'Koruma Bahçesi', tasarla: 'Parkur Atölyesi', deniz: 'Deniz Kenarı', okul: 'Sihirli Okul', ucurum: 'Uçurum', uzay: 'Uzay' };
@@ -297,7 +320,7 @@ const SAVE = 'robi_orman_v1';
 let SV = { gears: 0, xp: 0, pets: {}, pet: null, suits: {}, hats: {}, capes: {}, suit: 'white', hat: null, cape: 'blue', trained: false, muted: false };
 try { const r = localStorage.getItem(SAVE); if (r) SV = Object.assign(SV, JSON.parse(r)); } catch (e) {}
 SV.suits = SV.suits || {}; SV.hats = SV.hats || {}; SV.capes = SV.capes || {};
-const MINE = ['cleared', 'dragonFriend', 'gears', 'xp', 'pets', 'pet', 'suits', 'hats', 'capes', 'suit', 'hat', 'cape', 'trained', 'muted', 'sanctuary', 'petCount'];
+const MINE = ['tutorialDone', 'cleared', 'dragonFriend', 'gears', 'xp', 'pets', 'pet', 'suits', 'hats', 'capes', 'suit', 'hat', 'cape', 'trained', 'muted', 'sanctuary', 'petCount'];
 const save = () => { try { const cur = JSON.parse(localStorage.getItem(SAVE) || '{}'); for (const k of MINE) if (SV[k] !== undefined) cur[k] = SV[k]; localStorage.setItem(SAVE, JSON.stringify(cur)); } catch (e) {} };
 SV.sanctuary = SV.sanctuary || { rabbit: 0, fox: 0, deer: 0, giant: 0 }; SV.petCount = SV.petCount || 0;
 const xpNeed = l => 30 * l * (l + 1) / 2;
@@ -329,7 +352,7 @@ const canvas = $('c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(LEARN ? '#a8e0ff' : BAHCE ? '#ffe3f1' : BUILD ? '#bde0ff' : DENIZ ? '#8fdcff' : OKUL ? '#cbb6ff' : UCURUM ? '#a9d6ff' : UZAY ? '#0b0b2e' : '#9fd8ff');
+scene.background = new THREE.Color(TOPLA ? '#ffe9d6' : LEARN ? '#a8e0ff' : BAHCE ? '#ffe3f1' : BUILD ? '#bde0ff' : DENIZ ? '#8fdcff' : OKUL ? '#cbb6ff' : UCURUM ? '#a9d6ff' : UZAY ? '#0b0b2e' : '#9fd8ff');
 scene.fog = new THREE.Fog(scene.background, UZAY ? 120 : UCURUM ? 70 : 55, UZAY ? 300 : UCURUM ? 170 : 130);
 const camera = new THREE.PerspectiveCamera(60, 1, .1, UZAY ? 600 : 300);
 scene.add(new THREE.HemisphereLight('#ffffff', '#6aa84f', .85));
@@ -342,7 +365,7 @@ const mat = c => mats[c] || (mats[c] = new THREE.MeshLambertMaterial({ color: c 
 const emissive = c => new THREE.MeshBasicMaterial({ color: c });
 let seed = 7;
 const rnd = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
-const W = LEARN ? 34 : BAHCE ? 26 : BUILD ? 16 : DENIZ ? 40 : OKUL ? 34 : UCURUM ? 40 : UZAY ? 44 : 68;
+const W = LEARN ? 34 : BAHCE ? 26 : BUILD ? 16 : TOPLA ? 14 : DENIZ ? 40 : OKUL ? 34 : UCURUM ? 40 : UZAY ? 44 : 68;
 const colliders = [];
 function box(x0, y0, z0, x1, y1, z1, color, opt = {}) {
   let mesh = null;
@@ -733,7 +756,7 @@ function dragonWater() { const d = dragon; if (!d || d.friend || !(d.state === '
 // =============== DÜNYA: ÇİM ZEMİN ===============
 (function ground() {
   const cv = document.createElement('canvas'); cv.width = cv.height = 128; const g = cv.getContext('2d');
-  const PAL = DENIZ ? ['#f2d79b', '#ead08e', '#f7e2ae', '#e8c983'] : UZAY ? ['#8d8d9c', '#7d7d8c', '#a0a0ae', '#6f6f7e'] : ['#6ab84a', '#5eaa40', '#7cc957', '#64b146'];
+  const PAL = TOPLA ? ['#e2b47c', '#d9a96e', '#e8bd88', '#d4a265'] : DENIZ ? ['#f2d79b', '#ead08e', '#f7e2ae', '#e8c983'] : UZAY ? ['#8d8d9c', '#7d7d8c', '#a0a0ae', '#6f6f7e'] : ['#6ab84a', '#5eaa40', '#7cc957', '#64b146'];
   g.fillStyle = PAL[0]; g.fillRect(0, 0, 128, 128);
   for (let i = 0; i < 500; i++) { g.fillStyle = PAL[1 + i % 3]; g.fillRect(Math.random() * 128, Math.random() * 128, 3, 3); }
   const tex = new THREE.CanvasTexture(cv); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(30, 30);
@@ -1036,6 +1059,98 @@ function buildUzay() {
     rocket: { e: '⛽', label: 'Yakıt', count: true, done: false, check: () => itemsOf('rocket').every(i => !i.alive), n: () => itemN('rocket') },
   };
 }
+// =============== DÜNYA 9: JELİBON ODASI (oda toplama) ===============
+const toys = [], carry = [];
+let toyBox = null, roomTotal = 10, roomDone = 0;
+const TOY_E = ['🧸', '🚗', '🧩', '📚', '👕', '🧦', '⚽', '🎲', '🪀', '🖍️', '🦖', '🪁', '🎈', '🧃', '🎸', '🪆', '🚂', '🏀', '🧢', '🦆'];
+function buildToplama() {
+  START = new THREE.Vector3(0, 0, 4);
+  const p = RO.parent ? RO.parent() : {}; roomTotal = Math.max(1, Math.min(100, p.roomItems || 10));
+  const wallC = ['#ffd6e7', '#cfe8f7', '#e6dcff', '#fff0c4'];
+  [[-W, -W, W, -W + .4], [-W, W - .4, W, W], [-W, -W, -W + .4, W], [W - .4, -W, W, W]].forEach(([x0, z0, x1, z1], i) => box(x0, 0, z0, x1, 7, z1, wallC[i]));
+  const win = add(new THREE.PlaneGeometry(6, 3.5), null, -4, 4.2, -W + .45, new THREE.MeshBasicMaterial({ color: '#bfe8ff' })); box(-7.2, 2.3, -W + .4, -.8, 2.5, -W + .9, '#ffffff', { collide: false });
+  // yatak, dolap, masa, halı, raf
+  box(6, 0, -13.5, 13.5, 1.6, -6, '#5b8def'); box(6, 1.6, -13.5, 13.5, 2.1, -6, '#ffffff', { collide: false }); box(6.5, 2.1, -13, 9.5, 2.6, -11, '#ffffff', { collide: false }); box(6, 0, -13.8, 13.5, 3.5, -13.5, '#b07a4a');
+  box(-13.6, 0, 4, -10.5, 6, 11, '#c99766'); add(new THREE.SphereGeometry(.15, 8, 6), '#ffd166', -10.4, 3, 7.6);
+  box(9, 0, 5, 13.6, 2.4, 11, '#c99766'); box(10, 0, 3, 12.5, 1.4, 4.6, '#ff7a2f');
+  const rug = add(new THREE.CylinderGeometry(5, 5, .05, 32), '#ff9ec4', 0, .03, 0); add(new THREE.CylinderGeometry(3.2, 3.2, .06, 32), '#ffd6e7', 0, .04, 0);
+  for (let k = 0; k < 3; k++) { box(-13.6, 2 + k * 1.6, -11, -11.8, 2.2 + k * 1.6, -4, '#b07a4a', { collide: false }); }
+  // oyuncak sandığı
+  const tb = new THREE.Group(); tb.position.set(0, 0, -11); scene.add(tb);
+  tb.add(at(new THREE.Mesh(new THREE.BoxGeometry(4, 2, 2.6), mat('#ff7a2f')), 0, 1, 0));
+  tb.add(at(new THREE.Mesh(new THREE.BoxGeometry(4.1, .3, 2.7), mat('#ffd166')), 0, 1.9, 0));
+  const lid = at(new THREE.Mesh(new THREE.BoxGeometry(4.1, .3, 2.7), mat('#e5484d')), 0, 3.1, -1.2); lid.rotation.x = -1.1; tb.add(lid);
+  const lbl = new THREE.Sprite(new THREE.SpriteMaterial({ map: emojiTex('🧺'), transparent: true })); lbl.position.set(0, 4.6, 0); lbl.scale.setScalar(1.6); tb.add(lbl);
+  const glowB = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: '#ffd166', blending: THREE.AdditiveBlending, transparent: true, depthWrite: false })); glowB.position.y = 1.5; glowB.scale.setScalar(7); tb.add(glowB);
+  box(-2, 0, -12.3, 2, 2, -9.7, null);
+  toyBox = { g: tb, lbl, glow: glowB, pos: V(0, 0, -11), fill: [] };
+  // dağınık eşyalar
+  let tries = 0;
+  while (toys.length < roomTotal && tries++ < 5000) {
+    const x = (rnd() * 2 - 1) * (W - 2), z = (rnd() * 2 - 1) * (W - 2);
+    if (blockedAt(x, z, 0, .6, 1) || Math.hypot(x, z + 11) < 4.5 || Math.hypot(x - START.x, z - START.z) < 2 || toys.some(t => Math.hypot(t.pos.x - x, t.pos.z - z) < 1.1 - Math.min(.6, roomTotal / 200))) continue;
+    const e = TOY_E[toys.length % TOY_E.length];
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: emojiTex(e), transparent: true })); s.scale.setScalar(1); s.position.set(x, .55, z); scene.add(s);
+    toys.push({ e, s, pos: V(x, 0, z), state: 'floor', t: rnd() * 6 });
+  }
+  roomTotal = toys.length;
+  sign(4, 10, '🍬 Jelibon Odası', 'Oyuncakları sandığa!', '🧸 Odadaki oyuncaklara dokunarak kucağına al (en fazla 5), sonra 🧺 oyuncak sandığına götür. Hepsini toplayınca JELİBON HAKKI kazanırsın! 🍬');
+  MISSIONS = { room: { e: '🧺', label: 'Oyuncak', count: true, done: false, check: () => roomDone >= roomTotal, n: () => `${roomDone}/${roomTotal}` } };
+}
+function updateToys(dt) {
+  if (!toyBox) return;
+  toyBox.glow.material.opacity = .4 + Math.sin(elapsed * 4) * .2; toyBox.lbl.position.y = 4.6 + Math.sin(elapsed * 3) * .2;
+  for (const t of toys) {
+    t.t += dt;
+    if (t.state === 'floor') {
+      t.s.position.y = .55 + Math.abs(Math.sin(t.t * 2)) * .12;
+      if (carry.length < 5 && Math.hypot(t.pos.x - P.pos.x, t.pos.z - P.pos.z) < 1.3 && P.pos.y < 2) { t.state = 'carried'; carry.push(t); tone(500 + carry.length * 120, .09, 'triangle', .07); sparkle(t.pos, '#fff06a', 5); if (carry.length === 5) toast('🙌 Kucağın doldu! 🧺 Sandığa götür.', 2); }
+    } else if (t.state === 'carried') {
+      const i = carry.indexOf(t); t.s.position.lerp(V(P.pos.x, P.pos.y + 2.3 + i * .55, P.pos.z), Math.min(1, dt * 12)); t.s.scale.setScalar(.75);
+    } else if (t.state === 'flying') {
+      t.ft += dt * 1.6; const k = Math.min(1, t.ft);
+      t.s.position.set(t.from.x + (toyBox.pos.x - t.from.x) * k, t.from.y + (2.2 - t.from.y) * k + Math.sin(k * Math.PI) * 2.5, t.from.z + (toyBox.pos.z - t.from.z) * k);
+      if (k >= 1) { t.state = 'done'; detach(t.s); roomDone++; tone(880 + (roomDone % 5) * 90, .1, 'triangle', .08); sparkle(V(toyBox.pos.x, 2, toyBox.pos.z), '#ffd166', 6); addXP(1); hud(); if (roomDone % 10 === 0 && roomDone < roomTotal) celebrate(`${roomDone} OYUNCAK!`, 'Harika gidiyorsun!'); checkMissions(); }
+    }
+  }
+  if (carry.length && Math.hypot(P.pos.x - toyBox.pos.x, P.pos.z - toyBox.pos.z) < 3.6) {
+    carry.forEach((t, i) => { t.state = 'flying'; t.ft = -i * .15; t.from = t.s.position.clone(); });
+    carry.length = 0; neonBurst('joy', 3);
+  }
+}
+// cam jelibon kutlaması
+let jelly = null;
+function jellyGeo() { const g = new THREE.CapsuleGeometry(.55, 1.0, 12, 24); const p = g.attributes.position; for (let i = 0; i < p.count; i++) { const y = p.getY(i); p.setX(i, p.getX(i) + .25 * (y * y) - .1); } g.computeVertexNormals(); return g; }
+const JCOL = ['#ff3d6e', '#ffd166', '#2bb673', '#2e8bff', '#a259ff', '#ff7a2f', '#ff5ad8'];
+function jellyMoment() {
+  if (jelly) return;
+  const col = JCOL[Math.floor(Math.random() * JCOL.length)];
+  const glass = new THREE.MeshPhysicalMaterial({ color: col, transmission: .85, thickness: 1.2, roughness: .05, clearcoat: 1, clearcoatRoughness: .05, ior: 1.45, transparent: true, opacity: .96, emissive: col, emissiveIntensity: .12 });
+  const g = new THREE.Group(); const main = new THREE.Mesh(jellyGeo(), glass); main.rotation.z = Math.PI / 2; g.add(main);
+  const shine = new THREE.Mesh(new THREE.SphereGeometry(.12, 10, 8), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: .9 })); shine.position.set(-.35, .32, .45); shine.scale.set(2.2, .7, 1); g.add(shine);
+  const halo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: col, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false })); halo.scale.setScalar(5); g.add(halo);
+  const light = new THREE.PointLight('#ffffff', 1.4, 12); light.position.set(1.5, 2, 3); g.add(light);
+  scene.add(g);
+  const rain = [];
+  for (let i = 0; i < 40; i++) { const m = new THREE.Mesh(jellyGeo(), new THREE.MeshPhongMaterial({ color: JCOL[i % JCOL.length], shininess: 120, specular: '#ffffff', transparent: true, opacity: .9 })); m.scale.setScalar(.22); scene.add(m); rain.push({ m, x: (Math.random() - .5) * 7, y: 3 + Math.random() * 5, z: (Math.random() - .5) * 2, v: 1.5 + Math.random() * 2, r: Math.random() * 6 }); }
+  jelly = { g, rain, t: 0, col }; $('toast').classList.remove('on'); toastT = 0;
+  paused = true; musicGain && (musicGain.gain.value = .15);
+  $('jelly').style.display = 'flex'; $('jellyCount').textContent = RO.jelly ? RO.jelly() : '';
+  SFX.fanfare(); setTimeout(() => { try { const t = ac().currentTime; [1046, 1318, 1568, 2093].forEach((f, i) => note(f, t + i * .12, .4, 'sine', .07)); } catch (e) {} voice('power'); }, 900);
+  sticker('jelly');
+}
+function jellyUpdate(dt) {
+  const j = jelly; j.t += dt;
+  const fwd = new THREE.Vector3(); camera.getWorldDirection(fwd);
+  const base = camera.position.clone().addScaledVector(fwd, 4.2);
+  const pop = Math.min(1, j.t * 2.2), bounce = 1 + Math.sin(Math.min(1, j.t * 1.5) * Math.PI) * .25;
+  j.g.position.copy(base).add(V(0, .15 + Math.sin(j.t * 2) * .12, 0)); j.g.scale.setScalar(pop * bounce);
+  j.g.rotation.y = j.t * 1.4; j.g.rotation.x = Math.sin(j.t * 1.1) * .4;
+  const right = new THREE.Vector3().crossVectors(fwd, camera.up).normalize();
+  j.rain.forEach(r => { r.y -= r.v * dt; if (r.y < -3) r.y = 4; r.r += dt * 3; r.m.position.copy(base).addScaledVector(right, r.x).add(V(0, r.y, 0)).addScaledVector(fwd, r.z); r.m.rotation.set(r.r, r.r * .7, 0); });
+  if (Math.random() < .3) sparkle(j.g.position.clone().add(V(0, -.8, 0)), j.col, 1);
+}
+function jellyClose() { if (!jelly) return; scene.remove(jelly.g); jelly.rain.forEach(r => scene.remove(r.m)); jelly = null; $('jelly').style.display = 'none'; paused = false; last = performance.now(); musicGain && (musicGain.gain.value = .55); }
 // =============== DÜNYA 2: BÜYÜLÜ ORMAN ===============
 function buildForest() {
   START = new THREE.Vector3(0, 0, 13);
@@ -1103,7 +1218,7 @@ function buildForest() {
     suits: { e: '👕', label: 'Kostüm', count: true, bonus: true, done: false, check: () => ['red', 'blue', 'orange', 'green'].every(k => SV.suits[k]), n: () => `${['red', 'blue', 'orange', 'green'].filter(k => SV.suits[k]).length}/4` },
   };
 }
-BUILD ? buildBuilder() : BAHCE ? buildBahce() : LEARN ? buildLearn() : DENIZ ? buildDeniz() : OKUL ? buildOkul() : UCURUM ? buildUcurum() : UZAY ? buildUzay() : buildForest();
+TOPLA ? buildToplama() : BUILD ? buildBuilder() : BAHCE ? buildBahce() : LEARN ? buildLearn() : DENIZ ? buildDeniz() : OKUL ? buildOkul() : UCURUM ? buildUcurum() : UZAY ? buildUzay() : buildForest();
 
 // =============== ROBİ ===============
 const suitMat = new THREE.MeshLambertMaterial({ color: '#f4f6fb' }), accMat = new THREE.MeshLambertMaterial({ color: '#ff7a2f' }), darkMat = mat('#2b2340');
@@ -1371,7 +1486,9 @@ topBtn('wardBtn', openWardrobe); topBtn('photoBtn', photoOpen);
 document.querySelectorAll('#photoUI [data-pose]').forEach(b => b.onclick = () => { photo.pose = b.dataset.pose; photo.t = 0; document.querySelectorAll('#photoUI [data-pose]').forEach(x => x.classList.toggle('on', x === b)); tone(700, .06, 'triangle', .05); });
 $('pShoot').onclick = photoShoot; $('pClose').onclick = photoClose;
 $('pZoomIn').onclick = () => photo && (photo.dist = Math.max(2.2, photo.dist - .8)); $('pZoomOut').onclick = () => photo && (photo.dist = Math.min(10, photo.dist + .8));
-$('sleepMenu').onclick = () => $('pMenu').onclick(); topBtn('pauseBtn', () => togglePause());
+$('sleepMenu').onclick = () => $('pMenu').onclick();
+$('jellyOk').onclick = () => { jellyClose(); };
+$('jellyMenu').onclick = () => { jellyClose(); $('pMenu').onclick(); }; topBtn('pauseBtn', () => togglePause());
 if (!LEARN) topBtn('shopBtn', openShop); else $('shopBtn').remove();
 function swapPower() { const l = powersList(); if (l.length < 2) return; powerSel = (powerSel + 1) % l.length; SFX.power(); refreshPowerUI(); }
 function togglePause(force) {
@@ -1382,6 +1499,8 @@ function togglePause(force) {
 }
 $('pResume').onclick = () => togglePause(false);
 $('pRestart').onclick = () => location.reload();
+$('pTut').onclick = () => { togglePause(false); tutStart(); };
+$('tutSkip').onclick = () => tutEnd(false); $('tutOk').onclick = () => tutEnd(true);
 $('pMenu').onclick = () => { musicStop(); try { if (window.parent !== window) { parent.postMessage('robi-menu', '*'); return; } } catch (e) {} location.reload(); };
 $('pMusic').onclick = () => { SV.muted = !SV.muted; save(); $('pMusic').textContent = SV.muted ? '🔇 Müzik kapalı' : '🎵 Müzik açık'; };
 $('pMusic').textContent = SV.muted ? '🔇 Müzik kapalı' : '🎵 Müzik açık';
@@ -1660,6 +1779,7 @@ function checkMissions() {
 const k2 = m => !m.bonus; // orman: kostüm toplamak bonus görev
 function finishWorld() {
   if (won) return; won = true;
+  if (TOPLA) { setTimeout(jellyMoment, 900); return; }
   if (BUILD) { sticker('builder'); celebrate('PARKUR BİTTİ!', `⏱ ${parkurT.toFixed(1)} saniye`, true); voice('power'); setTimeout(() => toast('✏️ Düzenle ile parkuru değiştir ya da 🔁 tekrar dene!', 4), 2200); return; }
   SV.cleared = SV.cleared || {}; SV.cleared[WID] = true; if (LEARN) SV.trained = true; save();
   sticker({ ogren: 'trained', orman: 'forest', deniz: 'deniz', okul: 'okul', ucurum: 'ucurum', uzay: 'uzay' }[WID]);
@@ -1717,6 +1837,46 @@ function photoShoot() {
   sticker('photo'); updateStickerPop(0);
   $('photoMsg').textContent = ok ? '📒 Albüme kaydedildi!' : 'Albüm dolu, menüden eski fotoğrafları sil.';
   setTimeout(() => $('photoMsg').textContent = '', 2000);
+}
+// =============== NASIL OYNANIR (Robi gösterir) ===============
+const TUT = [
+  { say: 'Merhaba! Ben Robi! 🤖 Sol alttaki tekerleği sürükle, beni yürüt!', target: 'stick', demo: null, done: s => s.moved > 4 },
+  { say: 'Süper! Şimdi bak, böyle zıplıyorum! Sen de yeşil ⤒ Zıpla tuşuna bas.', target: 'bJump', demo: () => { input.jump = true; }, done: s => s.jumped },
+  { say: 'Havadayken bir daha basarsan ÇİFT ZIPLAMA yaparım! Dene!', target: 'bJump', demo: () => { input.jump = true; setTimeout(() => input.jump = true, 350); }, done: s => P.jumps === 2 },
+  { say: '🌀 Dön tuşu ile dönerek canavarlara vururum! Sen de bas.', target: 'bSpin', demo: () => { input.spin = true; }, done: s => P.spin > 0 && !s.demoing },
+  { say: '💨 Atıl tuşu ile hızla ileri fırlarım! Hadi dene!', target: 'bDash', demo: () => { input.dash = true; }, done: s => P.dash > 0 && !s.demoing },
+  { say: 'Aşağıdaki renkli düğmeler kostümlerim! 🔥 Kırmızıya dokun, ateş kostümü giyeyim.', target: 'suitBar', demo: null, done: s => SV.suit === 'red' },
+  { say: 'Turuncu güç tuşunu BASILI TUT: lav akıtırım! 🔥', target: 'bPower', demo: null, done: s => s.powerT > .6 },
+  { say: 'Şimdi 🪽 turuncu kostümü seç, sonra Uç tuşuna bas: uçarım!', target: 'suitBar', demo: null, done: s => P.flying, retarget: () => SV.suit === 'orange' ? 'bFly' : 'suitBar' },
+  { say: 'Uçarken ⬆️⬇️ ile yükseklik seçersin. Yere dokunursan oraya güç atarım! Harika gidiyorsun!', target: 'bUp', demo: null, done: s => s.stepT > 4 },
+  { say: 'Hepsini öğrendin! 🎉 Şimdi tabelaları oku, 4 görevi bitir, Büyülü Orman açılsın!', target: null, demo: null, done: () => false, last: true },
+];
+let tut = null;
+function tutStart() {
+  tut = { i: -1, moved: 0, jumped: false, powerT: 0, stepT: 0, demoing: false, lastPos: P.pos.clone() };
+  $('tut').style.display = 'block'; tutNext();
+}
+function tutNext() {
+  tut.i++; tut.stepT = 0; tut.jumped = false; tut.powerT = 0;
+  if (tut.i >= TUT.length) return tutEnd(true);
+  const st = TUT[tut.i];
+  $('tutSay').textContent = st.say; $('tutStep').textContent = `${tut.i + 1}/${TUT.length}`;
+  $('tutOk').style.display = st.last ? 'inline-block' : 'none';
+  $('tutBox').classList.remove('pop'); void $('tutBox').offsetWidth; $('tutBox').classList.add('pop');
+  tone(880, .08, 'triangle', .06); setTimeout(() => tone(1175, .1, 'triangle', .06), 80);
+  if (st.demo) { tut.demoing = true; setTimeout(() => { st.demo(); setTimeout(() => { if (tut) tut.demoing = false; }, 700); }, 600); }
+}
+function tutEnd(done) { if (tut) { tut = null; $('tut').style.display = 'none'; $('tutHand').style.display = 'none'; } SV.tutorialDone = true; save(); if (done) { neonBurst('white', 5); toast('🎓 Harika! Şimdi tabelaları oku ve görevleri bitir.', 3.5); } }
+function tutUpdate(dt) {
+  if (!tut) return;
+  const st = TUT[tut.i]; tut.stepT += dt;
+  tut.moved += Math.hypot(P.pos.x - tut.lastPos.x, P.pos.z - tut.lastPos.z); tut.lastPos.copy(P.pos);
+  if (!tut.demoing && P.vel.y > 2 && !P.onGround) tut.jumped = true;
+  if (input.powerHeld && currentPower()) tut.powerT += dt;
+  const tg = st.retarget ? st.retarget() : st.target, el = tg && $(tg), hand = $('tutHand');
+  if (el && el.getClientRects().length && getComputedStyle(el).display !== 'none') { const r = el.getBoundingClientRect(); hand.style.display = 'block'; hand.style.left = (r.left + r.width / 2 - 22) + 'px'; hand.style.top = (r.top - 50 + Math.sin(elapsed * 6) * 8) + 'px'; }
+  else hand.style.display = 'none';
+  if (!st.last && tut.stepT > 1 && st.done(tut)) { sparkle(P.pos, '#fff06a', 14); tutNext(); }
 }
 // =============== SÜPER GÜÇ ANI (sinematik) ===============
 let moment = null;
@@ -1931,7 +2091,7 @@ function update(dt) {
   }
   if (combo.t > 0) combo.t -= dt;
   if (BUILD && !won) parkurT += dt;
-  updateStickerPop(dt); updateVehicles(dt); updateDragon(dt); updateItems(dt, V(P.pos.x, P.pos.y + .9, P.pos.z));
+  updateStickerPop(dt); tutUpdate(dt); updateToys(dt); updateVehicles(dt); updateDragon(dt); updateItems(dt, V(P.pos.x, P.pos.y + .9, P.pos.z));
   parentT += dt; if (parentT >= 5) { parentT = 0; const left = RO.tick(5); if (left <= 0) sleepTime(); else if (left <= 60 && !warned) { warned = true; toast('⏰ Robi yakında uyuyacak: 1 dakika kaldı!', 4); } }
   updateNeon(dt);
   if (aimActive() && currentPower()) { aimRing.visible = true; aimRing.position.set(aim.point.x, aim.point.y + .08, aim.point.z); aimRing.material.color.set(POWER[currentPower()].color); const s = 1 + Math.sin(elapsed * 10) * .1; aimRing.scale.set(s, s, s); } else aimRing.visible = false;
@@ -2001,6 +2161,7 @@ function update(dt) {
   const dist = flying ? 11 : 9, target = V(P.pos.x, P.pos.y + 1.4, P.pos.z);
   const cp = V(target.x + Math.sin(camYaw) * Math.cos(camPitch) * dist, target.y + Math.sin(camPitch) * dist, target.z + Math.cos(camYaw) * Math.cos(camPitch) * dist);
   cp.y = Math.max(.8, cp.y);
+  if (TOPLA) { cp.x = Math.max(-W + 1, Math.min(W - 1, cp.x)); cp.z = Math.max(-W + 1, Math.min(W - 1, cp.z)); cp.y = Math.min(6.4, cp.y); }
   camera.position.lerp(cp, Math.min(1, dt * 8));
   if (shake > 0) { shake -= dt; camera.position.x += (Math.random() - .5) * shake * 2; camera.position.y += (Math.random() - .5) * shake * 2; }
   camera.lookAt(target);
@@ -2013,6 +2174,7 @@ function frame(now) {
     for (const p of FX) { if (!p.alive) continue; p.life -= dt; if (p.life <= 0) { killFX(p); continue; } if (p.grav) p.vel.y -= p.grav * dt; p.sp.position.addScaledVector(p.vel, dt); const k = 1 - p.life / p.max; p.sp.scale.setScalar(p.s0 + (p.s1 - p.s0) * k); p.sp.material.opacity = p.a0 * Math.min(1, p.life / p.max * 2.2); }
   }
   else if (started && photo) { photoUpdate(rawDt); updateNeon(rawDt); updateStickerPop(rawDt); }
+  else if (started && jelly) { jellyUpdate(rawDt); }
   else if (started && BUILD && editMode && !paused) editUpdate(dt);
   else if (started && !paused) update(dt);
   else if (!started) { camYaw += dt * .12; const t = V(START.x, 3, START.z + (LEARN ? -8 : 9)); camera.position.set(t.x + Math.sin(camYaw) * 18, 9, t.z + Math.cos(camYaw) * 18); camera.lookAt(t); robi.position.copy(P.pos); robiShadow.position.set(P.pos.x, .07, P.pos.z); for (const f of fires) { f.t += dt; if (Math.random() < .5) fx({ pos: V(f.pos.x + (Math.random() - .5), .3, f.pos.z + (Math.random() - .5)), vel: V(0, 3, 0), life: .7, size: 1.2, size2: .2, color: '#ffe680', color2: '#ff2a00', add: true }); } for (const p of FX) { if (!p.alive) continue; p.life -= dt; if (p.life <= 0) { killFX(p); continue; } p.sp.position.addScaledVector(p.vel, dt); const k = 1 - p.life / p.max; p.sp.scale.setScalar(p.s0 + (p.s1 - p.s0) * k); p.sp.material.color.copy(p.c0).lerp(p.c1, k); } }
@@ -2021,6 +2183,7 @@ function frame(now) {
 }
 // Giriş ekranı içeriği
 const W_INTRO = {
+  toplama: ['🍬 Jelibon Odası', '<p>Oda çok dağınık! Oyuncakları topla, <b>jelibon hakkı</b> kazan! 🍬</p><ul><li>🧸 Oyuncağa dokun: kucağına alırsın (en fazla 5)</li><li>🧺 Turuncu oyuncak sandığına götür, içine uçarlar</li><li>Hepsi bitince jelibon hakkı kazanırsın, anne babana göster!</li></ul>'],
   deniz: ['🏖️ Deniz Kenarı', '<p>Güneşli bir sahil! Kum kalesine tırman, iskelede koş, kayalardan zıpla.</p><ul><li>🐚 8 deniz kabuğu bul</li><li>🐢 4 kaplumbağa yavrusunu ağla kurtar</li><li>🦀 Yengeçlerin kafasına zıpla</li><li>🐴 Atla ya da 🚗 arabayla sahilde gez</li></ul>'],
   okul: ['🏰 Sihirli Okul', '<p>Büyücülerin okulunda iksirler kaçmış, hayaletler ortalıkta!</p><ul><li>🧪 5 sihirli iksiri bul (biri kulenin tepesinde)</li><li>📚 Uçan kitaplardan basamak basamak tırman</li><li>👻 6 hayaleti ateşle ya da zıplayarak kovala</li><li>🧞 Uçan halıyla kuleye uç!</li></ul>'],
   ucurum: ['⛰️ Uçurum', '<p>Bulutların üstünde dev kayalıklar! Zirveye kadar tırman.</p><ul><li>🔷 6 kristal topla</li><li>🚩 Zirve bayrağına ulaş</li><li>🟦 Mavi taşlar seni yükseğe fırlatır</li><li>Düşersen son taşa dönersin, korkma!</li></ul>'],
@@ -2036,13 +2199,14 @@ $('start').onclick = () => {
   ac(); musicStart();
   $('intro').style.display = 'none'; ['hud', 'btns', 'topR', 'stick', 'missions'].forEach(id => $(id).style.display = ''); document.body.classList.add('playing');
   stickHome(); started = true; camYaw = 0; hud(); refreshPowerUI(); buildSuitBar();
+  if (LEARN && !SV.tutorialDone) setTimeout(tutStart, 1200);
   if (BUILD) { $('editUI').innerHTML = TOOLS.map(([k, e, n]) => `<button data-tool="${k}" class="${k === tool ? 'on' : ''}"><i>${e}</i>${n}</button>`).join('') + '<button id="eSample"><i>📋</i>Örnek</button><button id="eClear"><i>🗑️</i>Temizle</button><button id="ePlay" class="play"><i>▶</i>Dene</button>'; $('editUI').querySelectorAll('[data-tool]').forEach(b => b.onclick = () => { tool = b.dataset.tool; $('editUI').querySelectorAll('[data-tool]').forEach(x => x.classList.toggle('on', x === b)); tone(600, .05, 'triangle', .05); }); $('ePlay').onclick = () => { if (!Object.values(layout).some(c => c.o === 'star')) { toast('⭐ Önce bir Bitiş yıldızı koy!'); SFX.bad(); return; } setEdit(false); }; $('eClear').onclick = () => { layout = {}; saveLayout(); rebuildParkur(); }; $('eSample').onclick = () => { layout = JSON.parse(JSON.stringify(SAMPLE)); saveLayout(); rebuildParkur(); }; $('editBtn').onclick = () => setEdit(true); setEdit(true); }
   if (SV.pet) setPet(SV.pet);
   toast(W_INTRO[WID] ? `${W_INTRO[WID][0]}: görevler üstte yazıyor. İyi eğlenceler!` : BUILD ? '🧱 Bir araç seç ve kareye dokun! Hazır olunca ▶ Dene.' : BAHCE ? '🌳 Koruma Bahçesine hoş geldin! Hayvanlara dokun ve sev.' : LEARN ? '🎓 Eğitim Bahçesine hoş geldin! Önce 👕 butonuna bas ve bir kostüm seç.' : '🌲 Orman yanıyor! Kostüm sandıklarını bul, ateşleri söndür, hayvanları kurtar!', 5);
 };
 hud();
 requestAnimationFrame(frame);
-window.__game = { get layout() { return layout; }, applyTool, setEdit, setTool: t => tool = t, get dragon() { return dragon; }, dragonHit, vehicles, mount, dismount, get riding() { return riding; }, photoOpen, photoShoot, photoClose, sticker, questEv, setSuit, setFlight, aim, screenToWorld, celebrate, neonBurst, cam: (y, p) => { camYaw = y; camPitch = p; }, P, SV, orbActive, giveOrb, fires, animals, monsters, rings, setPet, powerMoment, applyLook, refreshPowerUI, input, openWardrobe, get state() { return { LVL, missions: Object.fromEntries(Object.entries(MISSIONS).map(([k, m]) => [k, m.done])), moment: !!moment }; } };
+window.__game = { tutStart, get tut() { return tut; }, jellyMoment, jellyClose, get toys() { return toys; }, get roomDone() { return roomDone; }, get layout() { return layout; }, applyTool, setEdit, setTool: t => tool = t, get dragon() { return dragon; }, dragonHit, vehicles, mount, dismount, get riding() { return riding; }, photoOpen, photoShoot, photoClose, sticker, questEv, setSuit, setFlight, aim, screenToWorld, celebrate, neonBurst, cam: (y, p) => { camYaw = y; camPitch = p; }, P, SV, orbActive, giveOrb, fires, animals, monsters, rings, setPet, powerMoment, applyLook, refreshPowerUI, input, openWardrobe, get state() { return { LVL, missions: Object.fromEntries(Object.entries(MISSIONS).map(([k, m]) => [k, m.done])), moment: !!moment }; } };
 })();
 </script>
 </body>

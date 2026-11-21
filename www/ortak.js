@@ -33,6 +33,8 @@ const STICKERS = [
   { id: 'ucurum', e: '⛰️', name: 'Dağcı', hint: 'Uçurumun zirvesine çık' },
   { id: 'uzay', e: '🚀', name: 'Astronot', hint: 'Uzay görevini bitir' },
   { id: 'turtle', e: '🐢', name: 'Kaplumbağa', hint: 'Bir kaplumbağa kurtar' },
+  { id: 'jelly', e: '🍬', name: 'Tertemiz Oda', hint: 'Jelibon Odasını topla' },
+  { id: 'painter', e: '🎨', name: 'Ressam', hint: 'Boyama Atölyesinde 10 bölüm bitir' },
   { id: 'builder', e: '🧱', name: 'Mimar', hint: 'Kendi parkurunu bitir' },
   { id: 'voice', e: '🎤', name: 'Seslendirmen', hint: 'Robi için sesini kaydet' },
   { id: 'petter', e: '💗', name: 'Hayvan Dostu', hint: 'Koruma bahçesinde 10 hayvan sev' },
@@ -84,7 +86,7 @@ const Robi = window.RobiOrtak = {
     return { day, gears, extra, streak: d.streak };
   },
   // ebeveyn süresi
-  parent() { const s = load(); s.parent = s.parent || { limit: 0, used: 0, date: today(), bonus: 0 }; if (s.parent.date !== today()) { s.parent.date = today(); s.parent.used = 0; s.parent.bonus = 0; store(s); } return s.parent; },
+  parent() { const s = load(); s.parent = s.parent || { limit: 0, used: 0, date: today(), bonus: 0 }; if (s.parent.date !== today()) { s.parent.date = today(); s.parent.used = 0; s.parent.bonus = 0; s.parent.jellyToday = 0; store(s); } return s.parent; },
   setParent(p) { const s = load(); s.parent = Object.assign(Robi.parent(), p); store(s); },
   tick(sec) { const s = load(); const p = Robi.parent(); p.used += sec; s.parent = p; store(s); return Robi.timeLeft(); },
   timeLeft() { const p = Robi.parent(); if (!p.limit) return Infinity; return (p.limit + (p.bonus || 0)) * 60 - p.used; },
@@ -112,6 +114,8 @@ const Robi = window.RobiOrtak = {
       src.start(); return true;
     } catch (e) { return false; }
   },
+  // jelibon hakkı: sayaç
+  jelly() { const s = load(); const p = Robi.parent(); p.jellyToday = (p.jellyToday || 0) + 1; p.jellyTotal = (p.jellyTotal || 0) + 1; s.parent = p; store(s); return `Bugün ${p.jellyToday}. jelibon hakkın 🍬 · Toplam ${p.jellyTotal}`; },
   // fotoğraflar
   photos() { try { return JSON.parse(localStorage.getItem('robi_photos') || '[]'); } catch (e) { return []; } },
   addPhoto(url) { const a = Robi.photos(); a.unshift({ url, date: today() }); while (a.length > 12) a.pop(); try { localStorage.setItem('robi_photos', JSON.stringify(a)); return true; } catch (e) { a.pop(); try { localStorage.setItem('robi_photos', JSON.stringify(a)); } catch (e2) {} return false; } },
