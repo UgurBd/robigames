@@ -73,6 +73,10 @@ h1{margin:2px 0 0;font-size:clamp(24px,5.5vh,38px);line-height:1;color:#ffd166;-
 .row{display:flex;gap:8px;align-items:center;justify-content:space-between;border-bottom:2px dashed #e4dcef;padding:8px 0;text-align:left}
 .row b{font-size:15px}.row small{display:block;color:#5a4f70;font-size:12px}
 select{font-family:inherit;font-weight:800;font-size:15px;border:3px solid var(--ink);border-radius:10px;padding:2px 6px;background:#fff7e0;color:var(--ink)}
+
+#upd{position:fixed;top:10px;right:10px;z-index:15;display:none;align-items:center;gap:8px;background:#fff;border:3.5px solid var(--ink);box-shadow:0 4px 0 var(--ink);border-radius:16px;padding:6px 8px 6px 12px;font-weight:800;font-size:14px;max-width:70vw;animation:bob 2s ease-in-out infinite}
+#upd a{background:#22b573;color:#fff;border:3px solid var(--ink);border-radius:12px;padding:2px 10px;text-decoration:none;box-shadow:0 3px 0 var(--ink);text-shadow:0 1px 0 var(--ink);white-space:nowrap}
+#upd small{display:block;font-weight:700;color:#5a4f70;font-size:11px}
 </style>
 </head>
 <body>
@@ -133,6 +137,7 @@ select{font-family:inherit;font-weight:800;font-size:15px;border:3px solid var(-
   <button class="btn" data-close>Tamam</button>
 </div></div>
 
+<div id="upd"><div>🆕 Yeni sürüm hazır!<small id="updNotes"></small></div><a id="updLink" href="https://github.com/UgurBd/robigames/releases/download/latest/RobininMacerasi.apk" target="_blank" rel="noopener">⬇️ İndir</a></div>
 <div id="rotate"><div class="ph"></div><div>Telefonu yan çevir 🔄</div><small style="font-size:15px">Robi yatay ekranda daha iyi oynanır!</small></div>
 <div id="loading">Yükleniyor... 🤖</div>
 <iframe id="game" allow="autoplay; fullscreen"></iframe>
@@ -229,6 +234,18 @@ function renderParent() {
   $('mus').onclick = () => { const s2 = RO.load(); s2.muted = !s2.muted; RO.store(s2); renderParent(); };
 }
 $('tParent').onclick = () => { renderGate(); openS('sParent'); };
+
+// Güncelleme kontrolü (uygulamada çalışır; internet yoksa sessizce geçer)
+(async function checkUpdate() {
+  try {
+    const mine = await (await fetch('version.json', { cache: 'no-store' })).json();
+    const r = await fetch('https://raw.githubusercontent.com/UgurBd/robigames/main/www/version.json?t=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) return;
+    const latest = await r.json();
+    if (latest.v > mine.v) { $('updNotes').textContent = latest.notes || ''; $('upd').style.display = 'flex'; }
+  } catch (e) {}
+})();
+
 </script>
 </body>
 </html>

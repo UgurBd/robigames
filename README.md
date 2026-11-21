@@ -17,3 +17,8 @@ Yeni sürümler eskisinin üstüne kurulur, kayıtlı ilerleme silinmez.
 - `main` dalına her gönderimde GitHub Actions oyunu [Capacitor](https://capacitorjs.com) ile Android uygulamasına çevirip APK derler ve **Releases** sayfasına koyar.
 - `scripts/android_setup.py` → yatay ekran, tam ekran, uygulama adı ve simgeleri ayarlar.
 - `keystore/debug.keystore` → sadece test sürümleri için ortak imza anahtarı (her güncelleme aynı imzayla gelsin diye). Google Play'e çıkarken buraya değil, gizli bir anahtara geçilecek.
+
+## Güncellemeler
+
+Uygulama her açılışta GitHub'daki `www/version.json` ile kendi sürümünü karşılaştırır. Yeni sürüm varsa menüde **"🆕 Yeni sürüm hazır — İndir"** butonu çıkar; dokununca yeni APK iner, eskisinin üstüne kurulur (ilerleme silinmez).
+Yeni sürüm yayınlarken `www/version.json` içindeki `v` sayısı bir artırılır.
