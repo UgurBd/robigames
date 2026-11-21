@@ -214,6 +214,7 @@ function openS(id) { $(id).style.display = 'flex'; tone(660, .08); }
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => { b.closest('.screen').style.display = 'none'; refresh(); });
 
 addEventListener('message', e => {
+  if (typeof e.data === 'string' && e.data.startsWith('robi-invite:')) { const [, m, c] = e.data.split(':'); renderCok(); openS('sCok'); inviteGate(m, c); return; }
   if (e.data === 'robi-menu' || e.data === 'robi-menu-break') {
     const back = () => { frame.onload = null; frame.style.display = 'none'; frame.src = 'about:blank'; menu.style.display = 'flex'; setTimeout(() => { AN.resync(); AN.screen('menu'); }, 300); refresh(); };
     if (e.data === 'robi-menu-break') { frame.onload = null; frame.style.display = 'none'; frame.src = 'about:blank'; menu.style.display = 'flex'; refresh(); setTimeout(() => { AN.resync(); AN.interstitial(() => { AN.screen('menu'); refresh(); }, 'dunya_sonu'); }, 400); } else back();
@@ -305,16 +306,48 @@ function renderCok() {
   $('cokBody').querySelectorAll('[data-d]').forEach(b => b.onclick = () => { if (cokCode.length < 5) { cokCode += b.dataset.d; tone(500 + cokCode.length * 80, .06); RO.say && RO.say(b.dataset.d); renderCok(); } });
   $('cokDel').onclick = () => { cokCode = cokCode.slice(0, -1); renderCok(); };
   $('cokJoin').onclick = async () => {
-    if (cokCode.length !== 5) return; $('cokMsg').style.color = '#5a4f70'; $('cokMsg').textContent = '⏳ Oda aranıyor...';
-    try { const i = await RN.info(cokCode); if (!i) { $('cokMsg').style.color = '#e53935'; $('cokMsg').textContent = '😕 Bu kodda oda yok. Kodu kontrol et.'; RO.say && RO.say('Bu kodda oda yok.'); return; } if (i.n >= i.max) { $('cokMsg').textContent = '😕 Oda dolu (6 kişi).'; RO.say && RO.say('Oda dolu.'); return; } const c = cokCode; cokCode = ''; cokGo(i.mode, c); } catch (e) { $('cokMsg').style.color = '#e53935'; $('cokMsg').textContent = '📡 İnternete bağlanılamadı.'; }
+    if (cokCode.length !== 5) return; joinCode(cokCode);
   };
+}
+async function joinCode(code) {
+  const msg = (t, c = '#e53935') => { const m = $('cokMsg'); if (m) { m.style.color = c; m.textContent = t; } };
+  msg('⏳ Oda aranıyor...', '#5a4f70');
+  try { const i = await RN.info(code); if (!i) { msg('😕 Bu kodda oda yok. Kodu kontrol et.'); RO.say && RO.say('Bu kodda oda yok.'); return; } if (i.n >= i.max) { msg('😕 Oda dolu (6 kişi).'); RO.say && RO.say('Oda dolu.'); return; } cokCode = ''; cokGo(i.mode, code); } catch (e) { msg('📡 İnternete bağlanılamadı.'); }
+}
+// davet linkiyle açılış: https://robi-oda.../oda/12345 ya da robigames://oda/12345
+function openInvite(url) {
+  const m = String(url || '').match(/oda\/(\d{5})/); if (!m) return;
+  if (frame.style.display === 'block') { frame.onload = null; frame.style.display = 'none'; frame.src = 'about:blank'; menu.style.display = 'flex'; }
+  cokCode = m[1]; renderCok(); openS('sCok'); RO.say && RO.say('Arkadaşın seni odasına davet etti! Hadi gidelim!'); setTimeout(() => joinCode(m[1]), 600);
+}
+(() => { const C = window.Capacitor && window.Capacitor.Plugins; const A = C && C.App;
+  if (A) { try { A.addListener('appUrlOpen', e => openInvite(e.url)); A.getLaunchUrl().then(r => r && r.url && openInvite(r.url)).catch(() => {}); } catch (e) {} }
+  const q = new URLSearchParams(location.search).get('oda'); if (q) setTimeout(() => openInvite('oda/' + q), 800);
+})();
+// davet: ebeveyn onayı + paylaşım menüsü (WhatsApp vb.)
+function inviteGate(mode, code) {
+  const a = 6 + Math.floor(Math.random() * 4), b = 6 + Math.floor(Math.random() * 4), ans = a * b, opts = [...new Set([ans, ans + a, ans - b, ans + 10])].sort(() => Math.random() - .5);
+  $('cokBody').innerHTML = `<p style="font-weight:800">👨‍👩‍👦 Daveti anne ya da baba göndersin</p><div style="font-size:34px;font-weight:800">${a} × ${b} = ?</div><div style="display:flex;gap:8px;justify-content:center;margin:10px 0">${opts.map(o => `<button class="btn sec" data-a="${o}" style="font-size:22px">${o}</button>`).join('')}</div><button class="btn sec" id="gBack">◀ Geri</button>`;
+  $('cokBody').querySelectorAll('[data-a]').forEach(x => x.onclick = () => +x.dataset.a === ans ? doShare(mode, code) : inviteGate(mode, code));
+  $('gBack').onclick = () => showCode(mode, code);
+}
+async function doShare(mode, code) {
+  const url = `${window.ROBI_SERVER}/oda/${code}`, pretty = code.slice(0, 2) + '-' + code.slice(2);
+  const text = `Robi'nin Macerası'nda ${RN.MODES[mode][1]} odası açtık! 🤖👫\nOda kodu: ${pretty} ${RN.codeEmoji(code)}\nLinke dokun, oyun açılsın ve odaya girsin:`;
+  showCode(mode, code);
+  try { const S = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Share; if (S) { await S.share({ title: "Robi'nin Macerası daveti", text, url, dialogTitle: 'Daveti gönder' }); return; } } catch (e) { if (/cancel/i.test(String(e && e.message))) return; }
+  try { if (navigator.share) { await navigator.share({ title: "Robi'nin Macerası daveti", text, url }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+  try { await navigator.clipboard.writeText(text + ' ' + url); } catch (e) {}
+  $('cokMsg2').innerHTML = `📋 Davet kopyalandı, WhatsApp'a yapıştırabilirsiniz:<br><small style="word-break:break-all">${url}</small>`;
 }
 function showCode(mode, code) {
   const [e, n] = RN.MODES[mode];
   $('cokBody').innerHTML = `<p style="font-weight:800">${e} ${n} odası hazır!</p><p>Arkadaşın <b>👫 Birlikte Oyna → Katıl</b> deyip bu kodu girsin:</p>
     <div style="font-size:52px;font-weight:800;letter-spacing:8px">${code.slice(0, 2)}-${code.slice(2)}</div><div style="font-size:40px">${RN.codeEmoji(code)}</div>
-    <button class="btn go" id="cokStart" style="font-size:22px;margin-top:10px">▶ Odaya gir</button>`;
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:10px"><button class="btn sec" id="cokInv" style="font-size:20px">📨 Davet et</button><button class="btn go" id="cokStart" style="font-size:22px">▶ Odaya gir</button></div>
+    <p id="cokMsg2" style="font-weight:700;color:#22a861;margin:8px 0 0"></p>`;
   $('cokStart').onclick = () => cokGo(mode, code);
+  $('cokInv').onclick = () => inviteGate(mode, code);
 }
 
 // ---------- Test analizi (sadece cihazda) ----------

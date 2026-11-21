@@ -3,13 +3,29 @@
 // Sunucu sadece mesajları odadakilere iletir; isim, ses, kişisel veri taşımaz/saklamaz.
 const MAX = 6, EMPTY_TTL = 120000, MODES = ['orman', 'arena', 'ebe', 'parkur'];
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,POST,OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' };
+const FP = '2D:73:5F:25:2B:09:B1:50:BE:3E:24:5B:45:C0:16:AA:9A:C3:99:3C:A2:0E:96:23:BB:B6:37:98:D8:08:47:53';
+const APK = 'https://github.com/UgurBd/robigames/releases/latest/download/RobininMacerasi.apk';
+const ANI = ['🐶', '🐱', '🐭', '🐰', '🦊', '🐻', '🐼', '🐸', '🐵', '🐔'];
+function invitePage(code) {
+  const pretty = code.slice(0, 2) + '-' + code.slice(2), emo = code.split('').map(d => ANI[+d]).join('');
+  const intent = `intent://oda/${code}#Intent;scheme=robigames;package=com.robigames.robi;S.browser_fallback_url=${encodeURIComponent(APK)};end`;
+  return `<!DOCTYPE html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Robi'nin Macerası · Oda ${pretty}</title>
+<meta property="og:title" content="Robi'nin Macerası: oyun odasına davet! ${emo}"><meta property="og:description" content="Oda kodu ${pretty}. Dokun, birlikte oynayalım!">
+<style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif;background:#fff7e0;color:#2b2340}.b{background:#fff;border:4px solid #2b2340;box-shadow:0 8px 0 #2b2340;border-radius:26px;padding:22px;text-align:center;max-width:420px;margin:16px}.c{font-size:54px;font-weight:800;letter-spacing:6px}.e{font-size:40px}a{display:block;margin:12px 0;padding:14px;border:3px solid #2b2340;border-radius:16px;box-shadow:0 4px 0 #2b2340;font-weight:800;font-size:20px;text-decoration:none;color:#2b2340}.go{background:#22b573;color:#fff}small{color:#5a4f70}</style></head>
+<body><div class="b"><div style="font-size:60px">🤖👫</div><h2>Robi'nin Macerası<br>oyun odasına davetlisin!</h2><div class="c">${pretty}</div><div class="e">${emo}</div>
+<a class="go" href="${intent}">▶ Oyunu aç ve odaya gir</a><a href="${APK}">📥 Oyun yüklü değilse: indir</a>
+<small>Oyun açılmazsa: oyunu aç → 👫 Birlikte Oyna → Katıl → kodu gir.</small></div></body></html>`;
+}
 const json = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { 'Content-Type': 'application/json', ...CORS } });
 
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
     if (req.method === 'OPTIONS') return new Response(null, { headers: CORS });
-    if (url.pathname === '/ping') return json({ ok: true, v: 1 });
+    if (url.pathname === '/ping') return json({ ok: true, v: 2 });
+    if (url.pathname === '/.well-known/assetlinks.json') return json([{ relation: ['delegate_permission/common.handle_all_urls'], target: { namespace: 'android_app', package_name: 'com.robigames.robi', sha256_cert_fingerprints: [FP] } }]);
+    const om = url.pathname.match(/^\/oda\/(\d{5})$/);
+    if (om) return new Response(invitePage(om[1]), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
     if (url.pathname === '/create') {
       const mode = MODES.includes(url.searchParams.get('mode')) ? url.searchParams.get('mode') : 'orman';
       for (let i = 0; i < 10; i++) {

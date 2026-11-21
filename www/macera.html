@@ -2132,6 +2132,7 @@ if (NETMODE) (function () {
     $('netEndList').innerHTML = ranks.map(([s, v], i) => `<div style="font-size:${i ? 22 : 34}px">${['🥇', '🥈', '🥉', '⭐', '⭐', '⭐'][i]} ${RN.AV[s]} ${s === N.me ? '(sen)' : ''} — ${v} ⭐</div>`).join('');
     $('netEnd').style.display = 'flex'; paused = true; neonBurst('white', 6); SAY(ranks[0][0] === N.me ? 'Yaşasın! Birinci oldun!' : 'Çok güzel oynadın! Bir tur daha?');
   }
+  if (window.parent !== window) { const ib = document.createElement('button'); ib.className = 'go sec'; ib.textContent = '📨 Arkadaşını davet et'; ib.onclick = () => parent.postMessage(`robi-invite:${NETMODE}:${code}`, '*'); $('pMenu').parentNode.insertBefore(ib, $('pMenu')); }
   $('netAgain').onclick = () => { netSend({ t: 'restart' }); restartRound(); };
   $('netMenu').onclick = () => { N.closing = true; try { N.ws.close(); } catch (e) {} $('pMenu').onclick(); };
   // ---------- HUD ----------

@@ -28,7 +28,25 @@ def perms(s):
         if perm not in s:
             s = s.replace('</manifest>', f'    <uses-permission android:name="{perm}" />\n</manifest>')
     return s
-edit(os.path.join(APP, 'AndroidManifest.xml'), lambda s: perms(manifest(s)))
+def links(s):
+    if 'robigames' in s:
+        return s
+    f = '''
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="robi-oda.robigames.workers.dev" android:pathPrefix="/oda/" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="robigames" android:host="oda" />
+            </intent-filter>
+        </activity>'''
+    return s.replace('</activity>', f, 1)
+edit(os.path.join(APP, 'AndroidManifest.xml'), lambda s: links(perms(manifest(s))))
 
 # 2) Uygulama adı
 def strings(s):
