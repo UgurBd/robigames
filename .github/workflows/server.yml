@@ -1,0 +1,36 @@
+name: Oda sunucusu (Cloudflare)
+on:
+  push:
+    branches: [main]
+    paths: ['server/**', '.github/workflows/server.yml']
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Hesap ve workers.dev alt alan adı
+        env: { T: '${{ secrets.CLOUDFLARE_API_TOKEN }}' }
+        run: |
+          if [ -z "$T" ]; then echo "::error::CLOUDFLARE_API_TOKEN gizli anahtarı eklenmemiş"; exit 1; fi
+          API=https://api.cloudflare.com/client/v4
+          ACC=$(curl -s -H "Authorization: Bearer $T" $API/accounts | jq -r '.result[0].id')
+          echo "CLOUDFLARE_ACCOUNT_ID=$ACC" >> $GITHUB_ENV
+          SUB=$(curl -s -H "Authorization: Bearer $T" $API/accounts/$ACC/workers/subdomain | jq -r '.result.subdomain // empty')
+          if [ -z "$SUB" ]; then
+            for name in robigames robigames-oyun robigames-$RANDOM; do
+              R=$(curl -s -X PUT -H "Authorization: Bearer $T" -H "Content-Type: application/json" -d "{\"subdomain\":\"$name\"}" $API/accounts/$ACC/workers/subdomain)
+              if [ "$(echo $R | jq -r .success)" = "true" ]; then SUB=$name; break; fi; echo "$R"
+            done
+          fi
+          echo "SUB=$SUB" >> $GITHUB_ENV
+      - name: Yayınla
+        working-directory: server
+        env: { CLOUDFLARE_API_TOKEN: '${{ secrets.CLOUDFLARE_API_TOKEN }}' }
+        run: npx -y wrangler@4 deploy
+      - name: Kontrol
+        run: |
+          URL="https://robi-oda.$SUB.workers.dev"; echo "SUNUCU: $URL" | tee -a $GITHUB_STEP_SUMMARY
+          for i in 1 2 3 4 5 6; do sleep 5; curl -s "$URL/ping" && break; done
