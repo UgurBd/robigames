@@ -157,6 +157,8 @@ body.robiAdOn #missions{top:44px}
 #netEnd{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;background:rgba(43,35,64,.55)}
 #netEnd .box{background:#fff;border:4px solid var(--ink);box-shadow:0 8px 0 var(--ink);border-radius:26px;padding:14px 24px;text-align:center;font-weight:800}
 #charPick{display:flex;gap:8px;justify-content:center;margin:6px 0}#charPick button{font-size:30px;width:58px;height:58px;border-radius:16px;border:3px solid var(--ink);background:#fff;box-shadow:0 3px 0 var(--ink)}#charPick button.on{background:#ffd166;transform:translateY(-3px)}
+#bThrow.dim{opacity:.55}
+body.iAmEbe::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:4;box-shadow:inset 0 0 0 8px #ff2a2a,inset 0 0 60px #ff2a2a88;animation:ebeP 1s ease-in-out infinite}@keyframes ebeP{50%{opacity:.5}}
 #tutHand{position:fixed;z-index:12;font-size:44px;display:none;pointer-events:none;filter:drop-shadow(0 3px 0 rgba(0,0,0,.25));transform:rotate(180deg)}
 </style>
 </head>
@@ -179,6 +181,7 @@ body.robiAdOn #missions{top:44px}
   <button class="b" id="bDown"><i>⬇️</i></button>
   <button class="b" id="bFly"><i>🪽</i><span>Uç</span></button>
   <button class="b" id="bPower"><i>🔥</i><span>Ateş</span></button>
+  <button class="b" id="bThrow" style="display:none;--tint:#ffd166"><i>🎾</i><span>At</span></button>
   <button class="b" id="bDash"><i>💨</i><span>Atıl</span></button>
   <button class="b" id="bSpin"><i>🌀</i><span>Dön</span></button>
   <button class="b" id="bJump"><i>⤒</i><span>Zıpla</span></button>
@@ -294,6 +297,12 @@ function noise(d = .3, vol = .08, freq = 1200, t, dest, type = 'lowpass') {
   } catch (e) {}
 }
 const SFX = {
+  giggle: () => { try { const t = ac().currentTime; [880, 1046, 932, 1174, 988, 1318].forEach((f, i) => note(f, t + i * .085, .09, 'sine', .07 - i * .008, -1)); } catch (e) {} },
+  join: () => { try { const t = ac().currentTime; [523, 659, 784, 1046].forEach((f, i) => { note(f, t + i * .09, .18, 'triangle', .08); note(f * 2, t + i * .09, .1, 'sine', .03); }); } catch (e) {} setTimeout(() => SFX.giggle(), 420); },
+  ebe: () => { try { const t = ac().currentTime; note(300, t, .25, 'square', .07, 3); note(660, t + .18, .2, 'triangle', .08); note(990, t + .3, .25, 'triangle', .07); } catch (e) {} },
+  poof: () => { try { const t = ac().currentTime; noise(.35, .12, 1800, t, 0, 'bandpass'); note(700, t, .3, 'sine', .08, .25); } catch (e) {} },
+  revive: () => { try { const t = ac().currentTime; [392, 523, 659, 784, 1046].forEach((f, i) => note(f, t + i * .05, .12, 'triangle', .06)); } catch (e) {} },
+  bonk: () => { try { const t = ac().currentTime; note(220, t, .15, 'square', .09, 2.2); note(1500, t + .05, .08, 'sine', .05); } catch (e) {} },
   jump: () => tone(380, .14, 'square', .05, 1.8), djump: () => tone(560, .14, 'square', .05, 1.8),
   flap: () => noise(.15, .08, 900), gear: () => { tone(1320, .06, 'triangle', .07); setTimeout(() => tone(1760, .08, 'triangle', .07), 50); },
   stomp: () => { tone(160, .25, 'square', .1, .4); noise(.3, .12, 400); }, spin: () => tone(300, .2, 'sawtooth', .04, 2.5),
@@ -713,7 +722,7 @@ function makeDragonBoss(center) {
   const dizzy = new THREE.Group(); for (let i = 0; i < 4; i++) { const st = new THREE.Sprite(new THREE.SpriteMaterial({ map: emojiTex('⭐'), transparent: true })); st.scale.setScalar(.7); dizzy.add(st); } dizzy.position.set(0, 3, 2.8); dizzy.visible = false; g.add(dizzy);
   g.scale.setScalar(1.25); scene.add(g);
   const friend = !!SV.dragonFriend;
-  dragon = { g, head, wL, wR, tail, shield, dizzy, bodyMat, center, pos: center.clone().add(V(0, 10, 0)), ang: 0, t: 0, hp: 3, sh: 25, shMax: 25, state: 'fly', stT: 0, breathCd: 4, frozen: 0, dome: null, hitCd: 0, friend, shadow: blobShadow(2.6), yaw: 0 };
+  dragon = { g, head, wL, wR, tail, shield, dizzy, bodyMat, center, pos: center.clone().add(V(0, 10, 0)), ang: 0, t: 0, hp: 3, sh: 10, shMax: 10, state: 'fly', stT: 0, breathCd: 4, frozen: 0, dome: null, hitCd: 0, friend, shadow: blobShadow(2.6), yaw: 0 };
   if (friend) befriendLook();
 }
 function befriendLook() { dragon.bodyMat.color.set('#2bb673'); dragon.shield.visible = false; }
@@ -728,7 +737,7 @@ function dragonHit() {
     sticker('dragon'); checkMissions(); buildSuitBar();
     for (let i = 0; i < 12; i++) gear(d.center.x + Math.cos(i) * 4, 0, d.center.z + Math.sin(i) * 4);
     powerMoment('🐉 EJDER DOSTUN OLDU!', 'Ejder Kostümü kazandın: hem uçar hem ateş akıtır!');
-  } else { celebrate(`EJDER ${d.hp}❤️ KALDI!`, 'Tekrar suyla söndür!'); d.state = 'takeoff'; d.stT = 0; d.sh = d.shMax = 25 + (3 - d.hp) * 8; }
+  } else { celebrate(`EJDER ${d.hp}❤️ KALDI!`, 'Tekrar suyla söndür!'); d.state = 'takeoff'; d.stT = 0; d.sh = d.shMax = 10 + (3 - d.hp) * 3; }
 }
 function updateDragon(dt) {
   const d = dragon; if (!d) return;
@@ -748,18 +757,19 @@ function updateDragon(dt) {
       const m = dragonMouth(), tp = P.pos.clone().add(V(0, .8, 0)), dir = tp.sub(m).normalize();
       for (let i = 0; i < 3; i++) fx({ pos: m.clone(), vel: dir.clone().multiplyScalar(14).add(V((Math.random() - .5) * 2, (Math.random() - .5) * 2, (Math.random() - .5) * 2)), life: 1, size: .5, size2: 1.8, color: '#fff3b0', color2: '#ff2a00', add: true, grav: 3, kind: 'dfire' });
     }
-    if (d.stT > 3) { d.state = 'fly'; d.breathCd = 4 + Math.random() * 3 - (3 - d.hp); }
+    if (d.stT > 3) { d.state = 'fly'; d.breathCd = 6 + Math.random() * 3; }
   } else if (d.state === 'land') {
     target = V(d.center.x, 1.9, d.center.z);
-    if (d.pos.distanceTo(target) < .6) { d.state = 'tired'; d.stT = 0; d.dizzy.visible = true; SFX.stomp(); shake = .4; toast('🐉 Ejder yere indi, başı dönüyor! 🕸️ Ağ at, sonra kafasına zıpla!', 3); }
+    if (d.pos.distanceTo(target) < .6) { d.state = 'tired'; d.stT = 0; d.dizzy.visible = true; SFX.stomp(); shake = .4; toast('🐉 Ejder yere indi, başı dönüyor! Yanına koş: 🌀 Dön ya da 💨 Atıl ile vur!', 3.5); SAY('Ejder yere indi! Yanına koş, Dön düğmesine bas!'); }
   } else if (d.state === 'tired') {
     target = V(d.center.x, 1.9, d.center.z);
     d.dizzy.rotation.y += dt * 4; d.dizzy.children.forEach((c, i) => { const a = i / 4 * Math.PI * 2; c.position.set(Math.cos(a) * 1, 0, Math.sin(a) * 1); });
     if (d.frozen > 0) d.frozen -= dt;
-    if (d.stT > 7 && d.frozen <= 0) { d.state = 'takeoff'; d.stT = 0; d.sh = d.shMax * .6; d.dizzy.visible = false; if (d.dome) { scene.remove(d.dome); d.dome = null; } toast('🐉 Ejder yeniden havalandı! Tekrar suyla söndür.'); }
+    if (d.stT > 14 && d.frozen <= 0) { d.state = 'takeoff'; d.stT = 0; d.sh = d.shMax * .6; d.dizzy.visible = false; if (d.dome) { scene.remove(d.dome); d.dome = null; } toast('🐉 Ejder yeniden havalandı! Tekrar suyla söndür.'); }
     // zıplayarak vurma
     const hd = Math.hypot(P.pos.x - d.pos.x, P.pos.z - d.pos.z);
     if (hd < 3 && P.vel.y < 0 && P.pos.y > d.pos.y + .8 && P.pos.y < d.pos.y + 4) { P.vel.y = 14; dragonHit(); }
+    else if (hd < 4.2 && (P.spin > 0 || P.dash > 0) && !(d.hitCd > 0)) dragonHit();
   } else if (d.state === 'takeoff') {
     target = V(d.center.x, 10, d.center.z); d.dizzy.visible = false;
     if (d.stT > 2) { d.state = 'fly'; d.breathCd = 3; }
@@ -775,7 +785,7 @@ function updateDragon(dt) {
     if (show) { $('bossHp').textContent = '❤️'.repeat(d.hp) + '🖤'.repeat(3 - d.hp); $('bossSh').style.width = Math.max(0, d.sh / d.shMax * 100) + '%'; }
   } else $('bossBar').style.display = 'none';
 }
-function dragonWater() { const d = dragon; if (!d || d.friend || !(d.state === 'fly' || d.state === 'swoop')) return; d.sh -= .35; if (Math.random() < .3) fx({ pos: d.pos.clone(), vel: V(0, 2.5, 0), life: 1.2, size: 1, size2: 3, color: '#ffffff', alpha: .5 }); if (d.sh <= 0) { d.state = 'land'; d.stT = 0; SFX.steam(); toast('💧 Ejderin ateşi söndü! Yere iniyor...', 2.5); } }
+function dragonWater() { const d = dragon; if (!d || d.friend || !(d.state === 'fly' || d.state === 'swoop')) return; d.sh -= .6; if (Math.random() < .3) fx({ pos: d.pos.clone(), vel: V(0, 2.5, 0), life: 1.2, size: 1, size2: 3, color: '#ffffff', alpha: .5 }); if (d.sh <= 0) { d.state = 'land'; d.stT = 0; SFX.steam(); toast('💧 Ejderin ateşi söndü! Yere iniyor...', 2.5); } }
 // =============== DÜNYA: ÇİM ZEMİN ===============
 (function ground() {
   const cv = document.createElement('canvas'); cv.width = cv.height = 128; const g = cv.getContext('2d');
@@ -1392,7 +1402,7 @@ function refreshPowerUI() {
   $('bFly').style.display = canFly() ? 'flex' : 'none'; $('bFly').classList.toggle('active', !!P.flying);
   $('bFly').querySelector('span').textContent = P.flying ? 'İn' : 'Uç';
   $('altWrap').style.display = P.flying ? 'block' : 'none';
-  $('orbs').innerHTML = Object.keys(orbActive).filter(k => orbActive[k] > 0).map(k => `<span class="chip" style="--tint:${POWER[k].color}">${POWER[k].e} ${Math.ceil(orbActive[k])}</span>`).join('');
+  $('orbs').innerHTML = Object.keys(orbActive).filter(k => orbActive[k] > 0).map(k => `<span class="chip" style="--tint:${POWER[k].color}">${POWER[k].e} ${orbActive[k] > 1e6 ? '∞' : Math.ceil(orbActive[k])}</span>`).join('');
   $('suitBadge').textContent = SUITS[SV.suit].e;
   $('ad').style.display = 'none';
 }
@@ -1483,7 +1493,8 @@ function screenToWorld(x, y) {
   const o = raycaster.ray.origin, d = raycaster.ray.direction;
   // önce hedef nesneler (hayvan, canavar, ateş) — yakın olanı seç
   let best = null, bd = 2.2;
-  for (const t of [...animals, ...monsters, ...fires, ...brambles, ...crates]) { if (!t.alive) continue; const c = V(t.pos.x, t.pos.y + .8 * (t.scale || 1), t.pos.z); const tt = c.clone().sub(o).dot(d); if (tt < 0) continue; const dist = o.clone().addScaledVector(d, tt).distanceTo(c); const lim = 1.4 * (t.scale || 1); if (dist < lim && dist / lim < bd) { bd = dist / lim; best = V(t.pos.x, t.pos.y + .4, t.pos.z); } }
+  const extra = []; if (dragon && !dragon.friend) extra.push({ pos: V(dragon.pos.x, dragon.pos.y - 1.5, dragon.pos.z), alive: true, scale: 3.5 }); if (NET && NETMODE !== 'orman') Object.values(NET.players).forEach(r => extra.push({ pos: r.pos, alive: true, scale: 1.6 }));
+  for (const t of [...animals, ...monsters, ...fires, ...brambles, ...crates, ...extra]) { if (!t.alive) continue; const c = V(t.pos.x, t.pos.y + .8 * (t.scale || 1), t.pos.z); const tt = c.clone().sub(o).dot(d); if (tt < 0) continue; const dist = o.clone().addScaledVector(d, tt).distanceTo(c); const lim = 1.4 * (t.scale || 1); if (dist < lim && dist / lim < bd) { bd = dist / lim; best = V(t.pos.x, t.pos.y + .4, t.pos.z); } }
   if (best) return best;
   if (d.y >= -.01) return null;
   let tt = -o.y / d.y; const p = o.clone().addScaledVector(d, tt);
@@ -1518,14 +1529,16 @@ zone.addEventListener('pointerdown', e => {
   if (photo) { look.id = e.pointerId; look.lx = e.clientX; look.ly = e.clientY; try { zone.setPointerCapture(e.pointerId); } catch (err) {} return; }
   if (e.clientX < innerWidth * .45 && joy.id === null) { joy.id = e.pointerId; joy.cx = e.clientX; joy.cy = e.clientY; stickEl.style.left = e.clientX - 60 + 'px'; stickEl.style.top = e.clientY - 60 + 'px'; knobEl.style.transform = 'translate(0,0)'; }
   else if (P.flying && currentPower() && aim.id === null) { aim.id = e.pointerId; aim.point = screenToWorld(e.clientX, e.clientY); input.power = true; input.powerHeld = true; }
-  else if (look.id === null) { look.id = e.pointerId; look.lx = e.clientX; look.ly = e.clientY; aim.sx = e.clientX; aim.sy = e.clientY; aim.t0 = performance.now(); }
+  else if (look.id === null) { look.id = e.pointerId; look.lx = e.clientX; look.ly = e.clientY; aim.sx = e.clientX; aim.sy = e.clientY; aim.t0 = performance.now(); aim.lx = e.clientX; aim.ly = e.clientY;
+    const pid = e.pointerId; clearTimeout(aim.holdT);
+    aim.holdT = setTimeout(() => { if (look.id === pid && currentPower() && aim.id === null && Math.hypot(aim.lx - aim.sx, aim.ly - aim.sy) < 16) { look.id = null; aim.id = pid; aim.point = screenToWorld(aim.lx, aim.ly); input.power = true; input.powerHeld = true; } }, 170); }
   try { zone.setPointerCapture(e.pointerId); } catch (err) {}
 });
 zone.addEventListener('pointermove', e => {
   if (e.pointerId === joy.id) { let dx = e.clientX - joy.cx, dy = e.clientY - joy.cy; const d = Math.hypot(dx, dy), m = 55; if (d > m) { dx = dx / d * m; dy = dy / d * m; } joy.x = dx / m; joy.y = dy / m; knobEl.style.transform = `translate(${dx}px,${dy}px)`; }
   else if (e.pointerId === aim.id) { const p = screenToWorld(e.clientX, e.clientY); if (p) aim.point = p; }
   else if (photo && e.pointerId === look.id) { photo.yaw -= (e.clientX - look.lx) * .01; photo.pitch = Math.max(-.1, Math.min(1.2, photo.pitch + (e.clientY - look.ly) * .006)); look.lx = e.clientX; look.ly = e.clientY; }
-  else if (e.pointerId === look.id) { camYaw -= (e.clientX - look.lx) * .008; camPitch = Math.max(.05, Math.min(1.15, camPitch + (e.clientY - look.ly) * .005)); look.lx = e.clientX; look.ly = e.clientY; }
+  else if (e.pointerId === look.id) { aim.lx = e.clientX; aim.ly = e.clientY; if (Math.hypot(e.clientX - aim.sx, e.clientY - aim.sy) < 16 && performance.now() - aim.t0 < 170) return; camYaw -= (e.clientX - look.lx) * .008; camPitch = Math.max(.05, Math.min(1.15, camPitch + (e.clientY - look.ly) * .005)); look.lx = e.clientX; look.ly = e.clientY; }
 });
 const endPtr = e => {
   if (e.pointerId === joy.id) { joy.id = null; joy.x = joy.y = 0; stickHome(); }
@@ -1792,6 +1805,7 @@ let voiceT = 0;
 function voice(slot) { if (!RO.playVoice) return; const now = performance.now(); if (slot === 'jump' && now - voiceT < 1500) return; voiceT = now; try { RO.playVoice(ac(), slot, master); } catch (e) {} }
 // =============== HASAR & ÖDÜLLER ===============
 function hurt(from) {
+  if (NETMODE === 'parkur') return;
   if (P.inv > 0 || P.spin > 0 || P.dash > 0 || P.pound || moment) return;
   P.hp--; P.inv = 1.4; SFX.hurt(); hud(); AN.ev('hasar:' + WID);
   const d = new THREE.Vector3().subVectors(P.pos, from); d.y = 0; d.normalize(); P.vel.x = d.x * 10; P.vel.z = d.z * 10; P.vel.y = 6;
@@ -2031,7 +2045,8 @@ function netSend(o) { if (NET && NET.ws && NET.ws.readyState === 1) try { NET.ws
 if (NETMODE) (function () {
   const RN = window.RobiNet || { AV: ['🐶', '🐱', '🐰', '🦊', '🐼', '🐸'], COL: ['#ff5a5a', '#2e8bff', '#22b573', '#ffb020', '#a259ff', '#ff5ad8'], MODES: {} };
   const code = NETH[2], SERVER = window.ROBI_SERVER || 'https://robi-oda.robigames.workers.dev';
-  const N = NET = { code, mode: NETMODE, ws: null, me: -1, players: {}, score: {}, ebe: -1, ebeT: 0, sendT: 0, ok: false, retry: 0, roundT: NETMODE === 'arena' ? 180 : 0, finish: [], hitCd: 0 };
+  const N = NET = { code, mode: NETMODE, ws: null, me: -1, players: {}, score: {}, wins: {}, ebe: -1, ebeT: 0, sendT: 0, ok: false, retry: 0, roundT: 0, finish: [], hitCd: 0, dead: 0, ended: false };
+  const WIN = 5, PVP = NETMODE === 'arena' || NETMODE === 'ebe';
   const coop = NETMODE === 'orman'; window.__net = N; N.fx = NETFX;
   N.look = () => netSend({ t: 'look', suit: SV.suit, ch: SV.char || 'robi' });
   // ---------- uzak oyuncu modeli ----------
@@ -2039,12 +2054,21 @@ if (NETMODE) (function () {
   function makeRemote(p) {
     const M = { suit: new THREE.MeshLambertMaterial({ color: '#f4f6fb' }), acc: new THREE.MeshLambertMaterial({ color: '#ff7a2f' }), cape: new THREE.MeshLambertMaterial({ color: RN.COL[p.slot], side: THREE.DoubleSide }) };
     const g = makeRobi(M); scene.add(g); const sh = blobShadow(.5);
-    const tag = label(RN.AV[p.slot] + (p.slot === N.ebe ? '🏃' : ''), RN.COL[p.slot]); g.add(tag);
+    const tag = label(RN.AV[p.slot], RN.COL[p.slot]); g.add(tag);
     const ring = new THREE.Mesh(new THREE.TorusGeometry(.75, .07, 8, 30), new THREE.MeshBasicMaterial({ color: RN.COL[p.slot] })); ring.rotation.x = Math.PI / 2; ring.position.y = .06; g.add(ring);
-    const r = { slot: p.slot, g, M, sh, tag, ring, pos: V(START.x + (p.slot - 2.5) * 1.5, START.y, START.z), tgt: null, yaw: 0, tyaw: 0, st: {}, last: performance.now(), walk: 0, net: null };
+    const ebeTag = ebeSprite(); g.add(ebeTag);
+    const r = { slot: p.slot, g, M, sh, tag, ring, ebeTag, pos: V(START.x + (p.slot - 2.5) * 1.5, START.y, START.z), tgt: null, yaw: 0, tyaw: 0, st: {}, last: performance.now(), walk: 0, net: null };
     setRemoteLook(r, p.suit || 'white', p.ch || 'robi'); r.g.position.copy(r.pos); return r;
   }
   function setRemoteLook(r, suit, ch) { const s = SUITS[suit] || SUITS.white; r.M.suit.color.set(s.body); r.M.acc.color.set(s.acc); r.suit = suit; r.ch = ch; charParts(ch, r.g.userData); }
+  function tagText(slot) { return (N.wins[slot] ? '🏆' : '') + RN.AV[slot] + (NETMODE === 'arena' ? ' ' + (N.score[slot] || 0) : ''); }
+  function refreshLabels() {
+    for (const r of Object.values(N.players)) { const t = tagText(r.slot); if (r.tagT !== t) { r.g.remove(r.tag); r.tag = label(t, RN.COL[r.slot]); r.g.add(r.tag); r.tagT = t; } r.ebeTag.visible = r.slot === N.ebe; r.ring.material.color.set(r.slot === N.ebe ? '#ff2a2a' : RN.COL[r.slot]); }
+    const mt = tagText(N.me); if (N.myTagT !== mt) { if (N.myTag) robi.remove(N.myTag); N.myTag = label(mt, RN.COL[Math.max(0, N.me)]); robi.add(N.myTag); N.myTagT = mt; }
+    N.myEbe.visible = N.me === N.ebe; document.body.classList.toggle('iAmEbe', N.me === N.ebe);
+  }
+  function ebeSprite() { const c = document.createElement('canvas'); c.width = 256; c.height = 110; const g = c.getContext('2d'); g.fillStyle = '#ff2a2a'; g.beginPath(); g.roundRect(6, 6, 244, 98, 40); g.fill(); g.strokeStyle = '#fff'; g.lineWidth = 8; g.stroke(); g.fillStyle = '#fff'; g.font = '900 70px system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('EBE!', 128, 60); const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), depthTest: false })); sp.scale.set(1.9, .82, 1); sp.position.y = 3.4; sp.renderOrder = 10; sp.visible = false; return sp; }
+  N.myEbe = ebeSprite(); robi.add(N.myEbe);
   function dropRemote(slot) { const r = N.players[slot]; if (!r) return; scene.remove(r.g); scene.remove(r.sh); if (r.net) scene.remove(r.net); delete N.players[slot]; }
   // ---------- bağlantı ----------
   function connect() {
@@ -2063,12 +2087,18 @@ if (NETMODE) (function () {
       P.pos.set(START.x + (N.me - 2.5) * 1.5, START.y, START.z);
       if (!coop) { if (m.layout) { layout = m.layout; rebuildParkur(); } else if (isHost()) netSend({ t: 'layout', layout }); }
       if (NETMODE === 'ebe' && isHost() && N.ebe < 0) setEbe(N.me, true);
+      if (PVP) { for (const k of ['fire', 'water', 'net', 'joy']) orbActive[k] = 1e9; spawnBalls(); refreshPowerUI(); }
+      SFX.join(); joinFx(P.pos, RN.COL[N.me]); refreshLabels();
       hudNet(); toast(`🔑 Oda ${code} · ${RN.AV[N.me]} sensin!`, 3); SAY(`Odaya girdin! Senin hayvanın ${['köpek', 'kedi', 'tavşan', 'tilki', 'panda', 'kurbağa'][N.me]}.`);
     }
-    if (m.t === 'join') { N.players[m.p.slot] = makeRemote(m.p); SFX.ring(); toast(`${RN.AV[m.p.slot]} odaya katıldı!`, 2); SAY('Yeni arkadaş geldi!'); if (isHost()) hostSync(m.p.slot); hudNet(); }
-    if (m.t === 'leave') { dropRemote(m.slot); toast(`${RN.AV[m.slot]} odadan çıktı`, 2); if (N.ebe === m.slot && isHost()) setEbe(N.me, true); hudNet(); }
+    if (m.t === 'join') { const r = N.players[m.p.slot] = makeRemote(m.p); SFX.join(); joinFx(r.pos, RN.COL[m.p.slot]); toast(`🎉 ${RN.AV[m.p.slot]} odaya geldi! Yaşasın!`, 2.5); setTimeout(() => SAY(`Yaşasın! ${['Köpek', 'Kedi', 'Tavşan', 'Tilki', 'Panda', 'Kurbağa'][m.p.slot]} geldi!`), 700); refreshLabels(); if (isHost()) hostSync(m.p.slot); hudNet(); }
+    if (m.t === 'leave') { dropRemote(m.slot); refreshLabels(); toast(`${RN.AV[m.slot]} odadan çıktı`, 2); if (N.ebe === m.slot && isHost()) setEbe(N.me, true); hudNet(); }
   }
   // yeni gelene dünyanın son hali (sadece oda sahibi gönderir)
+  function joinFx(p, col) {
+    for (let i = 0; i < 40; i++) { const a = Math.random() * 6.28, sp = 3 + Math.random() * 4; fx({ pos: V(p.x, p.y + 1, p.z), vel: V(Math.cos(a) * sp, 3 + Math.random() * 5, Math.sin(a) * sp), life: 1.1, size: .3, size2: 0, color: i % 2 ? col : '#ffd166', add: true, grav: 6 }); }
+    for (let i = 0; i < 12; i++) fx({ pos: V(p.x, p.y + .1, p.z), vel: V(Math.cos(i / 12 * 6.28) * 5, .5, Math.sin(i / 12 * 6.28) * 5), life: .6, size: .6, size2: 1.4, color: '#ffffff', alpha: .7, drag: 2 });
+  }
   function hostSync(to) {
     const st = { t: 'snap', to, ebe: N.ebe, score: N.score };
     if (coop) { st.f = fires.map(f => f.alive ? 1 : 0); st.a = animals.map(a => a.alive ? 1 : 0); st.i = items.map(i => i.alive ? 1 : 0); }
@@ -2087,7 +2117,9 @@ if (NETMODE) (function () {
     else if (m.t === 'w' && coop) worldKill(m.k, m.i);
     else if (m.t === 'snap' && m.to === N.me) { if (coop) { (m.f || []).forEach((v, i) => !v && worldKill('fire', i)); (m.a || []).forEach((v, i) => !v && worldKill('animal', i)); (m.i || []).forEach((v, i) => !v && worldKill('item', i)); } N.score = m.score || {}; if (m.ebe >= 0) setEbe(m.ebe); hudNet(); }
     else if (m.t === 'shot' && r) remoteShot(s, m);
-    else if (m.t === 'hit') { N.score[m.by] = (N.score[m.by] || 0) + 1; const hr = N.players[m.v]; if (hr) hitFx(hr.g.position, m.k); hudNet(); if (m.by === N.me) { SFX.ring(); toast(`🎯 İsabet! ⭐ ${N.score[N.me]}`, 1.4); } }
+    else if (m.t === 'hit') { N.score[m.by] = (N.score[m.by] || 0) + 1; const hr = N.players[m.v]; if (hr) hitFx(hr.g.position, m.k); if (m.by === N.me) { SFX.giggle(); toast(`🎯 İsabet! ${N.score[N.me]}/${WIN}`, 1.4); } hudNet(); refreshLabels(); checkWin(); }
+    else if (m.t === 'poof' && r) { SFX.poof(); hitFx(r.pos, 'poof'); }
+    else if (m.t === 'pick') takeBall(m.i, false);
     else if (m.t === 'ebe') setEbe(m.s);
     else if (m.t === 'layout' && !coop) { layout = m.layout; rebuildParkur(); P.pos.set(START.x + (N.me - 2.5) * 1.5, START.y, START.z); won = false; parkurT = 0; N.finish = []; toast('🧱 Yeni parkur geldi!', 2.5); SAY('Yeni parkur hazır!'); }
     else if (m.t === 'restart') restartRound();
@@ -2098,39 +2130,74 @@ if (NETMODE) (function () {
   N.shot = (k, o, v) => netSend({ t: 'shot', k, o: [o.x, o.y, o.z].map(n => +n.toFixed(2)), v: [v.x, v.y, v.z].map(n => +n.toFixed(2)) });
   function remoteShot(s, m) {
     const o = V(...m.o), v = V(...m.v);
-    const mesh = m.k === 'net' ? new THREE.Mesh(new THREE.SphereGeometry(.6, 10, 8), new THREE.MeshBasicMaterial({ map: netTex, transparent: true, side: THREE.DoubleSide, depthWrite: false })) : new THREE.Mesh(new THREE.SphereGeometry(.22, 10, 8), new THREE.MeshLambertMaterial({ color: '#ff5ad8', emissive: '#ff5ad8', emissiveIntensity: .4 }));
+    const mesh = m.k === 'ball' ? new THREE.Mesh(new THREE.SphereGeometry(.3, 12, 8), new THREE.MeshLambertMaterial({ color: '#ffd166', emissive: '#ff8a00', emissiveIntensity: .3 })) : m.k === 'net' ? new THREE.Mesh(new THREE.SphereGeometry(.6, 10, 8), new THREE.MeshBasicMaterial({ map: netTex, transparent: true, side: THREE.DoubleSide, depthWrite: false })) : new THREE.Mesh(new THREE.SphereGeometry(.22, 10, 8), new THREE.MeshLambertMaterial({ color: '#ff5ad8', emissive: '#ff5ad8', emissiveIntensity: .4 }));
     mesh.position.copy(o); scene.add(mesh); rshots.push({ s, k: m.k, mesh, v, life: 2.2 });
   }
-  function canBeHit() { return !coop && NETFX.inv <= 0 && !moment; }
+  function canBeHit() { return !coop && NETMODE !== 'parkur' && NETFX.inv <= 0 && N.dead <= 0 && !moment && !N.ended; }
   function gotHit(by, k) {
     if (!canBeHit()) return; NETFX.inv = 1.6;
     if (k === 'net') { NETFX.stuck = 2; toast('🕸️ Ağa takıldın! 2 saniye dondun!', 1.8); }
     if (k === 'water') { NETFX.wet = 2.5; P.vel.x += Math.sin(N.players[by] ? N.players[by].yaw : 0) * 9; P.vel.z += Math.cos(N.players[by] ? N.players[by].yaw : 0) * 9; toast('💦 Islandın! Kayıyorsun!', 1.8); }
     if (k === 'fire') { NETFX.burn = 2.2; toast('🔥 Popon tutuştu! Koş koş!', 1.8); }
     if (k === 'joy') { NETFX.big = 2.5; toast('🎈 Kocaman oldun!', 1.8); }
+    if (k === 'ball') { NETFX.stuck = .6; P.vel.y = 7; SFX.bonk(); toast('🎾 Top çarptı! Bonk!', 1.4); }
     SFX.hurt(); hitFx(P.pos, k); N.score[by] = (N.score[by] || 0) + 1;
-    netSend({ t: 'hit', by, v: N.me, k }); hudNet();
+    netSend({ t: 'hit', by, v: N.me, k }); hudNet(); refreshLabels();
+    if (NETMODE === 'arena') { P.hp = Math.max(0, P.hp - 1); hud(); if (P.hp <= 0) poof(); }
+    checkWin();
     if (NETMODE === 'ebe' && by === N.ebe && k === 'net') setEbe(N.me, true);
   }
+  // can bitince bir anlığına kaybol, sonra titreyerek geri gel
+  function poof() {
+    N.dead = 1.1; SFX.poof(); hitFx(P.pos, 'poof'); robi.visible = false; netSend({ t: 'poof' }); toast('💫 Puf! Hemen geri geliyorsun...', 1.2);
+    setTimeout(() => { const a = Math.random() * 6.28; P.pos.set(Math.cos(a) * 8, 2, Math.sin(a) * 8); P.vel.set(0, 0, 0); P.hp = 3; hud(); robi.visible = true; NETFX.inv = 2; SFX.revive(); joinFx(P.pos, RN.COL[N.me]); }, 1100);
+  }
+  function checkWin() { if (NETMODE !== 'arena' || N.ended) return; const w = Object.entries(N.score).find(([k, v]) => !isNaN(k) && v >= WIN); if (w) { N.wins[w[0]] = (N.wins[w[0]] || 0) + 1; endRound(+w[0]); } }
   function hitFx(p, k) {
-    const col = { net: '#b9ffb0', water: '#7fd0ff', fire: '#ff8a00', joy: '#ff5ad8' }[k] || '#fff';
+    const col = { net: '#b9ffb0', water: '#7fd0ff', fire: '#ff8a00', joy: '#ff5ad8', ball: '#ffd166', poof: '#ffffff' }[k] || '#fff';
     for (let i = 0; i < 18; i++) fx({ pos: V(p.x, p.y + 1, p.z), vel: V((Math.random() - .5) * 5, 2 + Math.random() * 4, (Math.random() - .5) * 5), life: .8, size: .35, size2: 0, color: col, add: true });
   }
+  // ---------- yerden alınıp atılan toplar ----------
+  const balls = []; let carry = 0, myBalls = [];
+  function spawnBalls() {
+    if (balls.length) return; const cols = ['#ffd166', '#ff5a5a', '#2e8bff', '#22b573', '#a259ff', '#ff5ad8', '#ffb020', '#2bd4c4'];
+    for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2, rr = 6 + (i % 3) * 3.5, m = new THREE.Mesh(new THREE.SphereGeometry(.32, 14, 10), new THREE.MeshLambertMaterial({ color: cols[i % 8], emissive: cols[i % 8], emissiveIntensity: .25 })); const p = V(Math.cos(a) * rr, groundAt(Math.cos(a) * rr, Math.sin(a) * rr, 30) + .4, Math.sin(a) * rr); m.position.copy(p); scene.add(m); balls.push({ m, p, alive: true, t: 0 }); }
+    $('bThrow').style.display = 'flex';
+  }
+  function takeBall(i, mine) { const b = balls[i]; if (!b || !b.alive) return; b.alive = false; b.m.visible = false; b.t = 7; if (mine) { carry++; SFX.gear(); toast(`🎾 Top aldın! (${carry}) Sağdaki At düğmesine bas`, 1.6); netSend({ t: 'pick', i }); thrBtn(); } }
+  function thrBtn() { $('bThrow').querySelector('span').textContent = carry ? `At (${carry})` : 'At'; $('bThrow').classList.toggle('dim', !carry); }
+  N.throwBall = () => {
+    if (!carry || N.dead > 0) { if (!carry) toast('🎾 Önce yerdeki renkli toplardan al!', 1.6); return; }
+    carry--; thrBtn();
+    let tgt = aimActive() ? { pos: aim.point } : null; if (!tgt) { let bd = 24; for (const t of netTargets()) { const d = Math.hypot(t.pos.x - P.pos.x, t.pos.z - P.pos.z); if (d < bd) { bd = d; tgt = t; } } } if (tgt) P.yaw = Math.atan2(tgt.pos.x - P.pos.x, tgt.pos.z - P.pos.z);
+    const dir = V(Math.sin(P.yaw), 0, Math.cos(P.yaw)), o = V(P.pos.x + dir.x * .6, P.pos.y + 1.3, P.pos.z + dir.z * .6); let v = dir.clone().multiplyScalar(18); v.y = 3.5;
+    if (tgt) { const d = Math.hypot(tgt.pos.x - o.x, tgt.pos.z - o.z), tt = Math.max(.15, d / 18); v.y = Math.min(12, (tgt.pos.y + .8 - o.y + .5 * 15 * tt * tt) / tt); }
+    const m = new THREE.Mesh(new THREE.SphereGeometry(.3, 12, 8), new THREE.MeshLambertMaterial({ color: '#ffd166', emissive: '#ff8a00', emissiveIntensity: .3 })); m.position.copy(o); scene.add(m);
+    myBalls.push({ m, v, life: 2 }); N.shot('ball', o, v); SFX.dash();
+  };
+  function updateBalls(dt) {
+    for (let i = 0; i < balls.length; i++) { const b = balls[i]; if (b.alive) { b.m.position.y = b.p.y + Math.sin(elapsed * 3 + i) * .15; b.m.rotation.y += dt * 2; if (carry < 3 && N.dead <= 0 && Math.hypot(P.pos.x - b.p.x, P.pos.z - b.p.z) < 1.2 && Math.abs(P.pos.y - b.p.y) < 2) takeBall(i, true); } else if ((b.t -= dt) <= 0) { b.alive = true; b.m.visible = true; sparkle(b.p, '#fff6a0', 6); } }
+    for (let i = myBalls.length - 1; i >= 0; i--) { const s = myBalls[i]; s.life -= dt; s.v.y -= 15 * dt; s.m.position.addScaledVector(s.v, dt); if (s.life <= 0 || s.m.position.y < -1) { scene.remove(s.m); myBalls.splice(i, 1); } }
+  }
+  btn('bThrow', () => N.throwBall()); N.dbgCarry = n => { carry = n; thrBtn(); }; N.dbg = () => ({ carry, b: balls.map(b => [b.alive, +b.p.x.toFixed(1), +b.p.y.toFixed(1), +b.p.z.toFixed(1)]) });
   // ---------- ebelemece ----------
   function setEbe(s, announce) {
     const prev = N.ebe; N.ebe = s; N.ebeImm = 2.5;
     if (announce) netSend({ t: 'ebe', s });
-    Object.values(N.players).forEach(r => { r.g.remove(r.tag); r.tag = label(RN.AV[r.slot] + (r.slot === s ? '🏃' : ''), RN.COL[r.slot]); r.g.add(r.tag); });
+    refreshLabels(); SFX.ebe(); const er = s === N.me ? P.pos : N.players[s] && N.players[s].pos; if (er) { joinFx(er, '#ff2a2a'); } setTimeout(() => SFX.giggle(), 300);
+    if (s !== N.me && prev !== N.me) toast(`🏃 Ebe artık ${RN.AV[s]}!`, 2);
     if (s === N.me) { toast('🏃 EBE SENSİN! Ağ at ya da dokun, ebeyi devret!', 3); SAY('Ebe sensin! Birine ağ at ya da dokun!'); if (prev !== s) N.score['e' + s] = (N.score['e' + s] || 0) + 1; }
     else if (prev === N.me) { toast(`😅 Kurtuldun! Ebe artık ${RN.AV[s]}`, 2.5); SAY('Kurtuldun! Kaç kaç!'); }
     hudNet();
   }
   // ---------- tur ve yeniden başlatma ----------
-  function restartRound() { N.score = {}; N.finish = []; N.roundT = NETMODE === 'arena' ? 180 : 0; won = false; parkurT = 0; P.pos.set(START.x + (N.me - 2.5) * 1.5, START.y, START.z); P.vel.set(0, 0, 0); if (BUILD) rebuildParkur(); $('netEnd').style.display = 'none'; paused = false; hudNet(); toast('🔁 Yeni tur başladı!', 2); SAY('Yeni tur başladı!'); }
-  function endRound() {
+  function restartRound() { N.score = {}; N.finish = []; N.ended = false; P.hp = 3; refreshLabels(); won = false; parkurT = 0; P.pos.set(START.x + (N.me - 2.5) * 1.5, START.y, START.z); P.vel.set(0, 0, 0); if (BUILD) rebuildParkur(); $('netEnd').style.display = 'none'; paused = false; hudNet(); toast('🔁 Yeni tur başladı!', 2); SAY('Yeni tur başladı!'); }
+  function endRound(winner) {
+    N.ended = true;
     const ranks = [N.me, ...Object.keys(N.players).map(Number)].map(s => [s, N.score[s] || 0]).sort((a, b) => b[1] - a[1]);
     $('netEndList').innerHTML = ranks.map(([s, v], i) => `<div style="font-size:${i ? 22 : 34}px">${['🥇', '🥈', '🥉', '⭐', '⭐', '⭐'][i]} ${RN.AV[s]} ${s === N.me ? '(sen)' : ''} — ${v} ⭐</div>`).join('');
-    $('netEnd').style.display = 'flex'; paused = true; neonBurst('white', 6); SAY(ranks[0][0] === N.me ? 'Yaşasın! Birinci oldun!' : 'Çok güzel oynadın! Bir tur daha?');
+    $('netEndList').innerHTML = `<div style="font-size:40px">🏆 ${RN.AV[winner]} ${winner === N.me ? 'KAZANDIN!' : 'kazandı!'}</div>` + $('netEndList').innerHTML;
+    refreshLabels(); $('netEnd').style.display = 'flex'; paused = true; neonBurst('white', 6); SFX.join(); SAY(winner === N.me ? 'Yaşasın! Kazandın!' : 'Çok güzel oynadın! Bir tur daha?');
   }
   if (window.parent !== window) { const ib = document.createElement('button'); ib.className = 'go sec'; ib.textContent = '📨 Arkadaşını davet et'; ib.onclick = () => parent.postMessage(`robi-invite:${NETMODE}:${code}`, '*'); $('pMenu').parentNode.insertBefore(ib, $('pMenu')); }
   $('netAgain').onclick = () => { netSend({ t: 'restart' }); restartRound(); };
@@ -2138,25 +2205,28 @@ if (NETMODE) (function () {
   // ---------- HUD ----------
   function hudNet() {
     const all = [N.me, ...Object.keys(N.players).map(Number)].filter(s => s >= 0).sort();
-    $('netBar').innerHTML = `<span class="code">🔑 ${code.slice(0, 2)}-${code.slice(2)}</span>` + all.map(s => `<span class="pl ${s === N.me ? 'me' : ''}" style="--c:${RN.COL[s]}">${RN.AV[s]}${s === N.ebe ? '🏃' : ''}${coop ? '' : ' ' + (NETMODE === 'parkur' ? (N.finish.indexOf(s) >= 0 ? '🏁' + (N.finish.indexOf(s) + 1) : '') : (N.score[s] || 0) + '⭐')}</span>`).join('') + (N.roundT > 0 ? `<span class="code">⏱ ${Math.floor(N.roundT / 60)}:${String(Math.floor(N.roundT % 60)).padStart(2, '0')}</span>` : '');
+    $('netBar').innerHTML = `<span class="code">🔑 ${code.slice(0, 2)}-${code.slice(2)}</span>` + all.map(s => `<span class="pl ${s === N.me ? 'me' : ''}" style="--c:${RN.COL[s]}">${RN.AV[s]}${s === N.ebe ? '🏃' : ''}${coop ? '' : ' ' + (NETMODE === 'parkur' ? (N.finish.indexOf(s) >= 0 ? '🏁' + (N.finish.indexOf(s) + 1) : '') : (N.score[s] || 0) + (NETMODE === 'arena' ? '/' + WIN : '⭐'))}${N.wins[s] ? ' 🏆' + N.wins[s] : ''}</span>`).join('') + (N.roundT > 0 ? `<span class="code">⏱ ${Math.floor(N.roundT / 60)}:${String(Math.floor(N.roundT % 60)).padStart(2, '0')}</span>` : '');
   }
   N.hud = hudNet; N.isHost = isHost;
   // ---------- her kare ----------
   N.update = dt => {
     for (const k of ['stuck', 'wet', 'burn', 'big', 'inv']) NETFX[k] = Math.max(0, NETFX[k] - dt);
+    if (N.dead > 0) N.dead -= dt; else if (NETFX.inv > 0 && PVP) robi.visible = Math.floor(elapsed * 14) % 2 === 0; else if (!robi.visible && !photo) robi.visible = true;
+    if (N.myEbe.visible) { N.myEbe.scale.set(1.9 + Math.sin(elapsed * 8) * .15, .82 + Math.sin(elapsed * 8) * .06, 1); if (Math.random() < .4) fx({ pos: V(P.pos.x, P.pos.y + .2, P.pos.z), vel: V((Math.random() - .5) * 2, 2, (Math.random() - .5) * 2), life: .5, size: .4, size2: 0, color: '#ff2a2a', add: true }); }
+    updateBalls(dt);
     if (NETFX.burn > 0 && Math.random() < .5) fx({ pos: V(P.pos.x, P.pos.y + .6, P.pos.z), vel: V(0, 2, 0), life: .5, size: .5, size2: 1.2, color: '#ffb020', color2: '#ff2a00', add: true });
     if (NETFX.wet > 0 && Math.random() < .3) fx({ pos: V(P.pos.x + (Math.random() - .5), P.pos.y + 1.6, P.pos.z), vel: V(0, -2, 0), life: .5, size: .15, size2: .1, color: '#7fd0ff', drop: true, grav: 8 });
     const tsc = NETFX.big > 0 ? 2.2 : 1; robi.scale.setScalar(robi.scale.x + (tsc - robi.scale.x) * Math.min(1, dt * 6));
     if (NETFX.stuck > 0) { if (!N.myNet) { N.myNet = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), new THREE.MeshBasicMaterial({ map: netTex, transparent: true, side: THREE.DoubleSide, depthWrite: false })); scene.add(N.myNet); } N.myNet.position.set(P.pos.x, P.pos.y + .8, P.pos.z); } else if (N.myNet) { scene.remove(N.myNet); N.myNet = null; }
     // konum gönder (saniyede 10)
     N.sendT -= dt; const pw = input.powerHeld ? currentPower() : null;
-    if (N.sendT <= 0 && N.ok) { N.sendT = .1; netSend({ t: 'p', x: +P.pos.x.toFixed(2), y: +P.pos.y.toFixed(2), z: +P.pos.z.toFixed(2), yaw: +P.yaw.toFixed(2), f: P.flying ? 1 : 0, sp: P.spin > 0 ? 1 : 0, pw: pw === 'fire' || pw === 'water' ? pw : 0, st: NETFX.stuck > 0 ? 1 : 0, b: NETFX.big > 0 ? 1 : 0, r: riding ? riding.kind : 0 }); }
+    if (N.sendT <= 0 && N.ok) { N.sendT = .1; netSend({ t: 'p', x: +P.pos.x.toFixed(2), y: +P.pos.y.toFixed(2), z: +P.pos.z.toFixed(2), yaw: +P.yaw.toFixed(2), f: P.flying ? 1 : 0, sp: P.spin > 0 ? 1 : 0, pw: pw === 'fire' || pw === 'water' ? pw : 0, st: NETFX.stuck > 0 ? 1 : 0, b: NETFX.big > 0 ? 1 : 0, d: N.dead > 0 ? 1 : 0, iv: NETFX.inv > 0 ? 1 : 0, r: riding ? riding.kind : 0 }); }
     // uzak oyuncular
     for (const r of Object.values(N.players)) {
       if (r.tgt) { const k = Math.min(1, dt * 12); const before = r.pos.clone(); r.pos.lerp(r.tgt, k); let d = r.tyaw - r.yaw; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; r.yaw += d * k; r.walk += before.distanceTo(r.pos) * 4; }
       const u = r.g.userData, mv = r.tgt ? r.tgt.distanceTo(r.pos) : 0;
       r.g.position.copy(r.pos); r.g.rotation.y = r.yaw; r.g.scale.setScalar(r.st.b ? 2.2 : 1);
-      r.sh.position.set(r.pos.x, .03, r.pos.z); r.g.visible = performance.now() - r.last < 8000 || !r.tgt;
+      r.sh.position.set(r.pos.x, .03, r.pos.z); r.g.visible = (performance.now() - r.last < 8000 || !r.tgt) && !r.st.d && !(r.st.iv && Math.floor(elapsed * 14) % 2);
       u.wings.visible = !!r.st.f; u.legL.rotation.x = Math.sin(r.walk) * .7; u.legR.rotation.x = -Math.sin(r.walk) * .7; u.armL.rotation.set(Math.sin(r.walk) * -.6, 0, r.st.f ? -1.3 : 0); u.armR.rotation.set(r.st.pw ? -1.45 : Math.sin(r.walk) * .6, 0, r.st.f ? 1.3 : 0);
       u.hip.rotation.y = r.st.sp ? (r.walk * 3) % 6.28 : 0;
       if (r.st.st) { if (!r.net) { r.net = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), new THREE.MeshBasicMaterial({ map: netTex, transparent: true, side: THREE.DoubleSide, depthWrite: false })); scene.add(r.net); } r.net.position.set(r.pos.x, r.pos.y + .8, r.pos.z); } else if (r.net) { scene.remove(r.net); r.net = null; }
@@ -2168,6 +2238,7 @@ if (NETMODE) (function () {
         const dx = P.pos.x - r.pos.x, dz = P.pos.z - r.pos.z, d = Math.hypot(dx, dz);
         if (d < 9 && d > .3 && (dx * dir.x + dz * dir.z) / d > .88 && Math.abs(P.pos.y - r.pos.y) < 3) gotHit(r.slot, r.st.pw);
       }
+      if (r.ebeTag.visible) { r.ebeTag.scale.set(1.9 + Math.sin(elapsed * 8) * .15, .82, 1); if (Math.random() < .4) fx({ pos: V(r.pos.x, r.pos.y + .2, r.pos.z), vel: V((Math.random() - .5) * 2, 2, (Math.random() - .5) * 2), life: .5, size: .4, size2: 0, color: '#ff2a2a', add: true }); }
       // ebelemece: dokunarak devret
       if (NETMODE === 'ebe' && N.ebe === N.me && N.ebeImm <= 0 && r.pos.distanceTo(P.pos) < 1.3) { setEbe(r.slot, true); SFX.ring(); }
     }
@@ -2178,7 +2249,7 @@ if (NETMODE) (function () {
       if (s.life <= 0 || hitMe || s.mesh.position.y < -2) { scene.remove(s.mesh); rshots.splice(i, 1); }
     }
     if (N.ebeImm > 0) N.ebeImm -= dt;
-    if (N.roundT > 0 && !paused) { N.roundT -= dt; if (Math.floor(N.roundT + dt) !== Math.floor(N.roundT)) hudNet(); if (N.roundT <= 0) endRound(); }
+
   };
   connect();
   addEventListener('pagehide', () => { N.closing = true; try { N.ws.close(); } catch (e) {} });
@@ -2453,7 +2524,7 @@ function update(dt) {
         }
         if (!p.alive) continue;
         for (const m of monsters) if (m.alive && !m.dummy && Math.hypot(pp.x - m.pos.x, pp.z - m.pos.z) < .9 && pp.y < m.pos.y + m.h + .3) { m.stun = 2; m.heat = 0; killFX(p); break; }
-        if (p.alive && dragon && pp.distanceTo(dragon.pos) < 3.6) { dragonWater(); killFX(p); }
+        if (p.alive && dragon && pp.distanceTo(dragon.pos) < 5) { dragonWater(); killFX(p); }
       }
     }
   }
@@ -2504,6 +2575,7 @@ setTimeout(() => { if (!started) SAY((W_INTRO[WID] ? W_INTRO[WID][0] : LEARN ? '
 $('charPick').innerHTML = Object.entries(CHARS).map(([k, c]) => `<button data-k="${k}" class="${(SV.char || 'robi') === k ? 'on' : ''}" title="${c.name}">${c.e}</button>`).join('');
 $('charPick').querySelectorAll('button').forEach(b => b.onclick = () => { SV.char = b.dataset.k; save(); applyLook(); SAY(CHARS[SV.char].name + '!'); tone(880, .08, 'triangle', .06); $('charPick').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); });
 if (NETMODE) { const MD = (window.RobiNet && RobiNet.MODES[NETMODE]) || ['👫', 'Birlikte Oyna', '']; $('introTitle').innerHTML = `${MD[0]} ${MD[1]}<small>🔑 Oda ${NETH[2].slice(0, 2)}-${NETH[2].slice(2)} ${window.RobiNet ? RobiNet.codeEmoji(NETH[2]) : ''}</small>`; $('introText').innerHTML = `<p>${MD[2]}</p><ul><li>Karakterini seç, sonra ▶ Oyna</li><li>Arkadaşların bu kodla odaya katılabilir (en fazla 6 kişi)</li>${NETMODE === 'orman' ? '<li>Görevler ortak: biri söndürünce herkeste söner!</li>' : '<li>💧 su: kaydırır · 🔥 ateş: koşturur · 🕸️ ağ: dondurur · isabet = ⭐</li>'}</ul>`; }
+if (NETMODE) { let cd = 6; const st = $('start'), base = st.textContent; const tick = () => { if (started || $('intro').style.display === 'none') return; cd--; st.textContent = `${base} (${cd})`; if (cd <= 0) st.click(); else setTimeout(tick, 1000); }; setTimeout(tick, 1000); $('charPick').addEventListener('click', () => { cd = Math.max(cd, 4); }); }
 $('start').onclick = () => {
   if (RO.timeLeft() <= 0) { $('intro').style.display = 'none'; started = true; sleepTime(); return; }
   ac(); musicStart();

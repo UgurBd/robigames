@@ -67,6 +67,8 @@ h1{margin:0;font-size:30px;color:#ff5ad8;-webkit-text-stroke:2px var(--ink);text
 .tool{border:3px solid var(--ink);border-radius:12px;background:#fff;box-shadow:0 3px 0 var(--ink);font-size:20px;padding:2px 0;line-height:1.05}
 .tool small{display:block;font-size:10px;font-weight:800}
 .tool.on{background:#ffd166;transform:translateY(-2px)}
+#sNet{display:flex;gap:5px;align-items:center}#sNet span{background:#fff;border:3px solid var(--ink);border-radius:12px;padding:0 7px;font-weight:800}#sNet button{border:3px solid var(--ink);border-radius:12px;background:#ffd166;font-weight:800;box-shadow:0 3px 0 var(--ink)}
+.rcur{position:absolute;z-index:4;font-size:34px;pointer-events:none;transform:translate(-50%,-60%);transition:left .08s linear,top .08s linear,opacity .4s;filter:drop-shadow(0 2px 0 #fff)}
 #bubble{position:absolute;z-index:3;pointer-events:none;background:#fff;border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink);border-radius:14px;padding:2px 10px;text-align:center;font-weight:800;display:none;transform:translate(-50%,-100%)}
 #bubble .en{color:#2e8bff;font-size:14px;display:block}#bubble .tr{color:#e53935;font-size:17px;display:block}
 /* kutlama */
@@ -136,7 +138,7 @@ h1{margin:0;font-size:30px;color:#ff5ad8;-webkit-text-stroke:2px var(--ink);text
 <div class="scr" id="studio">
   <div class="shelf" id="shelf"></div>
   <div class="board">
-    <div class="bar"><button class="btn" data-go="home">◀</button><span class="t">🖌️ Serbest Atölye <small style="color:#5a4f70">· nesneyi sürükle bırak, dokun: adını duy</small></span><button class="btn" id="sSave">📸 Albüme</button></div>
+    <div class="bar"><button class="btn" data-go="home">◀</button><span class="t">🖌️ Serbest Atölye <small style="color:#5a4f70">· nesneyi sürükle bırak, dokun: adını duy</small></span><span id="sNet"></span><button class="btn" id="sSave">📸 Albüme</button></div>
     <div class="wrap" id="stage"><canvas id="bgc"></canvas><svg id="objs" viewBox="0 0 800 450"></svg><canvas id="topc"></canvas><div id="bubble"></div></div>
   </div>
   <div class="side">
@@ -156,6 +158,7 @@ h1{margin:0;font-size:30px;color:#ff5ad8;-webkit-text-stroke:2px var(--ink);text
 <script src="ortak.js"></script>
 <script src="kutuphane.js"></script>
 <script src="analiz.js"></script>
+<script src="net.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const RO = window.RobiOrtak || { award: () => null, tick: () => Infinity, load: () => ({}), addPhoto: () => true };
@@ -166,7 +169,7 @@ let AC = null;
 function tone(f, d = .1, type = 'triangle', vol = .07, t0 = 0) { try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); const t = AC.currentTime + t0, o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.value = f; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + d); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + d + .02); } catch (e) {} }
 const SCREENS = ['home', 'select', 'paint', 'tsel', 'trace', 'studio'];
 function show(id) { AN.screen('atolye:' + id); SCREENS.forEach(s => $(s).style.display = s === id ? 'flex' : 'none'); if (id === 'select') renderSelect(); if (id === 'tsel') renderTsel(); if (id === 'studio') studioInit(); if (id === 'home') renderHome(); }
-document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { tone(660, .06); show(b.dataset.go); });
+document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { tone(660, .06); if (SNETH && b.dataset.go === 'home') { $('back').onclick(); return; } show(b.dataset.go); });
 $('back').onclick = () => { try { if (window.parent !== window) { parent.postMessage('robi-menu', '*'); return; } } catch (e) {} location.href = 'index.html'; };
 
 // ---------- Resimler (10 resim × 4 zorluk = 40 bölüm) ----------
@@ -403,7 +406,7 @@ let VH = 450;
 function sizeCanvases() {
   const r = $('stage').getBoundingClientRect(); if (r.width > 10) { const nv = Math.round(800 * r.height / r.width); if (nv !== VH) { const k = nv / VH; document.querySelectorAll('#objs g.o').forEach(g => { g.dataset.y = g.dataset.y * k; placeObj(g); }); VH = nv; } $('objs').setAttribute('viewBox', `0 0 800 ${VH}`); }
   const dpr = Math.min(2, window.devicePixelRatio || 1);
-  ['bgc', 'topc'].forEach(id => { const c = $(id); const old = c.width ? c.toDataURL() : null; c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr); const g = c.getContext('2d'); if (id === 'bgc' && !old) { g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height); } if (old) { const im = new Image(); im.onload = () => g.drawImage(im, 0, 0, c.width, c.height); im.src = old; } });
+  ['bgc', 'topc'].forEach(id => { const c = $(id); const old = c.dataset.init ? c.toDataURL() : null; c.dataset.init = 1; c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr); const g = c.getContext('2d'); if (id === 'bgc' && !old) { g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height); } if (old) { const im = new Image(); im.onload = () => g.drawImage(im, 0, 0, c.width, c.height); im.src = old; } });
 }
 function stagePt(e) { const r = $('stage').getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top, vx: (e.clientX - r.left) / r.width * 800, vy: (e.clientY - r.top) / r.height * 450, r }; }
 function decorate(str) { return str.replace(/class="r" fill="#fff"/g, 'class="r" fill="#fff" stroke="#2b2340" stroke-width="3.5" stroke-linejoin="round"').replace(/class="ink"/g, 'class="ink" fill="none" stroke="#2b2340" stroke-width="3.5" stroke-linecap="round"').replace(/class="dot"/g, 'class="dot" fill="#2b2340"'); }
@@ -412,12 +415,14 @@ function freeSpot() {
   for (let j = 0; j < 3; j++) for (let i = 0; i < 5; i++) { const x = 100 + i * 150 + (j % 2) * 40, y = VH * (.22 + j * .28); const d = objs.length ? Math.min(...objs.map(([ox, oy]) => Math.hypot(ox - x, (oy - y) * 1.3))) : 999 - Math.hypot(x - 400, y - VH / 2); if (d > bd) { bd = d; best = [x, y]; } }
   return best;
 }
-function addObj(id, vx, vy) {
+let uidN = 0;
+function addObj(id, vx, vy, remote) {
   const o = libById(id), g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
   if (vx === undefined) [vx, vy] = freeSpot();
+  g.dataset.uid = remote ? remote.uid : `${SNET ? SNET.me : 0}-${Date.now() % 1e6}-${uidN++}`;
   g.setAttribute('class', 'o'); g.dataset.id = id; g.dataset.x = vx; g.dataset.y = vy; g.dataset.s = .42; g.dataset.r = 0;
   g.innerHTML = `<g transform="translate(-200 -150)"><rect x="0" y="0" width="400" height="300" fill="transparent" class="hitbox"/>${decorate(o.body())}<rect class="selbox" x="10" y="10" width="380" height="280" rx="20"/></g>`;
-  $('objs').appendChild(g); placeObj(g); select(g, true); tone(880, .08); tone(1175, .1, 'triangle', .06, .08);
+  $('objs').appendChild(g); placeObj(g); if (remote) { g.dataset.s = remote.s; g.dataset.r = remote.r || 0; placeObj(g); } else { select(g, true); netObj('add', g); } tone(880, .08); tone(1175, .1, 'triangle', .06, .08);
   g.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250 });
   g.addEventListener('pointerdown', e => objDown(e, g));
   return g;
@@ -470,12 +475,12 @@ function objDown(e, g) {
 }
 function hdlDown(e, k) {
   e.stopPropagation(); e.preventDefault(); const g = selObj; if (!g) return;
-  if (k === 'del') { g.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 180 }).onfinish = () => { g.remove(); select(null); }; tone(200, .1); return; }
+  if (k === 'del') { netSend({ t: 'del', u: g.dataset.uid }); g.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 180 }).onfinish = () => { g.remove(); select(null); }; tone(200, .1); return; }
   const c = [+g.dataset.x, +g.dataset.y], p = vpt(e);
   gest = { g, type: 'size', c, d0: Math.hypot(p[0] - c[0], p[1] - c[1]) || 1, a0: Math.atan2(p[1] - c[1], p[0] - c[0]), s0: +g.dataset.s, r0: +g.dataset.r || 0, moved: true }; ptrs.set(e.pointerId, p);
 }
 window.addEventListener('pointermove', e => {
-  if (!ptrs.has(e.pointerId) || !gest) return; e.preventDefault(); ptrs.set(e.pointerId, vpt(e)); const g = gest.g;
+  if (!ptrs.has(e.pointerId) || !gest) return; e.preventDefault(); ptrs.set(e.pointerId, vpt(e)); const g = gest.g; netMoveSoon(g);
   if (gest.type === 'drag') { const p = ptrs.get(e.pointerId), dx = p[0] - gest.p0[0], dy = p[1] - gest.p0[1]; if (Math.hypot(dx, dy) > 6) gest.moved = true; if (gest.moved) { g.dataset.x = Math.max(0, Math.min(800, gest.x0 + dx)); g.dataset.y = Math.max(0, Math.min(VH, gest.y0 + dy)); placeObj(g); $('bubble').style.display = 'none'; } }
   else if (gest.type === 'pinch') { const [a, b] = [...ptrs.values()], d = Math.hypot(b[0] - a[0], b[1] - a[1]), an = Math.atan2(b[1] - a[1], b[0] - a[0]), m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]; g.dataset.s = Math.max(.15, Math.min(1.6, gest.s0 * d / gest.d0)); g.dataset.r = gest.r0 + (an - gest.a0) * 180 / Math.PI; g.dataset.x = gest.x0 + m[0] - gest.m0[0]; g.dataset.y = gest.y0 + m[1] - gest.m0[1]; placeObj(g); $('bubble').style.display = 'none'; }
   else if (gest.type === 'size') { const p = ptrs.get(e.pointerId), d = Math.hypot(p[0] - gest.c[0], p[1] - gest.c[1]), an = Math.atan2(p[1] - gest.c[1], p[0] - gest.c[0]); g.dataset.s = Math.max(.15, Math.min(1.6, gest.s0 * d / gest.d0)); let r = gest.r0 + (an - gest.a0) * 180 / Math.PI; const snap = Math.round(r / 90) * 90; if (Math.abs(r - snap) < 8) r = snap; g.dataset.r = r; placeObj(g); $('bubble').style.display = 'none'; }
@@ -484,7 +489,8 @@ const ptrUp = e => {
   if (!ptrs.has(e.pointerId)) return; ptrs.delete(e.pointerId); if (!gest) return;
   if (ptrs.size === 0) {
     const g = gest.g;
-    if (gest.type === 'drag' && !gest.moved) { const t = gest.target; if (sTool === 'fill' && t && t.classList.contains('r')) { t.setAttribute('fill', sCol); tone(500 + COLORS.indexOf(sCol) * 60, .08); t.animate([{ opacity: .4 }, { opacity: 1 }], { duration: 200 }); bubble(g, true); } else bubble(g); }
+    netObj('mv', g);
+    if (gest.type === 'drag' && !gest.moved) { const t = gest.target; if (sTool === 'fill' && t && t.classList.contains('r')) { t.setAttribute('fill', sCol); netSend({ t: 'fr', u: g.dataset.uid, i: [...g.querySelectorAll('.r')].indexOf(t), c: sCol }); tone(500 + COLORS.indexOf(sCol) * 60, .08); t.animate([{ opacity: .4 }, { opacity: 1 }], { duration: 200 }); bubble(g, true); } else bubble(g); }
     else { tone(660, .05); bubble(g, true); }
     gest = null;
   } else startGesture();
@@ -503,28 +509,34 @@ $('stage').addEventListener('pointerdown', e => {
 $('stage').addEventListener('pointermove', e => { if (!painting) return; const p = stagePt(e); stroke(p.x * painting.dpr, p.y * painting.dpr); });
 ['pointerup', 'pointercancel'].forEach(t => $('stage').addEventListener(t, () => painting = null));
 function stroke(x, y) {
-  const g = $('topc').getContext('2d'), d = painting.dpr, [lx, ly] = painting.last;
-  g.globalCompositeOperation = sTool === 'erase' ? 'destination-out' : 'source-over';
-  if (sTool === 'spray') { g.fillStyle = sCol; for (let i = 0; i < 18; i++) { const a = Math.random() * 6.28, r = Math.random() * 22 * d; g.fillRect(x + Math.cos(a) * r, y + Math.sin(a) * r, 2.2 * d, 2.2 * d); } }
-  else { g.lineCap = g.lineJoin = 'round'; g.lineWidth = ({ pencil: 5, brush: 18, rainbow: 16, erase: 30 }[sTool] || 8) * d; if (sTool === 'rainbow') { rainbowH = (rainbowH + 4) % 360; g.strokeStyle = `hsl(${rainbowH},90%,55%)`; } else g.strokeStyle = sCol; g.beginPath(); g.moveTo(lx, ly); g.lineTo(x + .01, y); g.stroke(); }
-  g.globalCompositeOperation = 'source-over'; painting.last = [x, y];
+  const c = $('topc'); drawSeg(sTool, sCol, painting.last[0], painting.last[1], x, y, painting.dpr, sTool === 'rainbow' ? (rainbowH = (rainbowH + 4) % 360) : 0);
+  netSeg(painting.last[0] / c.width, painting.last[1] / c.height, x / c.width, y / c.height); painting.last = [x, y];
+}
+function drawSeg(tool, col, lx, ly, x, y, d, h) {
+  const g = $('topc').getContext('2d');
+  g.globalCompositeOperation = tool === 'erase' ? 'destination-out' : 'source-over';
+  if (tool === 'spray') { g.fillStyle = col; for (let i = 0; i < 18; i++) { const a = Math.random() * 6.28, r = Math.random() * 22 * d; g.fillRect(x + Math.cos(a) * r, y + Math.sin(a) * r, 2.2 * d, 2.2 * d); } }
+  else { g.lineCap = g.lineJoin = 'round'; g.lineWidth = ({ pencil: 5, brush: 18, rainbow: 16, erase: 30 }[tool] || 8) * d; g.strokeStyle = tool === 'rainbow' ? `hsl(${h},90%,55%)` : col; g.beginPath(); g.moveTo(lx, ly); g.lineTo(x + .01, y); g.stroke(); }
+  g.globalCompositeOperation = 'source-over';
 }
 function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
-function floodFill(x, y) {
+function floodFill(x, y, col = sCol, remote) {
+  if (!remote) netSend({ t: 'ff', x: x / $('topc').width, y: y / $('topc').height, c: col });
   const c = $('topc'), g = c.getContext('2d'), W = c.width, H = c.height; x = Math.floor(x); y = Math.floor(y);
-  const img = g.getImageData(0, 0, W, H), d = img.data, i0 = (y * W + x) * 4, t = [d[i0], d[i0 + 1], d[i0 + 2], d[i0 + 3]], [nr, ng, nb] = hexRgb(sCol);
+  const img = g.getImageData(0, 0, W, H), d = img.data, i0 = (y * W + x) * 4, t = [d[i0], d[i0 + 1], d[i0 + 2], d[i0 + 3]], [nr, ng, nb] = hexRgb(col);
   if (t[3] > 200 && t[0] === nr && t[1] === ng && t[2] === nb) return;
   const same = i => t[3] < 40 ? d[i + 3] < 40 : Math.abs(d[i] - t[0]) + Math.abs(d[i + 1] - t[1]) + Math.abs(d[i + 2] - t[2]) < 60 && d[i + 3] > 120;
   const seen = new Uint8Array(W * H), stack = [y * W + x]; let n = 0; const list = [];
   while (stack.length) { const p = stack.pop(); if (seen[p]) continue; seen[p] = 1; if (!same(p * 4)) continue; list.push(p); n++; const px = p % W, py = (p / W) | 0; if (px > 0) stack.push(p - 1); if (px < W - 1) stack.push(p + 1); if (py > 0) stack.push(p - W); if (py < H - 1) stack.push(p + W); }
-  if (t[3] < 40 && n > W * H * .55) { const b = $('bgc').getContext('2d'); b.fillStyle = sCol; b.fillRect(0, 0, W, H); tone(400, .15); return; }
+  if (t[3] < 40 && n > W * H * .55) { const b = $('bgc').getContext('2d'); b.fillStyle = col; b.fillRect(0, 0, W, H); tone(400, .15); return; }
   for (const p of list) { const i = p * 4; d[i] = nr; d[i + 1] = ng; d[i + 2] = nb; d[i + 3] = 255; }
   g.putImageData(img, 0, 0); tone(520, .12);
 }
-$('oBig').onclick = () => { if (selObj) { selObj.dataset.s = Math.min(1.6, +selObj.dataset.s * 1.25); placeObj(selObj); tone(760, .06); } };
-$('oSmall').onclick = () => { if (selObj) { selObj.dataset.s = Math.max(.15, +selObj.dataset.s / 1.25); placeObj(selObj); tone(520, .06); } };
-$('oDel').onclick = () => { if (selObj) { selObj.remove(); select(null); tone(200, .1); } };
-$('sClear').onclick = () => { $('objs').innerHTML = ''; select(null); $('topc').getContext('2d').clearRect(0, 0, $('topc').width, $('topc').height); const b = $('bgc').getContext('2d'); b.fillStyle = '#fff'; b.fillRect(0, 0, $('bgc').width, $('bgc').height); };
+$('oBig').onclick = () => { if (selObj) { selObj.dataset.s = Math.min(1.6, +selObj.dataset.s * 1.25); placeObj(selObj); netObj('mv', selObj); tone(760, .06); } };
+$('oSmall').onclick = () => { if (selObj) { selObj.dataset.s = Math.max(.15, +selObj.dataset.s / 1.25); placeObj(selObj); netObj('mv', selObj); tone(520, .06); } };
+$('oDel').onclick = () => { if (selObj) { netSend({ t: 'del', u: selObj.dataset.uid }); selObj.remove(); select(null); tone(200, .1); } };
+$('sClear').onclick = () => { netSend({ t: 'clr' }); clearAll(); };
+function clearAll() { $('objs').innerHTML = ''; select(null); $('topc').getContext('2d').clearRect(0, 0, $('topc').width, $('topc').height); const b = $('bgc').getContext('2d'); b.fillStyle = '#fff'; b.fillRect(0, 0, $('bgc').width, $('bgc').height); };
 $('sSave').onclick = () => {
   const W = 960, H = Math.round(W * $('bgc').height / $('bgc').width), out = document.createElement('canvas'); out.width = W; out.height = H; const g = out.getContext('2d');
   g.drawImage($('bgc'), 0, 0, W, H);
@@ -534,7 +546,57 @@ $('sSave').onclick = () => {
   im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml);
 };
 setInterval(() => { if (document.hidden) return; if (RO.tick(5) <= 0) { document.body.innerHTML = '<div style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#2b2340;color:#fff;font-weight:800;font-size:24px;text-align:center"><div style="font-size:70px">😴🌙</div>Robi\'nin uyku zamanı!<br><small>Bugünlük oyun süresi bitti.</small></div>'; } }, 5000);
-show('home');
+
+// ---------- BİRLİKTE BOYA (aynı tuvalde, oda kodu ile) ----------
+const SNETH = (location.hash || '').match(/^#net-boya-(\d{5})$/);
+let SNET = null;
+function netSend(o) { if (SNET && SNET.ws && SNET.ws.readyState === 1) try { SNET.ws.send(JSON.stringify(o)); } catch (e) {} }
+let segBuf = [], segT = 0;
+function netSeg(ax, ay, bx, by) { if (!SNET) return; segBuf.push([+ax.toFixed(4), +ay.toFixed(4), +bx.toFixed(4), +by.toFixed(4)]); if (!segT) segT = setTimeout(() => { netSend({ t: 'sg', tool: sTool, c: sCol, h: rainbowH, s: segBuf }); segBuf = []; segT = 0; }, 60); }
+function objState(g) { return { u: g.dataset.uid, id: g.dataset.id, x: +(+g.dataset.x / 800).toFixed(4), y: +(+g.dataset.y / VH).toFixed(4), s: +(+g.dataset.s).toFixed(3), r: +(+g.dataset.r || 0).toFixed(1) }; }
+function netObj(kind, g) { if (SNET && g) netSend({ t: kind, ...objState(g) }); }
+let mvT = 0; function netMoveSoon(g) { if (!SNET || mvT) return; mvT = setTimeout(() => { mvT = 0; netObj('mv', g); }, 70); }
+const findObj = u => [...document.querySelectorAll('#objs g.o')].find(g => g.dataset.uid === u);
+if (SNETH) (function () {
+  const RN = window.RobiNet, code = SNETH[1], SERVER = window.ROBI_SERVER;
+  const N = SNET = { code, me: -1, peers: {}, ws: null };
+  const isHost = () => Object.keys(N.peers).every(s => +s > N.me);
+  function hud() { $('sNet').innerHTML = `<span>🔑 ${code.slice(0, 2)}-${code.slice(2)}</span>` + [N.me, ...Object.keys(N.peers).map(Number)].filter(s => s >= 0).sort().map(s => `<span style="border-color:${RN.COL[s]};${s === N.me ? `background:${RN.COL[s]};color:#fff` : ''}">${RN.AV[s]}</span>`).join('') + `<button id="sInv">📨 Davet</button>`; $('sInv').onclick = () => { try { parent.postMessage(`robi-invite:boya:${code}`, '*'); } catch (e) {} }; }
+  function cursor(s, nx, ny) { const st = $('stage').getBoundingClientRect(); let c = $('cur' + s); if (!c) { c = document.createElement('div'); c.id = 'cur' + s; c.className = 'rcur'; c.textContent = RN.AV[s]; $('stage').appendChild(c); } c.style.left = nx * st.width + 'px'; c.style.top = ny * st.height + 'px'; c.style.opacity = 1; clearTimeout(c._t); c._t = setTimeout(() => c.style.opacity = 0, 1500); }
+  function joinParty(s) { const b = $('bubble'); b.style.display = 'block'; b.style.left = '50%'; b.style.top = '70px'; b.innerHTML = `<span class="tr">🎉 ${RN.AV[s]} geldi! Birlikte boyayalım!</span>`; setTimeout(() => b.style.display = 'none', 2200); [523, 659, 784, 1046].forEach((f, i) => tone(f, .16, 'triangle', .07, i * .09)); [880, 1046, 932, 1174, 988, 1318].forEach((f, i) => tone(f, .08, 'sine', .05, .45 + i * .08)); KB.speak('Yaşasın! Arkadaşın geldi!', 'tr-TR'); }
+  function apply(s, m) {
+    const c = $('topc');
+    if (m.t === 'sg') { for (const [ax, ay, bx, by] of m.s) drawSeg(m.tool, m.c, ax * c.width, ay * c.height, bx * c.width, by * c.height, c.width / $('stage').getBoundingClientRect().width, m.h); const l = m.s[m.s.length - 1]; if (l) cursor(s, l[2], l[3]); }
+    else if (m.t === 'ff') { floodFill(m.x * c.width, m.y * c.height, m.c, true); cursor(s, m.x, m.y); }
+    else if (m.t === 'add') { if (!findObj(m.u)) addObj(m.id, m.x * 800, m.y * VH, { uid: m.u, s: m.s, r: m.r }); }
+    else if (m.t === 'mv') { const g = findObj(m.u); if (g) { g.dataset.x = m.x * 800; g.dataset.y = m.y * VH; g.dataset.s = m.s; g.dataset.r = m.r; placeObj(g); cursor(s, m.x, m.y * VH / VH); } else addObj(m.id, m.x * 800, m.y * VH, { uid: m.u, s: m.s, r: m.r }); }
+    else if (m.t === 'del') { const g = findObj(m.u); if (g) { if (g === selObj) select(null); g.remove(); } }
+    else if (m.t === 'fr') { const g = findObj(m.u); const r = g && g.querySelectorAll('.r')[m.i]; if (r) { r.setAttribute('fill', m.c); r.animate([{ opacity: .4 }, { opacity: 1 }], { duration: 200 }); } }
+    else if (m.t === 'clr') clearAll();
+    else if (m.t === 'snap' && m.to === N.me) {
+      clearAll(); for (const o of m.objs) { const g = addObj(o.id, o.x * 800, o.y * VH, { uid: o.u, s: o.s, r: o.r }); g.querySelectorAll('.r').forEach((r, i) => o.f[i] && r.setAttribute('fill', o.f[i])); }
+      if (m.img) { const im = new Image(); im.onload = () => { const b = $('bgc'); b.getContext('2d').drawImage(im, 0, 0, b.width, b.height); }; im.src = m.img; }
+    }
+  }
+  function snapFor(to) {
+    const W = 640, b = $('bgc'), H = Math.round(W * b.height / b.width), cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, W, H); g.drawImage(b, 0, 0, W, H); g.drawImage($('topc'), 0, 0, W, H);
+    netSend({ t: 'snap', to, objs: [...document.querySelectorAll('#objs g.o')].map(g => ({ ...objState(g), f: [...g.querySelectorAll('.r')].map(r => r.getAttribute('fill') === '#fff' ? 0 : r.getAttribute('fill')) })), img: cv.toDataURL('image/jpeg', .6) });
+  }
+  function connect() {
+    const ws = N.ws = new WebSocket(SERVER.replace(/^http/, 'ws') + `/ws?code=${code}&ch=boya`);
+    ws.onmessage = e => { let m; try { m = JSON.parse(e.data); } catch (x) { return; }
+      if (m.t === 'welcome') { N.me = m.me.slot; m.peers.forEach(p => N.peers[p.slot] = 1); hud(); joinParty(N.me); }
+      else if (m.t === 'join') { N.peers[m.p.slot] = 1; hud(); joinParty(m.p.slot); if (isHost()) setTimeout(() => snapFor(m.p.slot), 400); }
+      else if (m.t === 'leave') { delete N.peers[m.slot]; hud(); }
+      else if (m.m) apply(m.s, m.m); };
+    ws.onclose = () => { if (!N.closing) setTimeout(connect, 1500); };
+  }
+  addEventListener('pagehide', () => { N.closing = true; try { N.ws.close(); } catch (e) {} });
+  setTimeout(() => { show('studio'); const sm = document.querySelector('#studio .t small'); if (sm) sm.style.display = 'none'; setTimeout(connect, 300); }, 50);
+})();
+
+
+if (!SNETH) show('home');
 
 </script>
 </body>
