@@ -210,6 +210,10 @@ body:not(.playing) #editBtn{display:none!important}
 const LEARN = location.hash === '#ogren';
 const BAHCE = location.hash === '#bahce';
 const BUILD = location.hash === '#tasarla';
+const WID = (location.hash || '#orman').slice(1);
+const DENIZ = WID === 'deniz', OKUL = WID === 'okul', UCURUM = WID === 'ucurum', UZAY = WID === 'uzay';
+const VOID = UCURUM || UZAY, GMUL = UZAY ? .42 : 1;
+const WNAME = { ogren: 'Eğitim Bahçesi', orman: 'Büyülü Orman', bahce: 'Koruma Bahçesi', tasarla: 'Parkur Atölyesi', deniz: 'Deniz Kenarı', okul: 'Sihirli Okul', ucurum: 'Uçurum', uzay: 'Uzay' };
 const RO = window.RobiOrtak || { award: () => null, quest: () => [], tick: () => Infinity, timeLeft: () => Infinity, load: () => ({}), addPhoto: () => true };
 const $ = id => document.getElementById(id);
 
@@ -293,7 +297,7 @@ const SAVE = 'robi_orman_v1';
 let SV = { gears: 0, xp: 0, pets: {}, pet: null, suits: {}, hats: {}, capes: {}, suit: 'white', hat: null, cape: 'blue', trained: false, muted: false };
 try { const r = localStorage.getItem(SAVE); if (r) SV = Object.assign(SV, JSON.parse(r)); } catch (e) {}
 SV.suits = SV.suits || {}; SV.hats = SV.hats || {}; SV.capes = SV.capes || {};
-const MINE = ['dragonFriend', 'gears', 'xp', 'pets', 'pet', 'suits', 'hats', 'capes', 'suit', 'hat', 'cape', 'trained', 'muted', 'sanctuary', 'petCount'];
+const MINE = ['cleared', 'dragonFriend', 'gears', 'xp', 'pets', 'pet', 'suits', 'hats', 'capes', 'suit', 'hat', 'cape', 'trained', 'muted', 'sanctuary', 'petCount'];
 const save = () => { try { const cur = JSON.parse(localStorage.getItem(SAVE) || '{}'); for (const k of MINE) if (SV[k] !== undefined) cur[k] = SV[k]; localStorage.setItem(SAVE, JSON.stringify(cur)); } catch (e) {} };
 SV.sanctuary = SV.sanctuary || { rabbit: 0, fox: 0, deer: 0, giant: 0 }; SV.petCount = SV.petCount || 0;
 const xpNeed = l => 30 * l * (l + 1) / 2;
@@ -325,9 +329,9 @@ const canvas = $('c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(LEARN ? '#a8e0ff' : BAHCE ? '#ffe3f1' : BUILD ? '#bde0ff' : '#9fd8ff');
-scene.fog = new THREE.Fog(scene.background, 55, 130);
-const camera = new THREE.PerspectiveCamera(60, 1, .1, 300);
+scene.background = new THREE.Color(LEARN ? '#a8e0ff' : BAHCE ? '#ffe3f1' : BUILD ? '#bde0ff' : DENIZ ? '#8fdcff' : OKUL ? '#cbb6ff' : UCURUM ? '#a9d6ff' : UZAY ? '#0b0b2e' : '#9fd8ff');
+scene.fog = new THREE.Fog(scene.background, UZAY ? 120 : UCURUM ? 70 : 55, UZAY ? 300 : UCURUM ? 170 : 130);
+const camera = new THREE.PerspectiveCamera(60, 1, .1, UZAY ? 600 : 300);
 scene.add(new THREE.HemisphereLight('#ffffff', '#6aa84f', .85));
 const sun = new THREE.DirectionalLight('#fff2d6', .6); sun.position.set(30, 60, 20); scene.add(sun);
 const fill = new THREE.DirectionalLight('#ffe9f2', .35); fill.position.set(-20, 30, -40); scene.add(fill);
@@ -338,7 +342,7 @@ const mat = c => mats[c] || (mats[c] = new THREE.MeshLambertMaterial({ color: c 
 const emissive = c => new THREE.MeshBasicMaterial({ color: c });
 let seed = 7;
 const rnd = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
-const W = LEARN ? 34 : BAHCE ? 26 : BUILD ? 16 : 68;
+const W = LEARN ? 34 : BAHCE ? 26 : BUILD ? 16 : DENIZ ? 40 : OKUL ? 34 : UCURUM ? 40 : UZAY ? 44 : 68;
 const colliders = [];
 function box(x0, y0, z0, x1, y1, z1, color, opt = {}) {
   let mesh = null;
@@ -465,14 +469,17 @@ function bigStar(x, y, z) {
 // Canavar
 function monster(x, z, y = 0, opt = {}) {
   const g = new THREE.Group();
-  const c = opt.dummy ? '#e0b85a' : ['#4e9a3a', '#2f7d32', '#6aa84f'][monsters.length % 3];
-  const body = new THREE.Mesh(new THREE.SphereGeometry(.6, 14, 10), mat(c)); body.position.y = .55; body.scale.set(1, .9, 1); g.add(body);
+  const c = opt.dummy ? '#e0b85a' : opt.ghost ? '#c9b8ff' : opt.crab ? '#ff5a3c' : opt.alien ? '#7cff6b' : ['#4e9a3a', '#2f7d32', '#6aa84f'][monsters.length % 3];
+  const body = new THREE.Mesh(new THREE.SphereGeometry(.6, 14, 10), opt.ghost ? new THREE.MeshLambertMaterial({ color: c, transparent: true, opacity: .75, emissive: '#5a3fa0' }) : mat(c)); body.position.y = .55; body.scale.set(1, opt.crab ? .6 : .9, 1); g.add(body);
+  if (opt.ghost) { const tail = new THREE.Mesh(new THREE.ConeGeometry(.55, .8, 10, 1, true), body.material); tail.rotation.x = Math.PI; tail.position.y = .1; g.add(tail); }
+  if (opt.crab) { [-1, 1].forEach(sd => { const cl = new THREE.Mesh(new THREE.SphereGeometry(.25, 10, 8), mat('#e5381f')); cl.position.set(sd * .75, .6, .35); cl.scale.set(1, .7, 1.3); g.add(cl); for (let k = 0; k < 3; k++) g.add(at(new THREE.Mesh(new THREE.BoxGeometry(.4, .07, .07), mat('#e5381f')), sd * .65, .25, -.25 + k * .22)); }); }
+  if (opt.alien) { [-.22, .22].forEach(x => { g.add(at(new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, .5), mat('#2b2340')), x, 1.15, 0)); g.add(at(new THREE.Mesh(new THREE.SphereGeometry(.09, 8, 6), emissive('#ff5ad8')), x, 1.42, 0)); }); }
   if (opt.dummy) { const p = new THREE.Mesh(new THREE.CylinderGeometry(.08, .08, 1.2), mat('#7a4a25')); p.position.y = -.1; g.add(p); body.position.y = .9; }
-  for (let i = 0; i < 6; i++) { const l = new THREE.Mesh(new THREE.ConeGeometry(.18, .5, 5), mat(opt.dummy ? '#c99a3a' : '#2e6b1f')); const a = i / 6 * Math.PI * 2; l.position.set(Math.cos(a) * .45, body.position.y + .45, Math.sin(a) * .45); l.rotation.set(Math.sin(a) * .6, 0, -Math.cos(a) * .6); g.add(l); }
+  if (!opt.ghost && !opt.crab && !opt.alien) for (let i = 0; i < 6; i++) { const l = new THREE.Mesh(new THREE.ConeGeometry(.18, .5, 5), mat(opt.dummy ? '#c99a3a' : '#2e6b1f')); const a = i / 6 * Math.PI * 2; l.position.set(Math.cos(a) * .45, body.position.y + .45, Math.sin(a) * .45); l.rotation.set(Math.sin(a) * .6, 0, -Math.cos(a) * .6); g.add(l); }
   const ey = body.position.y + .17;
   [-.2, .2].forEach(xx => { const w = new THREE.Mesh(new THREE.SphereGeometry(.17, 10, 8), mat('#fff')); w.position.set(xx, ey, .45); g.add(w); const p = new THREE.Mesh(new THREE.SphereGeometry(.08, 8, 6), mat(opt.dummy ? '#2b2340' : '#e5484d')); p.position.set(xx, ey, .6); g.add(p); });
   scene.add(g);
-  const m = { g, home: new THREE.Vector3(x, y, z), pos: new THREE.Vector3(x, y, z), dir: rnd() * 6.28, alive: true, r: .55, h: opt.dummy ? 1.5 : 1.1, stun: 0, frozen: 0, heat: 0, shadow: blobShadow(.55), t: rnd() * 9, respawn: 0, dummy: !!opt.dummy, dome: null };
+  const m = { g, home: new THREE.Vector3(x, y, z), pos: new THREE.Vector3(x, y, z), dir: rnd() * 6.28, alive: true, r: .55, h: opt.dummy ? 1.5 : 1.1, stun: 0, frozen: 0, heat: 0, shadow: blobShadow(.55), t: rnd() * 9, respawn: 0, dummy: !!opt.dummy, ghost: !!opt.ghost, dome: null };
   monsters.push(m); return m;
 }
 // Hayvanlar
@@ -484,6 +491,12 @@ function makeAnimal(kind) {
     g.add(at(new THREE.Mesh(new THREE.SphereGeometry(.28, 12, 10), m), 0, .8, .3));
     [-.1, .1].forEach(x => { const e = new THREE.Mesh(new THREE.CapsuleGeometry(.07, .4, 4, 6), m); e.position.set(x, 1.2, .25); g.add(e); const p = new THREE.Mesh(new THREE.SphereGeometry(.04, 6, 4), mat('#2b2340')); p.position.set(x * 1.3, .85, .55); g.add(p); });
     g.add(at(new THREE.Mesh(new THREE.SphereGeometry(.14, 8, 6), mat('#ffffff')), 0, .5, -.42));
+  } else if (kind === 'turtle') {
+    const sh = new THREE.Mesh(new THREE.SphereGeometry(.5, 14, 10, 0, Math.PI * 2, 0, Math.PI / 2), mat('#3d9b5a')); sh.position.y = .25; sh.scale.set(1, .8, 1.2); g.add(sh);
+    for (let i = 0; i < 5; i++) { const sp = new THREE.Mesh(new THREE.CircleGeometry(.12, 6), mat('#8fd18f')); const a = i / 5 * 6.28; sp.position.set(Math.cos(a) * .25, .62, Math.sin(a) * .3); sp.rotation.x = -Math.PI / 2; g.add(sp); }
+    g.add(at(new THREE.Mesh(new THREE.SphereGeometry(.2, 10, 8), mat('#9ad19a')), 0, .32, .66));
+    [-.07, .07].forEach(x => g.add(at(new THREE.Mesh(new THREE.SphereGeometry(.035, 6, 4), mat('#2b2340')), x, .4, .83)));
+    [[-.35, .35], [.35, .35], [-.35, -.35], [.35, -.35]].forEach(([x, z]) => { const l = at(new THREE.Mesh(new THREE.BoxGeometry(.18, .14, .25), mat('#9ad19a')), x, .1, z); g.add(l); legs.push(l); });
   } else if (kind === 'fox') {
     const m = mat('#ff7a2f');
     g.add(at(new THREE.Mesh(new THREE.BoxGeometry(.45, .4, .9), m), 0, .55, 0));
@@ -504,10 +517,33 @@ function makeAnimal(kind) {
   scene.add(g); g.userData.legs = legs; return g;
 }
 function animal(kind, x, z, speedScale = 1) {
-  animals.push({ scale: 1, scaleT: 1, joy: 0, happy: 0, kind, g: makeAnimal(kind), home: new THREE.Vector3(x, 0, z), pos: new THREE.Vector3(x, 0, z), dir: rnd() * 6.28, alive: true, frozen: false, dome: null, t: rnd() * 5, shadow: blobShadow(kind === 'deer' ? .7 : .45), speed: { rabbit: 7.2, fox: 8, deer: 8.6 }[kind] * speedScale, leash: LEARN ? 6 : 18 });
+  animals.push({ scale: 1, scaleT: 1, joy: 0, happy: 0, kind, g: makeAnimal(kind), home: new THREE.Vector3(x, 0, z), pos: new THREE.Vector3(x, 0, z), dir: rnd() * 6.28, alive: true, frozen: false, dome: null, t: rnd() * 5, shadow: blobShadow(kind === 'deer' ? .7 : .45), speed: { rabbit: 7.2, fox: 8, deer: 8.6, turtle: 4.2 }[kind] * speedScale, leash: LEARN ? 6 : 18 });
 }
-const ANIMAL_TR = { rabbit: 'Tavşan', fox: 'Tilki', deer: 'Geyik' };
+const ANIMAL_TR = { rabbit: 'Tavşan', fox: 'Tilki', deer: 'Geyik', turtle: 'Kaplumbağa' };
 
+
+// =============== TOPLANABİLİR EŞYALAR (iksir, deniz kabuğu, kristal...) ===============
+const items = [];
+function item(kind, e, x, y, z, sc = 1) {
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: emojiTex(e), transparent: true })); s.scale.setScalar(1.15 * sc); s.position.set(x, y + 1.1, z); scene.add(s);
+  const gl = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: '#fff6a0', blending: THREE.AdditiveBlending, transparent: true, depthWrite: false })); gl.scale.setScalar(2.4 * sc); gl.position.copy(s.position); scene.add(gl);
+  items.push({ kind, e, s, gl, pos: new THREE.Vector3(x, y, z), base: y + 1.1, alive: true, t: rnd() * 6 });
+}
+const itemsOf = k => items.filter(i => i.kind === k);
+const itemN = k => `${itemsOf(k).filter(i => !i.alive).length}/${itemsOf(k).length}`;
+const ITEM_TR = { potion: 'İksir', shell: 'Deniz kabuğu', crystal: 'Kristal', flag: 'Zirve bayrağı', shard: 'Yıldız parçası', rocket: 'Roket' };
+function updateItems(dt, pc) {
+  for (const it of items) {
+    if (!it.alive) continue; it.t += dt;
+    it.s.position.y = it.base + Math.sin(it.t * 3) * .2; it.gl.position.copy(it.s.position); it.gl.material.opacity = .5 + Math.sin(it.t * 5) * .2;
+    if (it.s.position.distanceTo(pc) < 1.6) {
+      it.alive = false; detach(it.s); detach(it.gl); SFX.ring(); sparkle(it.s.position, '#fff06a', 18); addGears(3); addXP(4); neonBurst('white', 3);
+      const left = itemsOf(it.kind).filter(i => i.alive).length;
+      toast(`${it.e} ${ITEM_TR[it.kind] || ''} bulundu! (${itemN(it.kind)})${left ? '' : ' Hepsi tamam! 🎉'}`, 2.2);
+      checkMissions();
+    }
+  }
+}
 // =============== ARAÇLAR ===============
 const VEH = {
   skate: { name: 'Kaykay', e: '🛹', speed: 11, acc: 10, jump: 10.5, r: .45, step: .45, seat: .28, stand: true },
@@ -697,10 +733,11 @@ function dragonWater() { const d = dragon; if (!d || d.friend || !(d.state === '
 // =============== DÜNYA: ÇİM ZEMİN ===============
 (function ground() {
   const cv = document.createElement('canvas'); cv.width = cv.height = 128; const g = cv.getContext('2d');
-  g.fillStyle = '#6ab84a'; g.fillRect(0, 0, 128, 128);
-  for (let i = 0; i < 500; i++) { g.fillStyle = ['#5eaa40', '#7cc957', '#64b146'][i % 3]; g.fillRect(Math.random() * 128, Math.random() * 128, 3, 3); }
+  const PAL = DENIZ ? ['#f2d79b', '#ead08e', '#f7e2ae', '#e8c983'] : UZAY ? ['#8d8d9c', '#7d7d8c', '#a0a0ae', '#6f6f7e'] : ['#6ab84a', '#5eaa40', '#7cc957', '#64b146'];
+  g.fillStyle = PAL[0]; g.fillRect(0, 0, 128, 128);
+  for (let i = 0; i < 500; i++) { g.fillStyle = PAL[1 + i % 3]; g.fillRect(Math.random() * 128, Math.random() * 128, 3, 3); }
   const tex = new THREE.CanvasTexture(cv); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(30, 30);
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshLambertMaterial({ map: tex })); m.rotation.x = -Math.PI / 2; scene.add(m);
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(VOID ? 900 : 400, VOID ? 900 : 400), new THREE.MeshLambertMaterial({ map: tex })); m.rotation.x = -Math.PI / 2; if (VOID) m.position.y = -45; scene.add(m);
 })();
 const trunkGeo = new THREE.CylinderGeometry(.5, .7, 4, 8), leafGeo = new THREE.ConeGeometry(2.6, 5, 8), leafGeo2 = new THREE.SphereGeometry(2.4, 10, 8);
 function tree(x, z, s = 1, collide = true) {
@@ -777,7 +814,7 @@ function buildBahce() {
   vehicle('horse', 4, 12, 0, Math.PI); vehicle('carpet', -6, 12, 0, Math.PI); vehicle('skate', 8, 12, 0, Math.PI);
   const n = SV.sanctuary;
   const list = [];
-  ['rabbit', 'fox', 'deer'].forEach(k => { for (let i = 0; i < Math.min(6, n[k] || 0); i++) list.push(k); });
+  ['rabbit', 'fox', 'deer', 'turtle'].forEach(k => { for (let i = 0; i < Math.min(5, n[k] || 0); i++) list.push(k); });
   list.forEach((k, i) => { const a = (i / Math.max(1, list.length)) * Math.PI * 2; animal(k, Math.cos(a) * (8 + (i % 3) * 3), Math.sin(a) * (8 + (i % 3) * 3) - 2); });
   for (let i = 0; i < Math.min(3, n.giant || 0) && animals.length; i++) { const a = animals[i]; a.scale = a.scaleT = 3; a.g.scale.setScalar(3); a.shadow.scale.setScalar(3); }
   animals.forEach(a => { a.tame = true; a.leash = 10; a.petCd = 0; });
@@ -851,6 +888,154 @@ function editUpdate(dt) {
   gears.forEach(g => g.obj.rotation.y += dt * 3); rings.forEach(r => r.m.rotation.y += dt); stars.forEach(s => s.s.position.y = s.pos.y + 1.4 + Math.sin(elapsed * 3) * .2);
   elapsed += dt; robi.position.copy(START); robiShadow.position.set(START.x, START.y + .07, START.z);
 }
+// =============== DÜNYA 5: DENİZ KENARI ===============
+function palm(x, z, s = 1) {
+  let px = x, py = 0;
+  for (let i = 0; i < 7; i++) { const seg = add(new THREE.CylinderGeometry(.32 * s, .38 * s, 1.1 * s, 8), i % 2 ? '#b07a4a' : '#9b6a3d', px, py + .55 * s, z); seg.rotation.z = -.08 * i; px += .12 * i * s * .3; py += 1.05 * s; }
+  for (let k = 0; k < 7; k++) { const lf = add(new THREE.ConeGeometry(.5 * s, 3.4 * s, 4), '#2bb673', px, py + .2, z); lf.rotation.set(Math.cos(k / 7 * 6.28) * 1.6, 0, Math.sin(k / 7 * 6.28) * 1.6); lf.scale.z = .25; }
+  [[.3, .2], [-.3, .1], [0, -.3]].forEach(([a, b]) => add(new THREE.SphereGeometry(.22 * s, 8, 6), '#7a4a25', px + a * s, py - .3, z + b * s));
+  box(x - .4, 0, z - .4, x + .4, 6 * s, z + .4, null);
+}
+function buildDeniz() {
+  START = new THREE.Vector3(0, 0, 22);
+  isWaterFns.push((x, z) => z < -10);
+  const sea = new THREE.Mesh(new THREE.PlaneGeometry(500, 300), new THREE.MeshLambertMaterial({ color: '#2fb6f0', transparent: true, opacity: .9 })); sea.rotation.x = -Math.PI / 2; sea.position.set(0, .07, -160); scene.add(sea);
+  const shallow = new THREE.Mesh(new THREE.PlaneGeometry(500, 3), new THREE.MeshLambertMaterial({ color: '#9feaff', transparent: true, opacity: .8 })); shallow.rotation.x = -Math.PI / 2; shallow.position.set(0, .08, -11.2); scene.add(shallow);
+  for (let i = 0; i < 26; i++) { const r = add(new THREE.RingGeometry(.4, .6, 16), null, -70 + i * 6 + rnd() * 3, .09, -12 - rnd() * 30, new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: .5 })); r.rotation.x = -Math.PI / 2; ripples.push(r); }
+  [[-30, 14], [-22, 26], [-34, -2], [26, 18], [34, 4], [30, 30], [-8, 34], [16, 34], [-36, 30], [38, -4]].forEach(([x, z], i) => palm(x, z, .9 + (i % 3) * .15));
+  // kum kalesi (tırmanılır)
+  box(6, 0, 4, 14, 2, 12, '#e8c983'); box(7.5, 2, 5.5, 12.5, 4.2, 10.5, '#e0bd78'); box(9, 4.2, 7, 11, 6.4, 9, '#d8b46c');
+  [[6, 4], [14, 4], [6, 12], [14, 12]].forEach(([x, z]) => { add(new THREE.CylinderGeometry(.8, .9, 3, 10), '#e0bd78', x, 1.5, z); add(new THREE.ConeGeometry(.9, 1.2, 10), '#d8b46c', x, 3.6, z); });
+  box(3, 0, 7, 6, 1, 9, '#e8c983'); add(new THREE.PlaneGeometry(.6, .4), null, 10, 7.2, 8, new THREE.MeshLambertMaterial({ color: '#e53935', side: THREE.DoubleSide })); add(new THREE.CylinderGeometry(.04, .04, 1.4), '#7a4a25', 9.7, 7, 8);
+  // iskele + tekne
+  box(-5, 0, -30, -1, .8, -8, '#a0703f'); for (let z = -29; z <= -9; z += 3) [-5, -1].forEach(x => add(new THREE.CylinderGeometry(.18, .18, 2), '#7a4a25', x, 0, z));
+  const boat = new THREE.Group(); boat.add(at(new THREE.Mesh(new THREE.BoxGeometry(2.4, .8, 5), mat('#ffffff')), 0, .4, 0)); boat.add(at(new THREE.Mesh(new THREE.BoxGeometry(2.5, .25, 5.1), mat('#e53935')), 0, .1, 0)); boat.add(at(new THREE.Mesh(new THREE.CylinderGeometry(.08, .08, 4), mat('#7a4a25')), 0, 2.2, 0)); boat.add(at(new THREE.Mesh(new THREE.PlaneGeometry(1.6, 2.4), new THREE.MeshLambertMaterial({ color: '#ffd166', side: THREE.DoubleSide })), .85, 2.6, 0)); boat.position.set(-7.5, .1, -30); scene.add(boat); box(-8.7, 0, -32.5, -6.3, .8, -27.5, null);
+  // cankurtaran kulesi
+  box(19, 0, -6, 23, .6, -2, '#ffffff'); box(19.5, 0, -1.5, 22.5, .6 + 1.2, 0, '#ffffff'); box(19, 3.6, -6, 23, 4.2, -2, '#ffffff');
+  [[19.2, -5.8], [22.8, -5.8], [19.2, -2.2], [22.8, -2.2]].forEach(([x, z]) => add(new THREE.BoxGeometry(.2, 3.6, .2), '#e53935', x, 1.8, z));
+  box(20, 0, 0, 22, 1.2, 1.5, '#e53935'); box(20, 0, 1.5, 22, 2.4, 3, '#e53935', { collide: true }); box(20, 0, 3, 22, 3.6, 4.5, '#e53935');
+  // deniz kayaları (zıplayarak geçilir)
+  [[8, -13], [11, -16], [14, -19], [17, -22]].forEach(([x, z], i) => rock(x - 1.2, z - 1.2, x + 1.2, z + 1.2, .9 + i * .15, '#8f8f9f'));
+  // şemsiyeler ve toplar
+  [[-14, 10, '#ff5ad8'], [-6, 6, '#2e8bff'], [24, 12, '#ffd166']].forEach(([x, z, c]) => { add(new THREE.CylinderGeometry(.06, .06, 3), '#ffffff', x, 1.5, z); add(new THREE.ConeGeometry(2.2, .9, 12), c, x, 3.1, z); });
+  [[-10, 16], [2, 2]].forEach(([x, z]) => { const b = add(new THREE.SphereGeometry(.7, 16, 12), '#ff5a5a', x, .7, z); });
+  // görevler: 8 deniz kabuğu, 4 kaplumbağa
+  [[10, 6.4, 8], [-3, .8, -29], [17, 1.5, -22], [21, 4.2, -4], [-30, 0, 2], [30, 0, 26], [-20, 0, -6], [4, 0, 30]].forEach(([x, y, z]) => item('shell', '🐚', x, y, z));
+  [[-18, -4], [12, -6], [-26, 16], [28, -2]].forEach(([x, z]) => animal('turtle', x, z));
+  [[-12, -2], [6, -4], [-24, 8], [18, 8], [-14, 6], [28, 14]].forEach(([x, z]) => monster(x, z, 0, { crab: true }));
+  vehicle('horse', -4, 18, 0, Math.PI); vehicle('car', 8, 20, 0, Math.PI);
+  orb('water', -16, 0, 20); orb('net', 16, 0, 0); orb('joy', -2, 0, 6); heart(10, 6.4, 6); heart(-28, 0, 24);
+  gearLine([-20, 0, 26], [20, 0, 26], 8); gearLine([8, 2, 5], [12, 4.2, 10], 3); gearLine([-3, .8, -10], [-3, .8, -26], 5);
+  sign(-6, 20, '🏖️ Deniz Kenarı', 'Kabuk ve kaplumbağa', '🏖️ 8 deniz kabuğu 🐚 bul, 4 kaplumbağa yavrusunu 🕸️ ağla kurtar! Yengeçlere dikkat: kafalarına zıpla!');
+  MISSIONS = {
+    shell: { e: '🐚', label: 'Kabuk', count: true, done: false, check: () => itemsOf('shell').every(i => !i.alive), n: () => itemN('shell') },
+    net: { e: '🐢', label: 'Kaplumbağa', count: true, done: false, check: () => animals.every(a => !a.alive), n: () => `${animals.filter(a => !a.alive).length}/${animals.length}` },
+  };
+}
+// =============== DÜNYA 6: SİHİRLİ OKUL ===============
+function buildOkul() {
+  START = new THREE.Vector3(0, 0, 24);
+  const stone = '#a99ac9', dark = '#7b6aa8';
+  // surlar
+  [[-W, -W, W, -W + 1.5], [-W, W - 1.5, W, W], [-W, -W, -W + 1.5, W], [W - 1.5, -W, W, W]].forEach(([x0, z0, x1, z1]) => box(x0, 0, z0, x1, 6, z1, stone));
+  for (let i = -W; i < W; i += 3) { add(new THREE.BoxGeometry(1.4, 1, 1.6), dark, i + .7, 6.5, -W + .75); add(new THREE.BoxGeometry(1.4, 1, 1.6), dark, i + .7, 6.5, W - .75); add(new THREE.BoxGeometry(1.6, 1, 1.4), dark, -W + .75, 6.5, i + .7); add(new THREE.BoxGeometry(1.6, 1, 1.4), dark, W - .75, 6.5, i + .7); }
+  [[-W + 2, -W + 2], [W - 2, -W + 2], [-W + 2, W - 2], [W - 2, W - 2]].forEach(([x, z]) => { add(new THREE.CylinderGeometry(3, 3.3, 14, 14), stone, x, 7, z); add(new THREE.ConeGeometry(3.6, 5, 14), '#6b3fa0', x, 16.5, z); box(x - 2.2, 0, z - 2.2, x + 2.2, 14, z + 2.2, null); });
+  // ana kule + uçan kitap merdiveni
+  add(new THREE.CylinderGeometry(4, 4.4, 18, 18), stone, 0, 9, -16); add(new THREE.ConeGeometry(5, 7, 18), '#6b3fa0', 0, 21.5, -16); box(-3.2, 0, -19.2, 3.2, 18, -12.8, null);
+  box(-3.2, 18, -19.2, 3.2, 18.3, -12.8, '#d9c8ff');
+  [[-1.5, 6], [1.5, 6]].forEach(([x, y]) => add(new THREE.CircleGeometry(.8, 16), null, x, y, -11.55, emissive('#ffe066')));
+  const BOOKC = ['#e53935', '#2e8bff', '#22a861', '#ffd166', '#a259ff', '#ff7a2f'];
+  for (let i = 0; i < 14; i++) { const a = -Math.PI / 2 + i * .55, x = Math.cos(a) * 7, z = -16 + Math.sin(a) * 7, y = 1.3 * (i + 1); box(x - 1.3, y - .5, z - 1, x + 1.3, y, z + 1, BOOKC[i % 6]); add(new THREE.BoxGeometry(2.5, .35, 1.9), '#fff7e0', x + .05, y - .25, z); }
+  // havada süzülen mumlar
+  const candles = [];
+  for (let i = 0; i < 16; i++) { const x = (rnd() * 2 - 1) * 26, z = (rnd() * 2 - 1) * 26, y = 7 + rnd() * 6; add(new THREE.CylinderGeometry(.15, .15, .7), '#fff7e0', x, y, z); const fl = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: '#ffb000', blending: THREE.AdditiveBlending, transparent: true, depthWrite: false })); fl.position.set(x, y + .55, z); fl.scale.setScalar(.8); scene.add(fl); }
+  // sihirli portal ve fıskiye
+  const portal = add(new THREE.TorusGeometry(2.6, .35, 12, 32), null, -18, 3.2, 8, new THREE.MeshBasicMaterial({ color: '#ff5ad8' })); portal.rotation.y = Math.PI / 2;
+  const pin = add(new THREE.CircleGeometry(2.4, 24), null, -18, 3.2, 8, new THREE.MeshBasicMaterial({ color: '#a259ff', transparent: true, opacity: .55, side: THREE.DoubleSide })); pin.rotation.y = Math.PI / 2;
+  box(14, 0, 10, 22, 1, 18, stone); add(new THREE.CylinderGeometry(1, 1.2, 3), stone, 18, 2.5, 14); const wtr = add(new THREE.SphereGeometry(1.2, 14, 10), null, 18, 4.6, 14, new THREE.MeshLambertMaterial({ color: '#7fd0ff', transparent: true, opacity: .7 }));
+  // sıralar, kitaplıklar
+  [[-20, -10], [-20, -4], [-20, 2]].forEach(([x, z]) => box(x - 3, 0, z - .8, x + 3, 1.2, z + .8, '#8b5a2b'));
+  [[24, -14], [24, -6]].forEach(([x, z]) => { box(x - 1, 0, z - 3, x + 1, 5, z + 3, '#8b5a2b'); for (let k = 0; k < 9; k++) add(new THREE.BoxGeometry(.4, .9, .5), BOOKC[k % 6], x - 1.1, 1 + Math.floor(k / 3) * 1.5, z - 2 + (k % 3) * 1.6); });
+  // baykuşlar
+  [[-W + 1, 7.4, 10], [W - 1, 7.4, -10], [0, 18.8, -16]].forEach(([x, y, z]) => { const o = new THREE.Sprite(new THREE.SpriteMaterial({ map: emojiTex('🦉'), transparent: true })); o.position.set(x, y, z); o.scale.setScalar(1.4); scene.add(o); });
+  // görevler: 5 iksir, 6 hayalet
+  [[0, 18.3, -16], [18, 1, 17], [-20, 1.2, -4], [24, 5, -10], [-26, 0, 22]].forEach(([x, y, z]) => item('potion', '🧪', x, y, z));
+  [[-8, 4], [8, 2], [-12, 16], [12, 20], [0, 8], [-24, -18]].forEach(([x, z]) => monster(x, z, 0, { ghost: true }));
+  vehicle('carpet', 6, 24, 0, Math.PI); vehicle('skate', -6, 24, 0, Math.PI);
+  orb('fire', -10, 0, 20); orb('water', 10, 0, 12); orb('joy', -24, 0, 12); heart(-20, 1.2, -10); heart(0, 18.3, -14);
+  gearRing(0, 0, 12, 5, 10); for (let i = 0; i < 14; i += 2) { const a = -Math.PI / 2 + i * .55; gear(Math.cos(a) * 7, 1.3 * (i + 1), -16 + Math.sin(a) * 7); }
+  sign(-5, 26, '🏰 Sihirli Okul', 'İksir ve hayaletler', '🏰 Kaçan 5 sihirli iksiri 🧪 bul! Biri kulenin tepesinde: uçan kitaplardan zıpla. 👻 6 hayaleti ateşle ya da zıplayarak kovala!');
+  MISSIONS = {
+    potion: { e: '🧪', label: 'İksir', count: true, done: false, check: () => itemsOf('potion').every(i => !i.alive), n: () => itemN('potion') },
+    ghost: { e: '👻', label: 'Hayalet', count: true, done: false, check: () => monsters.filter(m => m.ghost).every(m => !m.alive), n: () => `${monsters.filter(m => m.ghost && !m.alive).length}/${monsters.filter(m => m.ghost).length}` },
+  };
+}
+// =============== DÜNYA 7: UÇURUM ===============
+function cliff(x, z, top, w = 4, c = '#9a8f86') {
+  const r = add(rockGeo, c, x, top - 2.5, z); r.scale.set(w / 1.6, 3.2, w / 1.6); r.rotation.y = rnd() * 3;
+  const grass = add(new THREE.CylinderGeometry(w * .55, w * .6, .35, 8), '#7cc957', x, top - .15, z);
+  box(x - w / 2, top - 6, z - w / 2, x + w / 2, top, z + w / 2, null);
+}
+function buildUcurum() {
+  START = new THREE.Vector3(0, 0, 20);
+  cliff(0, 20, 0, 9); cliff(0, 12, 0, 6);
+  const plats = [];
+  for (let i = 0; i < 18; i++) { const a = Math.PI / 2 + i * .42, r = 12 - i * .15, x = Math.cos(a) * r, z = Math.sin(a) * r - 2, top = 1.4 * (i + 1); cliff(x, z, top, i % 5 === 4 ? 5 : 4); plats.push([x, top, z]); }
+  cliff(0, -2, 27, 8, '#8d8076');
+  [3, 8, 13].forEach(i => { const [x, y, z] = plats[i]; const m = add(new THREE.CylinderGeometry(.8, .9, .35, 18), '#2e8bff', x + 1, y + .17, z); pads.push({ x: x + 1, z, top: y + .35, m }); });
+  // dağlar ve vadi
+  for (let i = 0; i < 14; i++) { const a = i / 14 * 6.28, r = 80 + rnd() * 30; const m = add(new THREE.ConeGeometry(14 + rnd() * 10, 50 + rnd() * 30, 6), ['#8d96a0', '#7a8590', '#9aa3ad'][i % 3], Math.cos(a) * r, -20, Math.sin(a) * r); const cap = add(new THREE.ConeGeometry(6, 10, 6), '#ffffff', m.position.x, m.position.y + 22, m.position.z); }
+  for (let i = 0; i < 12; i++) { const c = add(new THREE.SphereGeometry(3 + rnd() * 2, 10, 8), null, (rnd() * 2 - 1) * 50, -6 - rnd() * 10, (rnd() * 2 - 1) * 50, new THREE.MeshLambertMaterial({ color: '#ffffff', transparent: true, opacity: .75 })); c.scale.set(2, .6, 1.2); }
+  // görevler: 6 kristal + zirve bayrağı
+  [2, 5, 9, 11, 14, 16].forEach(i => { const [x, y, z] = plats[i]; item('crystal', '🔷', x, y, z); });
+  item('flag', '🚩', 0, 27, -2, 1.4);
+  [6, 10, 15].forEach(i => { const [x, y, z] = plats[i]; monster(x, z, y); });
+  for (let i = 0; i < 18; i += 2) { const [x, y, z] = plats[i]; gear(x, y, z); }
+  [[0, 8, 4], [0, 14, -8], [0, 20, 4]].forEach(([x, y, z]) => ringGate(x, y, z, Math.PI / 2));
+  orb('joy', -2, 0, 22); orb('fire', 2, 0, 22); heart(plats[8][0], plats[8][1], plats[8][2]); heart(0, 27, 0);
+  sign(-3, 23, '⛰️ Uçurum', 'Zirveye tırman!', '⛰️ Taşlardan zıplayarak zirveye tırman! 6 kristal 🔷 topla, 🚩 zirve bayrağına ulaş. Düşersen son taşa dönersin. 🟦 Mavi taşlar seni fırlatır!');
+  MISSIONS = {
+    crystal: { e: '🔷', label: 'Kristal', count: true, done: false, check: () => itemsOf('crystal').every(i => !i.alive), n: () => itemN('crystal') },
+    flag: { e: '🚩', label: 'Zirve', count: true, done: false, check: () => itemsOf('flag').every(i => !i.alive), n: () => itemN('flag') },
+  };
+}
+// =============== DÜNYA 8: UZAY ===============
+function buildUzay() {
+  START = new THREE.Vector3(0, 0, 16);
+  scene.children.filter(c => c.isHemisphereLight).forEach(l => { l.color.set('#c9d4ff'); l.groundColor.set('#30305a'); });
+  const sv = []; for (let i = 0; i < 1500; i++) { const v = V(rnd() * 2 - 1, rnd() * 2 - 1, rnd() * 2 - 1).normalize().multiplyScalar(380 + rnd() * 60); sv.push(v.x, v.y, v.z); }
+  const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute(sv, 3));
+  scene.add(new THREE.Points(sg, new THREE.PointsMaterial({ color: '#ffffff', size: 1.6, sizeAttenuation: false, fog: false })));
+  const earth = add(new THREE.SphereGeometry(40, 32, 24), null, -160, 70, -260, new THREE.MeshLambertMaterial({ color: '#2e8bff', emissive: '#0a2a66', fog: false }));
+  for (let i = 0; i < 7; i++) add(new THREE.SphereGeometry(10 + rnd() * 8, 10, 8), null, -160 + (rnd() * 2 - 1) * 26, 70 + (rnd() * 2 - 1) * 26, -228, new THREE.MeshLambertMaterial({ color: '#2bb673', fog: false }));
+  const sat = add(new THREE.SphereGeometry(22, 28, 20), null, 190, 40, -180, new THREE.MeshLambertMaterial({ color: '#ffcf8a', emissive: '#553300', fog: false }));
+  const ring = add(new THREE.RingGeometry(30, 44, 48), null, 190, 40, -180, new THREE.MeshBasicMaterial({ color: '#e8c37a', side: THREE.DoubleSide, transparent: true, opacity: .7, fog: false })); ring.rotation.x = 1.2;
+  // ay yüzeyi (ana platform)
+  box(-16, -6, -6, 16, 0, 22, '#9a9aa8');
+  for (let i = 0; i < 14; i++) { const c = add(new THREE.CircleGeometry(1 + rnd() * 1.8, 18), '#7d7d8c', (rnd() * 2 - 1) * 14, .02, -4 + rnd() * 24); c.rotation.x = -Math.PI / 2; }
+  // roket üssü ve bayrak
+  add(new THREE.CylinderGeometry(.06, .06, 3), '#ffffff', -10, 1.5, 4); add(new THREE.PlaneGeometry(1.4, .9), null, -9.3, 2.6, 4, new THREE.MeshLambertMaterial({ color: '#e53935', side: THREE.DoubleSide }));
+  // asteroit platformları
+  const ast = [];
+  const path = [[0, 2, -10], [5, 4.5, -16], [11, 7, -20], [16, 10, -26], [11, 13, -33], [4, 16, -36], [-4, 19, -33], [-11, 22, -28], [-14, 25, -20], [-9, 28, -13]];
+  path.forEach(([x, y, z], i) => { const r = add(rockGeo, ['#8a7f9c', '#7d728f', '#9a8fae'][i % 3], x, y - 1.4, z); r.scale.set(2.6, 1.6, 2.6); r.rotation.y = rnd() * 3; box(x - 2.2, y - 3, z - 2.2, x + 2.2, y, z + 2.2, null); ast.push([x, y, z]); });
+  // uzay istasyonu (en tepe)
+  box(-6, 30, -6, 2, 30.6, 2, '#d9dde8'); add(new THREE.CylinderGeometry(1.6, 1.6, 3.6, 16), '#ffffff', -2, 32.4, -2); add(new THREE.BoxGeometry(9, .1, 2.2), '#2e8bff', -2, 33.2, -2);
+  const rocket = new THREE.Group(); rocket.add(at(new THREE.Mesh(new THREE.CylinderGeometry(.9, .9, 4, 16), mat('#ffffff')), 0, 2, 0)); rocket.add(at(new THREE.Mesh(new THREE.ConeGeometry(.9, 1.6, 16), mat('#e53935')), 0, 4.8, 0)); rocket.add(at(new THREE.Mesh(new THREE.CircleGeometry(.35, 14), emissive('#7fd0ff')), 0, 2.8, .91)); [0, 2.1, 4.2].forEach(a => { const f = new THREE.Mesh(new THREE.BoxGeometry(.1, 1.2, .8), mat('#e53935')); f.position.set(Math.cos(a) * .9, .6, Math.sin(a) * .9); f.rotation.y = -a; rocket.add(f); }); rocket.position.set(10, 0, 12); scene.add(rocket); box(9.1, 0, 11.1, 10.9, 4, 12.9, null);
+  // görevler: 6 yıldız parçası + roket yakıtı
+  [1, 3, 4, 6, 7, 9].forEach(i => { const [x, y, z] = ast[i]; item('shard', '💎', x, y, z); });
+  item('rocket', '⛽', -2, 30.6, 0, 1.3);
+  [[-9, 4], [9, 2], [0, -2], [-13, 10], [13, 8]].forEach(([x, z]) => monster(x, z, 0, { alien: true }));
+  [2, 5, 8].forEach(i => { const [x, y, z] = ast[i]; monster(x, z, y, { alien: true }); });
+  vehicle('moto', -4, 18, 0, Math.PI); vehicle('carpet', 4, 18, 0, Math.PI);
+  orb('fire', -12, 0, 8); orb('net', 12, 0, 6); orb('water', 0, 0, 2); heart(ast[5][0], ast[5][1], ast[5][2]); heart(-12, 0, 20);
+  gearRing(0, 0, 8, 4, 8); ast.forEach(([x, y, z], i) => i % 2 || gear(x + 1, y, z + 1));
+  sign(-4, 20, '🚀 Uzay', 'Az yerçekimi!', '🚀 Burada yerçekimi az: çok yükseğe zıplarsın! Asteroitlerden geçip 6 yıldız parçası 💎 topla, istasyondaki ⛽ roket yakıtını al. 👽 Uzaylılara dikkat!');
+  MISSIONS = {
+    shard: { e: '💎', label: 'Parça', count: true, done: false, check: () => itemsOf('shard').every(i => !i.alive), n: () => itemN('shard') },
+    rocket: { e: '⛽', label: 'Yakıt', count: true, done: false, check: () => itemsOf('rocket').every(i => !i.alive), n: () => itemN('rocket') },
+  };
+}
 // =============== DÜNYA 2: BÜYÜLÜ ORMAN ===============
 function buildForest() {
   START = new THREE.Vector3(0, 0, 13);
@@ -918,7 +1103,7 @@ function buildForest() {
     suits: { e: '👕', label: 'Kostüm', count: true, bonus: true, done: false, check: () => ['red', 'blue', 'orange', 'green'].every(k => SV.suits[k]), n: () => `${['red', 'blue', 'orange', 'green'].filter(k => SV.suits[k]).length}/4` },
   };
 }
-BUILD ? buildBuilder() : BAHCE ? buildBahce() : LEARN ? buildLearn() : buildForest();
+BUILD ? buildBuilder() : BAHCE ? buildBahce() : LEARN ? buildLearn() : DENIZ ? buildDeniz() : OKUL ? buildOkul() : UCURUM ? buildUcurum() : UZAY ? buildUzay() : buildForest();
 
 // =============== ROBİ ===============
 const suitMat = new THREE.MeshLambertMaterial({ color: '#f4f6fb' }), accMat = new THREE.MeshLambertMaterial({ color: '#ff7a2f' }), darkMat = mat('#2b2340');
@@ -1250,8 +1435,8 @@ function movePlayer(dt) {
   input.dash = false;
   const gliding = flying && P.vel.y < 0;
   if (P.flying && !P.pound) P.vel.y = Math.max(-9, Math.min(9, (P.altT - P.pos.y) * 3.5));
-  else P.vel.y -= GRAV * (gliding ? .35 : 1) * dt;
-  if (!P.pound && !P.flying && P.vel.y < (flying ? -6 : -30)) P.vel.y = flying ? -6 : -30;
+  else P.vel.y -= GRAV * GMUL * (gliding ? .35 : 1) * dt;
+  if (!P.pound && !P.flying && P.vel.y < (flying ? -6 : UZAY ? -12 : -30)) P.vel.y = flying ? -6 : -30;
   if (P.pos.y > 30 && P.vel.y > 0) P.vel.y = 0;
   if (P.dash > 0) { P.vel.x = Math.sin(P.yaw) * 17; P.vel.z = Math.cos(P.yaw) * 17; }
   if (P.pound) { P.vel.x = P.vel.z = 0; if (P.poundT > 0) { P.poundT -= dt; P.vel.y = 1.5; } else P.vel.y = -32; }
@@ -1267,7 +1452,8 @@ function movePlayer(dt) {
   P.pos.x = Math.max(-W + P.r, Math.min(W - P.r, P.pos.x)); P.pos.z = Math.max(-W + P.r, Math.min(W - P.r, P.pos.z));
   const was = P.onGround; P.onGround = false; P.pos.y += P.vel.y * dt;
   for (const b of colliders) { if (!overlap(P.pos.x, P.pos.y, P.pos.z, b)) continue; if (P.vel.y <= 0) { P.pos.y = b.y1; P.vel.y = 0; P.onGround = true; } else { P.pos.y = b.y0 - P.h; P.vel.y = 0; } }
-  if (P.pos.y <= 0) { P.pos.y = 0; P.vel.y = 0; P.onGround = true; }
+  if (!VOID && P.pos.y <= 0) { P.pos.y = 0; P.vel.y = 0; P.onGround = true; }
+  if (VOID && P.pos.y < -14) { SFX.splash(); P.pos.copy(P.safe); P.vel.set(0, 0, 0); P.inv = 1; if (P.flying) setFlight(false); toast(UZAY ? '🌌 Uzay boşluğuna düştün! Son platforma dönüyorsun.' : '⛰️ Uçurumdan düştün! Son taşa dönüyorsun. Dikkatli zıpla!', 2.5); }
   if (P.onGround) { P.jumps = 0; if (!was) puff(P.pos, 4); if (P.pound) { P.pound = false; poundImpact(); } }
   if (P.flying && P.onGround && P.vel.y <= 0) P.onGround = false;
   if (P.onGround && pads.length) for (const pd of pads) if (Math.abs(P.pos.x - pd.x) < 1 && Math.abs(P.pos.z - pd.z) < 1 && Math.abs(P.pos.y - pd.top) < .15) { P.vel.y = 17; P.onGround = false; P.jumps = 1; pd.m.scale.y = .4; setTimeout(() => pd.m.scale.y = 1, 150); try { const t = ac().currentTime; note(200, t, .3, 'sine', .12, 4); } catch (e) {} puff(P.pos, 8, '#bfe3ff'); }
@@ -1426,7 +1612,7 @@ function hurt(from) {
 }
 function killMonster(m) {
   if (!m.alive) return;
-  m.alive = false; m.g.visible = false; m.shadow.visible = false; m.respawn = m.dummy ? 1e9 : 25;
+  m.alive = false; m.g.visible = false; m.shadow.visible = false; m.respawn = m.dummy || m.ghost ? 1e9 : 25;
   if (m.dome) { scene.remove(m.dome); m.dome = null; }
   burst(m.pos, m.heat > 0 ? '#ff8a00' : '#9be27a', 14); for (let i = 0; i < 8; i++) fx({ pos: m.pos.clone().add(V(0, .8, 0)), vel: V((Math.random() - .5) * 3, 2 + Math.random() * 2, (Math.random() - .5) * 3), life: 1.2, size: .6, size2: 1.6, color: '#777', alpha: .5 });
   SFX.stomp(); addXP(m.dummy ? 3 : 5); if (!m.dummy) questEv('monster');
@@ -1475,10 +1661,12 @@ const k2 = m => !m.bonus; // orman: kostüm toplamak bonus görev
 function finishWorld() {
   if (won) return; won = true;
   if (BUILD) { sticker('builder'); celebrate('PARKUR BİTTİ!', `⏱ ${parkurT.toFixed(1)} saniye`, true); voice('power'); setTimeout(() => toast('✏️ Düzenle ile parkuru değiştir ya da 🔁 tekrar dene!', 4), 2200); return; }
-  if (LEARN) { SV.trained = true; save(); sticker('trained'); } else sticker('forest');
+  SV.cleared = SV.cleared || {}; SV.cleared[WID] = true; if (LEARN) SV.trained = true; save();
+  sticker({ ogren: 'trained', orman: 'forest', deniz: 'deniz', okul: 'okul', ucurum: 'ucurum', uzay: 'uzay' }[WID]);
   setTimeout(() => {
-    $('winTitle').innerHTML = LEARN ? '🎓 Eğitim tamam!<small>Büyülü Orman açıldı</small>' : '🎉 Orman kurtuldu!<small>Harika iş çıkardın Robi</small>';
-    $('winStats').innerHTML = LEARN ? 'Bütün kostümleri ve güçleri öğrendin.<br>Ormanda kostümleri bulup kazanacaksın!' : `🔥 ${fires.length} yangın söndü · 🐾 ${animals.length} hayvan kurtuldu<br>⭐ Seviye ${LVL} · ⚙️ ${SV.gears} dişli`;
+    const NEXT = { ogren: 'Büyülü Orman', orman: 'Deniz Kenarı', deniz: 'Sihirli Okul', okul: 'Uçurum', ucurum: 'Uzay' };
+    $('winTitle').innerHTML = LEARN ? '🎓 Eğitim tamam!<small>Büyülü Orman açıldı</small>' : `🎉 ${WNAME[WID]} tamam!<small>${NEXT[WID] ? '🔓 ' + NEXT[WID] + ' açıldı!' : 'Bütün dünyaları bitirdin, sen bir kahramansın!'}</small>`;
+    $('winStats').innerHTML = LEARN ? 'Bütün kostümleri ve güçleri öğrendin.<br>Ormanda kostümleri bulup kazanacaksın!' : `${Object.values(MISSIONS).filter(m => !m.bonus).map(m => m.e + ' ' + (m.n ? m.n() : '✓')).join(' · ')}<br>⭐ Seviye ${LVL} · ⚙️ ${SV.gears} dişli`;
     $('win').style.display = 'flex'; paused = true;
   }, LEARN ? 4200 : 1500);
 }
@@ -1689,7 +1877,7 @@ function update(dt) {
     else if (dist < 9 && same) { m.dir = Math.atan2(dx, dz); speed = 3.4; }
     else { m.dir += (Math.random() - .5) * dt * 3; if (m.pos.distanceTo(m.home) > 7) m.dir = Math.atan2(m.home.x - m.pos.x, m.home.z - m.pos.z); }
     if (speed) { const nx = m.pos.x + Math.sin(m.dir) * speed * dt, nz = m.pos.z + Math.cos(m.dir) * speed * dt; if (!isWater(nx, nz) && !blockedAt(nx, nz, m.pos.y, m.r * .8, m.h) && Math.abs(groundAt(nx, nz, m.pos.y, .05) - m.pos.y) < .2) { m.pos.x = nx; m.pos.z = nz; } else m.dir += Math.PI * (.5 + Math.random()); }
-    m.g.position.copy(m.pos); if (!m.dummy && speed) m.g.position.y += Math.abs(Math.sin(m.t * 8)) * .15;
+    m.g.position.copy(m.pos); if (m.ghost) m.g.position.y += .6 + Math.sin(m.t * 2.5) * .3; else if (!m.dummy && speed) m.g.position.y += Math.abs(Math.sin(m.t * 8)) * .15;
     if (!m.dummy) m.g.rotation.y = m.stun > 0 ? m.t * 8 : m.dir;
     m.shadow.position.set(m.pos.x, m.pos.y + .07, m.pos.z);
     if (!m.dummy && dist < m.r + P.r + .1 && P.pos.y < m.pos.y + m.h && P.pos.y + P.h > m.pos.y) {
@@ -1743,7 +1931,7 @@ function update(dt) {
   }
   if (combo.t > 0) combo.t -= dt;
   if (BUILD && !won) parkurT += dt;
-  updateStickerPop(dt); updateVehicles(dt); updateDragon(dt);
+  updateStickerPop(dt); updateVehicles(dt); updateDragon(dt); updateItems(dt, V(P.pos.x, P.pos.y + .9, P.pos.z));
   parentT += dt; if (parentT >= 5) { parentT = 0; const left = RO.tick(5); if (left <= 0) sleepTime(); else if (left <= 60 && !warned) { warned = true; toast('⏰ Robi yakında uyuyacak: 1 dakika kaldı!', 4); } }
   updateNeon(dt);
   if (aimActive() && currentPower()) { aimRing.visible = true; aimRing.position.set(aim.point.x, aim.point.y + .08, aim.point.z); aimRing.material.color.set(POWER[currentPower()].color); const s = 1 + Math.sin(elapsed * 10) * .1; aimRing.scale.set(s, s, s); } else aimRing.visible = false;
@@ -1832,8 +2020,14 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 // Giriş ekranı içeriği
-$('introTitle').innerHTML = BUILD ? 'Robi\'nin Macerası<small>🧱 Parkur Atölyesi</small>' : BAHCE ? 'Robi\'nin Macerası<small>🌳 Koruma Bahçesi</small>' : LEARN ? 'Robi\'nin Macerası<small>🎓 Eğitim Bahçesi</small>' : 'Robi\'nin Macerası<small>🌲 Büyülü Orman</small>';
-$('introText').innerHTML = BUILD ? '<p>Kendi parkurunu kur, sonra Robi ile oyna!</p><ul><li>🧱 Blok: aynı kareye tekrar dokun, yükselsin (4 kata kadar)</li><li>🟦 Zıpzıp, ⭕ halka, 🔥 ateş, 👾 canavar, ⚙️ dişli koy</li><li>🚩 Başlangıç ve ⭐ Bitiş yıldızını yerleştir</li><li>▶ Dene ile oyna, ✏️ Düzenle ile geri dön</li></ul>' : BAHCE ? (animals.length ? `<p>Kurtardığın <b>${animals.length}</b> hayvan burada mutlu yaşıyor! Yanlarına git, dokun ve sev. 💗</p><ul><li>Her sevgi 1 dişli kazandırır</li><li>Dev yakaladığın hayvanlar burada da büyük</li><li>📸 Fotoğraf modunda onlarla poz ver!</li></ul>` : '<p>Bahçe henüz boş! 🌱</p><ul><li>Büyülü Ormanda hayvanları ağla yakala</li><li>Yakaladığın her hayvan buraya gelir</li></ul>') : LEARN
+const W_INTRO = {
+  deniz: ['🏖️ Deniz Kenarı', '<p>Güneşli bir sahil! Kum kalesine tırman, iskelede koş, kayalardan zıpla.</p><ul><li>🐚 8 deniz kabuğu bul</li><li>🐢 4 kaplumbağa yavrusunu ağla kurtar</li><li>🦀 Yengeçlerin kafasına zıpla</li><li>🐴 Atla ya da 🚗 arabayla sahilde gez</li></ul>'],
+  okul: ['🏰 Sihirli Okul', '<p>Büyücülerin okulunda iksirler kaçmış, hayaletler ortalıkta!</p><ul><li>🧪 5 sihirli iksiri bul (biri kulenin tepesinde)</li><li>📚 Uçan kitaplardan basamak basamak tırman</li><li>👻 6 hayaleti ateşle ya da zıplayarak kovala</li><li>🧞 Uçan halıyla kuleye uç!</li></ul>'],
+  ucurum: ['⛰️ Uçurum', '<p>Bulutların üstünde dev kayalıklar! Zirveye kadar tırman.</p><ul><li>🔷 6 kristal topla</li><li>🚩 Zirve bayrağına ulaş</li><li>🟦 Mavi taşlar seni yükseğe fırlatır</li><li>Düşersen son taşa dönersin, korkma!</li></ul>'],
+  uzay: ['🚀 Uzay', '<p>Ay\'dasın! Yerçekimi az, çok yükseğe zıplarsın.</p><ul><li>💎 Asteroitlerde 6 yıldız parçası topla</li><li>⛽ Uzay istasyonundaki roket yakıtını al</li><li>👽 Uzaylıların kafasına zıpla</li><li>🏍️ Motorla ayda uç gibi zıpla!</li></ul>'],
+};
+$('introTitle').innerHTML = W_INTRO[WID] ? `Robi\'nin Macerası<small>${W_INTRO[WID][0]}</small>` : BUILD ? 'Robi\'nin Macerası<small>🧱 Parkur Atölyesi</small>' : BAHCE ? 'Robi\'nin Macerası<small>🌳 Koruma Bahçesi</small>' : LEARN ? 'Robi\'nin Macerası<small>🎓 Eğitim Bahçesi</small>' : 'Robi\'nin Macerası<small>🌲 Büyülü Orman</small>';
+$('introText').innerHTML = W_INTRO[WID] ? W_INTRO[WID][1] : BUILD ? '<p>Kendi parkurunu kur, sonra Robi ile oyna!</p><ul><li>🧱 Blok: aynı kareye tekrar dokun, yükselsin (4 kata kadar)</li><li>🟦 Zıpzıp, ⭕ halka, 🔥 ateş, 👾 canavar, ⚙️ dişli koy</li><li>🚩 Başlangıç ve ⭐ Bitiş yıldızını yerleştir</li><li>▶ Dene ile oyna, ✏️ Düzenle ile geri dön</li></ul>' : BAHCE ? (animals.length ? `<p>Kurtardığın <b>${animals.length}</b> hayvan burada mutlu yaşıyor! Yanlarına git, dokun ve sev. 💗</p><ul><li>Her sevgi 1 dişli kazandırır</li><li>Dev yakaladığın hayvanlar burada da büyük</li><li>📸 Fotoğraf modunda onlarla poz ver!</li></ul>` : '<p>Bahçe henüz boş! 🌱</p><ul><li>Büyülü Ormanda hayvanları ağla yakala</li><li>Yakaladığın her hayvan buraya gelir</li></ul>') : LEARN
   ? '<p>Burada bütün kostümleri <b>bedava</b> deneyebilirsin! 4 alanı tamamla, ormana hazır ol.</p><ul><li>🔥 <b>Kırmızı</b>: lav akıt, korkulukları yak</li><li>💧 <b>Mavi</b>: su fışkırt, ateşleri söndür</li><li>🪽 <b>Turuncu</b>: uç, halkalardan geç</li><li>🕸️ <b>Yeşil</b>: ağ at, tavşanları dondur ve topla</li></ul>'
   : '<p>Ormanda yangın var, hayvanlar kaçışıyor! Kostümleri sandıklarda bul ya da dişliyle al.</p><ul><li>🔥 6 yangını söndür (💧 mavi kostüm)</li><li>🐾 8 hayvanı ağla dondur ve topla (🕸️ yeşil)</li><li>👕 4 kostüm sandığını bul (biri pasta evin tepesinde!)</li><li>⚡ Güç topu alınca her kostümde o gücü kullan</li></ul>';
 $('lvlIntro').textContent = `⭐ Seviye ${LVL} · ⚙️ ${SV.gears}`;
@@ -1844,7 +2038,7 @@ $('start').onclick = () => {
   stickHome(); started = true; camYaw = 0; hud(); refreshPowerUI(); buildSuitBar();
   if (BUILD) { $('editUI').innerHTML = TOOLS.map(([k, e, n]) => `<button data-tool="${k}" class="${k === tool ? 'on' : ''}"><i>${e}</i>${n}</button>`).join('') + '<button id="eSample"><i>📋</i>Örnek</button><button id="eClear"><i>🗑️</i>Temizle</button><button id="ePlay" class="play"><i>▶</i>Dene</button>'; $('editUI').querySelectorAll('[data-tool]').forEach(b => b.onclick = () => { tool = b.dataset.tool; $('editUI').querySelectorAll('[data-tool]').forEach(x => x.classList.toggle('on', x === b)); tone(600, .05, 'triangle', .05); }); $('ePlay').onclick = () => { if (!Object.values(layout).some(c => c.o === 'star')) { toast('⭐ Önce bir Bitiş yıldızı koy!'); SFX.bad(); return; } setEdit(false); }; $('eClear').onclick = () => { layout = {}; saveLayout(); rebuildParkur(); }; $('eSample').onclick = () => { layout = JSON.parse(JSON.stringify(SAMPLE)); saveLayout(); rebuildParkur(); }; $('editBtn').onclick = () => setEdit(true); setEdit(true); }
   if (SV.pet) setPet(SV.pet);
-  toast(BUILD ? '🧱 Bir araç seç ve kareye dokun! Hazır olunca ▶ Dene.' : BAHCE ? '🌳 Koruma Bahçesine hoş geldin! Hayvanlara dokun ve sev.' : LEARN ? '🎓 Eğitim Bahçesine hoş geldin! Önce 👕 butonuna bas ve bir kostüm seç.' : '🌲 Orman yanıyor! Kostüm sandıklarını bul, ateşleri söndür, hayvanları kurtar!', 5);
+  toast(W_INTRO[WID] ? `${W_INTRO[WID][0]}: görevler üstte yazıyor. İyi eğlenceler!` : BUILD ? '🧱 Bir araç seç ve kareye dokun! Hazır olunca ▶ Dene.' : BAHCE ? '🌳 Koruma Bahçesine hoş geldin! Hayvanlara dokun ve sev.' : LEARN ? '🎓 Eğitim Bahçesine hoş geldin! Önce 👕 butonuna bas ve bir kostüm seç.' : '🌲 Orman yanıyor! Kostüm sandıklarını bul, ateşleri söndür, hayvanları kurtar!', 5);
 };
 hud();
 requestAnimationFrame(frame);
