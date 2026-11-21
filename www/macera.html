@@ -6,74 +6,96 @@
 <title>Robi'nin Macerası</title>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&display=swap" rel="stylesheet">
 <style>
-:root{--ink:#1f1a33;--glass:rgba(255,255,255,.26);--glass2:rgba(255,255,255,.42);--edge:rgba(255,255,255,.65)}
+:root{--ink:#2b2340}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 html,body{margin:0;height:100%;overflow:hidden;background:#9fd8ff;font-family:'Baloo 2',system-ui,sans-serif;color:var(--ink);touch-action:none}
 #c{position:fixed;inset:0;width:100%;height:100%;display:block}
 #touch{position:fixed;inset:0;z-index:2}
-.glass{background:var(--glass);backdrop-filter:blur(14px) saturate(170%);-webkit-backdrop-filter:blur(14px) saturate(170%);border:1.5px solid var(--edge);box-shadow:0 8px 24px rgba(31,26,51,.18), inset 0 1px 0 rgba(255,255,255,.7)}
-body:not(.playing) #hud, body:not(.playing) #btns, body:not(.playing) #topR, body:not(.playing) #stick, body:not(.playing) #missions{display:none}
-#hud{position:fixed;top:8px;left:8px;z-index:5;display:flex;flex-direction:column;gap:5px;pointer-events:none}
+.glass{background:#fff;border:3.5px solid var(--ink);box-shadow:0 4px 0 var(--ink)}
+body:not(.playing) #hud, body:not(.playing) #btns, body:not(.playing) #topR, body:not(.playing) #stick, body:not(.playing) #missions, body:not(.playing) #suitBar{display:none}
+#hud{position:fixed;top:8px;left:8px;z-index:5;display:flex;flex-direction:column;gap:7px;pointer-events:none}
 .row{display:flex;gap:6px;align-items:center}
-.pill{border-radius:999px;padding:2px 12px;font-weight:800;font-size:16px;color:var(--ink)}
-.lv{display:flex;align-items:center;gap:6px}
-.xp{width:76px;height:9px;background:rgba(31,26,51,.15);border-radius:5px;overflow:hidden}.xp i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffd166,#ff7a2f);border-radius:5px}
+.pill{border-radius:14px;padding:1px 11px;font-weight:800;font-size:16px;color:var(--ink)}
+#hp{background:#ffe3ea}.gearPill{background:#fff3c4}
+.lv{display:flex;align-items:center;gap:6px;background:#fff}
+.xp{width:76px;height:12px;background:#eee;border:2.5px solid var(--ink);border-radius:7px;overflow:hidden}.xp i{display:block;height:100%;width:0;background:#ffd166}
 #orbs{display:flex;gap:4px}
-.chip{border-radius:12px;padding:0 8px;font-weight:800;font-size:14px;background:color-mix(in srgb,var(--tint) 35%,rgba(255,255,255,.4));border:1.5px solid var(--edge);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
-#missions{position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:5;display:flex;gap:5px;border-radius:999px;padding:3px 6px;pointer-events:none}
-.mis{font-weight:800;font-size:14px;padding:1px 8px;border-radius:999px;background:rgba(255,255,255,.35)}
-.mis.done{background:rgba(43,182,115,.75);color:#fff}
-#topR{position:fixed;top:8px;right:8px;z-index:7;display:flex;gap:6px}
-.tb{width:46px;height:46px;border-radius:16px;font-size:22px;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer}
-#suitBadge{position:absolute;right:-4px;bottom:-4px;font-size:14px}
-#toast{position:fixed;top:60px;left:50%;transform:translate(-50%,-10px);z-index:6;color:var(--ink);border-radius:18px;padding:8px 16px;font-weight:800;font-size:16px;max-width:88vw;text-align:center;opacity:0;transition:.25s;pointer-events:none}
+.chip{border-radius:10px;padding:0 8px;font-weight:800;font-size:14px;background:var(--tint);color:#fff;border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink);text-shadow:0 1px 0 var(--ink)}
+#missions{position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:5;display:flex;gap:5px;border-radius:14px;padding:3px 5px;pointer-events:none}
+.mis{font-weight:800;font-size:14px;padding:0 8px;border-radius:9px;background:#f3ecff}
+.mis.done{background:#22b573;color:#fff}
+#topR{position:fixed;top:8px;right:8px;z-index:7;display:flex;gap:7px}
+.tb{width:46px;height:46px;border-radius:14px;font-size:22px;display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer;background:#ffd166}
+.tb:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+#suitBadge{position:absolute;right:-6px;bottom:-6px;font-size:14px}
+#toast{position:fixed;top:62px;left:50%;transform:translate(-50%,-10px);z-index:6;color:var(--ink);border-radius:16px;padding:6px 14px;font-weight:800;font-size:16px;max-width:86vw;text-align:center;opacity:0;transition:.25s;pointer-events:none;background:#fffbea}
 #toast.on{opacity:1;transform:translate(-50%,0)}
-#ad{position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:8;height:34px;width:min(480px,70vw);border-radius:0 0 14px 14px;display:none;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:rgba(31,26,51,.6);letter-spacing:1px;pointer-events:none}
-#stick{position:fixed;width:120px;height:120px;border-radius:50%;z-index:4;pointer-events:none}
-#knob{position:absolute;left:30px;top:30px;width:60px;height:60px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,rgba(255,255,255,.75));box-shadow:0 4px 10px rgba(0,0,0,.2)}
-#btns{position:fixed;right:12px;bottom:14px;z-index:5;width:250px;height:220px}
-.b{position:absolute;border-radius:50%;font-family:inherit;font-weight:800;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;cursor:pointer;
-  background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.75),color-mix(in srgb,var(--tint) 75%,transparent) 55%,var(--tint));border:2px solid rgba(255,255,255,.8);
-  box-shadow:0 6px 16px color-mix(in srgb,var(--tint) 45%,transparent), inset 0 -4px 8px rgba(0,0,0,.15);text-shadow:0 1px 2px rgba(0,0,0,.35);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:transform .08s}
-.b i{font-style:normal;font-size:1.6em}.b span{font-size:12px;margin-top:2px}
-.b.down{transform:scale(.9)}
+#ad{position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:8;height:32px;width:min(460px,64vw);border-radius:0 0 14px 14px;border-top:0;display:none;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#7a6f8f;letter-spacing:1px;pointer-events:none;background:#f3f3f7}
+#stick{position:fixed;width:120px;height:120px;border-radius:50%;z-index:4;pointer-events:none;background:rgba(255,255,255,.55);border:3.5px solid var(--ink);box-shadow:0 4px 0 var(--ink)}
+#knob{position:absolute;left:27px;top:27px;width:60px;height:60px;border-radius:50%;background:#ff7a2f;border:3.5px solid var(--ink);box-shadow:0 4px 0 var(--ink), inset 0 6px 0 rgba(255,255,255,.35)}
+#btns{position:fixed;right:12px;bottom:14px;z-index:5;width:250px;height:240px;pointer-events:none}
+.b{position:absolute;border-radius:50%;font-family:inherit;font-weight:800;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;cursor:pointer;pointer-events:auto;
+  background:var(--tint);border:4px solid var(--ink);box-shadow:0 6px 0 var(--ink), inset 0 7px 0 rgba(255,255,255,.35);text-shadow:0 2px 0 var(--ink);transition:transform .06s}
+.b i{font-style:normal;font-size:1.6em;text-shadow:none}.b span{font-size:12px;margin-top:2px}
+.b.down{transform:translateY(5px);box-shadow:0 1px 0 var(--ink), inset 0 7px 0 rgba(255,255,255,.35)}
 #bJump{--tint:#22b573;right:0;bottom:0;width:98px;height:98px;font-size:20px}
 #bSpin{--tint:#ff7a2f;right:106px;bottom:6px;width:74px;height:74px;font-size:16px}
-#bDash{--tint:#4f8cff;right:8px;bottom:108px;width:62px;height:62px;font-size:14px}
-#bPower{--tint:#ff5a1f;right:96px;bottom:92px;width:76px;height:76px;font-size:18px;display:none}
-#bFly{--tint:#ffb020;right:184px;bottom:40px;width:66px;height:66px;font-size:15px;display:none}
-#bSwap{--tint:#7a6f8f;right:178px;bottom:120px;width:44px;height:44px;font-size:12px;display:none}
-.screen{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(31,26,51,.25)}
-.box{border-radius:28px;padding:16px 20px;max-width:420px;width:100%;max-height:94vh;overflow-y:auto;text-align:center;background:rgba(255,255,255,.55);backdrop-filter:blur(22px) saturate(180%);-webkit-backdrop-filter:blur(22px) saturate(180%);border:1.5px solid var(--edge);box-shadow:0 20px 50px rgba(31,26,51,.3)}
+#bDash{--tint:#4f8cff;right:8px;bottom:110px;width:62px;height:62px;font-size:14px}
+#bPower{--tint:#ff5a1f;right:96px;bottom:94px;width:76px;height:76px;font-size:18px;display:none}
+#bFly{--tint:#ffb020;right:186px;bottom:40px;width:66px;height:66px;font-size:15px;display:none}
+#bFly.active{--tint:#ff8a1f;box-shadow:0 6px 0 var(--ink),0 0 0 4px #fff3,0 0 18px #ff9a1f}
+#bSwap{--tint:#a259ff;right:180px;bottom:124px;width:46px;height:46px;font-size:12px;display:none}
+#bUp,#bDown{--tint:#ff9a1f;right:10px;width:58px;height:54px;border-radius:18px;font-size:16px;display:none}
+#bUp{bottom:178px}#bDown{bottom:112px}
+#btns.flying #bUp,#btns.flying #bDown{display:flex}#btns.flying #bDash{display:none}
+#alt{width:22px;height:120px;border-radius:12px;background:#fff;border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink);overflow:hidden;pointer-events:none;position:relative}
+#altFill{position:absolute;left:0;right:0;bottom:0;height:0;background:linear-gradient(#ffd166,#ff8a1f)}
+#altTxt{position:absolute;left:50%;bottom:-24px;transform:translateX(-50%);font-weight:800;font-size:12px}
+#altWrap{position:fixed;right:84px;top:66px;z-index:5;pointer-events:none;display:none}
+#suitBar{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);z-index:6;display:flex;gap:7px;padding:5px 9px;border-radius:20px;background:#fff7e0;border:3.5px solid var(--ink);box-shadow:0 4px 0 var(--ink)}
+.sb{width:40px;height:40px;border-radius:50%;background:var(--c);border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink);font-size:17px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .1s;padding:0}
+.sb.on{transform:translateY(-6px) scale(1.15);box-shadow:0 6px 0 var(--ink)}
+.sb.lock{filter:grayscale(.8);opacity:.7}
+.screen{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;padding:14px;background:rgba(43,35,64,.35)}
+.box{border-radius:24px;padding:14px 18px;max-width:440px;width:100%;max-height:94vh;overflow-y:auto;text-align:center;background:#fff;border:4px solid var(--ink);box-shadow:0 8px 0 var(--ink)}
 .box h1{margin:0;font-size:28px;line-height:1.05}.box h1 small{display:block;font-size:18px;color:#ff7a2f}
 .box h3{margin:10px 0 4px;text-align:left;font-size:16px}
 .box p{font-size:15px;line-height:1.35;margin:8px 0}
 .box ul{text-align:left;font-size:14px;line-height:1.5;padding-left:18px;margin:6px 0 12px}
-.go{border:0;border-radius:16px;height:52px;width:100%;font-family:inherit;font-size:20px;font-weight:800;color:#fff;background:linear-gradient(135deg,#ff9a3c,#ff5a1f);box-shadow:0 6px 16px rgba(255,90,31,.35);margin-top:8px;cursor:pointer}
-.sec{background:rgba(255,255,255,.6);color:var(--ink);box-shadow:none;border:1.5px solid var(--edge)}
+.go{border:4px solid var(--ink);border-radius:16px;height:52px;width:100%;font-family:inherit;font-size:20px;font-weight:800;color:#fff;background:#ff7a2f;box-shadow:0 5px 0 var(--ink);margin-top:10px;cursor:pointer;text-shadow:0 2px 0 var(--ink)}
+.go:active{transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+.sec{background:#fff;color:var(--ink);text-shadow:none}
 .opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:8px}
-.opt{border:2px solid var(--edge);border-radius:16px;background:rgba(255,255,255,.45);padding:6px 4px;font-family:inherit;color:var(--ink);display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
+.opt{border:3px solid var(--ink);border-radius:14px;background:#fff;box-shadow:0 3px 0 var(--ink);padding:6px 4px;font-family:inherit;color:var(--ink);display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
 .opt b{font-size:12px;line-height:1.1}.opt small{font-size:11px;font-weight:800;color:#7a6f8f}
-.opt.sel{border-color:#ff7a2f;background:rgba(255,122,47,.18)}.opt.sel small{color:#ff5a1f}
-.opt.locked{opacity:.75}.opt.locked .sw{filter:grayscale(.6)}
-.sw{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:inset 0 -3px 0 rgba(0,0,0,.15),0 2px 6px rgba(0,0,0,.15)}
+.opt.sel{background:#fff1e4;border-color:#ff7a2f;box-shadow:0 3px 0 #ff7a2f}.opt.sel small{color:#ff5a1f}
+.opt.locked .sw{filter:grayscale(.6)}
+.sw{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:21px;border:3px solid var(--ink)}
 .desc{font-size:13px;font-weight:700;margin-top:6px;text-align:left;color:#5a4f70}
 .note{font-size:13px;color:#5a4f70;font-weight:700}
-.item{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1.5px solid rgba(255,255,255,.6);text-align:left}
+.item{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:2px dashed #e4dcef;text-align:left}
 .ie{font-size:30px;width:40px;text-align:center}.it{flex:1;line-height:1.15}.it small{display:block;color:#5a4f70;font-size:12px}
-.buy{border:0;border-radius:12px;background:#22b573;color:#fff;font-family:inherit;font-weight:800;font-size:15px;padding:8px 10px;min-width:78px}
-.buy:disabled{background:rgba(31,26,51,.2)}
-/* Süper güç anı */
+.buy{border:3px solid var(--ink);border-radius:12px;background:#22b573;color:#fff;font-family:inherit;font-weight:800;font-size:15px;padding:6px 10px;min-width:78px;box-shadow:0 3px 0 var(--ink)}
+.buy:disabled{background:#ddd;color:#999}
 #moment{position:fixed;inset:0;z-index:9;pointer-events:none;opacity:0;transition:opacity .3s}
 #moment.on{opacity:1}
-#moment .rays{position:absolute;left:50%;top:50%;width:160vmax;height:160vmax;transform:translate(-50%,-50%);background:repeating-conic-gradient(from 0deg,rgba(255,230,90,.22) 0 8deg,transparent 8deg 20deg);animation:spin 6s linear infinite;mask:radial-gradient(circle,transparent 8%,#000 30%,transparent 70%);-webkit-mask:radial-gradient(circle,transparent 8%,#000 30%,transparent 70%)}
+#moment .rays{position:absolute;left:50%;top:50%;width:160vmax;height:160vmax;transform:translate(-50%,-50%);background:repeating-conic-gradient(from 0deg,rgba(255,230,90,.25) 0 8deg,transparent 8deg 20deg);animation:spin 6s linear infinite;mask:radial-gradient(circle,transparent 8%,#000 30%,transparent 70%);-webkit-mask:radial-gradient(circle,transparent 8%,#000 30%,transparent 70%)}
 @keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
-#mTitle{position:absolute;top:7%;left:0;right:0;text-align:center;font-size:clamp(34px,9vh,64px);font-weight:800;color:#fff;text-shadow:0 4px 0 #ff5a1f,0 8px 20px rgba(0,0,0,.35);letter-spacing:2px;animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
-#mSub{position:absolute;bottom:8%;left:50%;transform:translateX(-50%);font-size:18px;font-weight:800;padding:6px 18px;border-radius:999px;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
+#mTitle{position:absolute;top:6%;left:0;right:0;text-align:center;font-size:clamp(34px,9vh,64px);font-weight:800;color:#ffd166;-webkit-text-stroke:3px var(--ink);text-shadow:0 6px 0 var(--ink);letter-spacing:2px;animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+#mSub{position:absolute;bottom:7%;left:50%;transform:translateX(-50%);font-size:18px;font-weight:800;padding:4px 18px;border-radius:16px;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
 @keyframes pop{from{transform:scale(.3)}}
 #flash{position:fixed;inset:0;z-index:9;background:#fff;opacity:0;pointer-events:none}
-#flash.go{animation:fl .35s}
+#flash.anim{animation:fl .35s}
 @keyframes fl{0%{opacity:.85}100%{opacity:0}}
+#combo{position:fixed;left:50%;top:46%;z-index:8;transform:translate(-50%,-50%);text-align:center;pointer-events:none;opacity:0}
+#combo b{display:block;font-size:clamp(36px,10vh,68px);font-weight:800;color:#ff5ad8;-webkit-text-stroke:3px var(--ink);text-shadow:0 6px 0 var(--ink);line-height:1}
+#combo small{display:inline-block;margin-top:6px;font-size:17px;font-weight:800;background:#fff;border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink);border-radius:12px;padding:0 12px}
+#combo.anim{animation:cb 2.2s ease-out}
+@keyframes cb{0%{opacity:0;transform:translate(-50%,-50%) scale(.3) rotate(-8deg)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.15) rotate(3deg)}22%{transform:translate(-50%,-50%) scale(1) rotate(0)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-70%) scale(1)}}
+#confetti{position:fixed;inset:0;z-index:8;pointer-events:none;overflow:hidden}
+#confetti i{position:absolute;top:-20px;width:10px;height:14px;border:2px solid var(--ink);border-radius:2px;opacity:0}
+#confetti.anim i{animation:cf linear forwards}
+@keyframes cf{0%{opacity:1;top:-20px}100%{opacity:1;top:105%;margin-left:40px}}
 </style>
 </head>
 <body>
@@ -81,7 +103,7 @@ body:not(.playing) #hud, body:not(.playing) #btns, body:not(.playing) #topR, bod
 <div id="touch"></div>
 <div id="stick" class="glass"><div id="knob"></div></div>
 <div id="hud">
-  <div class="row"><span class="pill glass" id="hp">❤️❤️❤️</span><span class="pill glass">⚙️ <span id="gears">0</span></span></div>
+  <div class="row"><span class="pill glass" id="hp">❤️❤️❤️</span><span class="pill glass gearPill">⚙️ <span id="gears">0</span></span></div>
   <div class="row"><span class="pill glass lv">⭐ <span id="lvl">1</span><span class="xp"><i id="xpbar"></i></span></span><span id="orbs"></span></div>
 </div>
 <div id="missions" class="glass"></div>
@@ -90,19 +112,24 @@ body:not(.playing) #hud, body:not(.playing) #btns, body:not(.playing) #topR, bod
 <div id="toast" class="glass"></div>
 <div id="btns">
   <button class="b" id="bSwap"><i>🔄</i></button>
+  <button class="b" id="bUp"><i>⬆️</i></button>
+  <button class="b" id="bDown"><i>⬇️</i></button>
   <button class="b" id="bFly"><i>🪽</i><span>Uç</span></button>
   <button class="b" id="bPower"><i>🔥</i><span>Ateş</span></button>
   <button class="b" id="bDash"><i>💨</i><span>Atıl</span></button>
   <button class="b" id="bSpin"><i>🌀</i><span>Dön</span></button>
   <button class="b" id="bJump"><i>⤒</i><span>Zıpla</span></button>
 </div>
+<div id="suitBar"></div>
+<div id="altWrap"><div id="alt"><div id="altFill"></div></div><div id="altTxt"></div></div>
+<div id="combo"></div><div id="confetti"></div>
 <div id="moment"><div class="rays"></div><div id="mTitle"></div><div id="mSub" class="glass"></div></div>
 <div id="flash"></div>
 <div class="screen" id="intro"><div class="box">
   <h1 id="introTitle"></h1>
   <p id="lvlIntro" style="font-weight:800;color:#22a861;margin:4px 0"></p>
   <div id="introText"></div>
-  <p style="font-size:12px;color:#5a4f70">Havadayken 🌀 = yere çakıl · 💨 = atıl · 🪽 basılı tut = yüksel<br>Bilgisayar: WASD, Boşluk, F dön, Shift atıl, G güç, V uç, K gardırop</p>
+  <p style="font-size:12px;color:#5a4f70">🪽 Uç tuşu: uçmaya başla · ⬆️⬇️ yükseklik · uçarken sağ elle yere dokun: güç at!<br>Havadayken 🌀 = yere çakıl · 💨 = atıl<br>Bilgisayar: WASD, Boşluk, F dön, Shift atıl, G güç, V uç, X alçal, K gardırop</p>
   <button class="go" id="start">▶ Oyna</button>
 </div></div>
 <div class="screen" id="wardrobe" style="display:none"><div class="box">
@@ -233,12 +260,12 @@ const SUITS = {
   red: { name: 'Ateş Kostümü', body: '#e53935', acc: '#ffd166', power: 'fire', e: '🔥', price: 80, desc: 'Uzun lav akıtır, her şeyi yakar' },
   blue: { name: 'Su Kostümü', body: '#2e8bff', acc: '#bff3ff', power: 'water', e: '💧', price: 60, desc: 'Su fışkırtır, her şeyi söndürür' },
   orange: { name: 'Uçuş Kostümü', body: '#ff8a1f', acc: '#ffe066', power: 'fly', e: '🪽', price: 100, desc: 'Uçar! Güç topu alırsa uçarken de kullanır' },
-  green: { name: 'Avcı Kostümü', body: '#22a861', acc: '#e8ffe0', power: 'net', e: '🕸️', price: 50, desc: 'Ağ atar, hayvanlar donup kalır' },
+  green: { name: 'Avcı Kostümü', body: '#22a861', acc: '#e8ffe0', power: 'net', e: '🕸️', price: 50, desc: 'Ağ atar + 🎈 neşe topları: hayvanlar sevinip 10 kat büyür!' },
 };
 const CAPES = { blue: { name: 'Mavi', c: '#2e6bff', price: 0 }, match: { name: 'Kostüm rengi', c: null, price: 0 }, gold: { name: 'Altın', c: '#ffc928', price: 60 }, rainbow: { name: 'Gökkuşağı', c: 'rainbow', price: 90 } };
 const HATS = { none: { name: 'Yok', e: '🚫', price: 0 }, cap: { name: 'Şapka', e: '🧢', price: 30 }, wizard: { name: 'Büyücü', e: '🧙', price: 60 }, propeller: { name: 'Pervaneli', e: '🚁', price: 80 }, crown: { name: 'Taç', e: '👑', price: 120 } };
 const POWER = {
-  fire: { name: 'Ateş', e: '🔥', color: '#ff5a1f' }, water: { name: 'Su', e: '💧', color: '#2e9bff' }, net: { name: 'Ağ', e: '🕸️', color: '#9be27a' },
+  fire: { name: 'Ateş', e: '🔥', color: '#ff5a1f' }, water: { name: 'Su', e: '💧', color: '#2e9bff' }, net: { name: 'Ağ', e: '🕸️', color: '#3ddc6a' }, joy: { name: 'Neşe', e: '🎈', color: '#ff5ad8' },
 };
 const ownsSuit = k => k === 'white' || LEARN || SV.suits[k];
 const ownsCape = k => CAPES[k].price === 0 || LEARN || SV.capes[k];
@@ -429,7 +456,7 @@ function makeAnimal(kind) {
   scene.add(g); g.userData.legs = legs; return g;
 }
 function animal(kind, x, z, speedScale = 1) {
-  animals.push({ kind, g: makeAnimal(kind), home: new THREE.Vector3(x, 0, z), pos: new THREE.Vector3(x, 0, z), dir: rnd() * 6.28, alive: true, frozen: false, dome: null, t: rnd() * 5, shadow: blobShadow(kind === 'deer' ? .7 : .45), speed: { rabbit: 7.2, fox: 8, deer: 8.6 }[kind] * speedScale, leash: LEARN ? 6 : 18 });
+  animals.push({ scale: 1, scaleT: 1, joy: 0, happy: 0, kind, g: makeAnimal(kind), home: new THREE.Vector3(x, 0, z), pos: new THREE.Vector3(x, 0, z), dir: rnd() * 6.28, alive: true, frozen: false, dome: null, t: rnd() * 5, shadow: blobShadow(kind === 'deer' ? .7 : .45), speed: { rabbit: 7.2, fox: 8, deer: 8.6 }[kind] * speedScale, leash: LEARN ? 6 : 18 });
 }
 const ANIMAL_TR = { rabbit: 'Tavşan', fox: 'Tilki', deer: 'Geyik' };
 
@@ -477,7 +504,7 @@ function buildLearn() {
   [[0, 4, -10], [4, 7, -14], [0, 10, -18], [-5, 12, -22], [-1, 14, -26]].forEach(([x, y, z]) => ringGate(x, y, z));
   add(new THREE.CylinderGeometry(2.2, 2.6, 15, 12), '#b9a2ff', 4, 7.5, -28); box(2, 0, -30, 6, 15, -26, null); bigStar(4, 15, -28);
   // 4) Ağ alanı
-  sign(14, -12, '🕸️ Ağ Alanı', 'Yeşil kostüm giy', '🕸️ Yeşil kostümü giy, güç butonuna bas: ağ at! Hayvan donup kalınca yanına git, dokun ve topla.', -.8);
+  sign(14, -12, '🕸️ Ağ Alanı', 'Yeşil kostüm giy', '🕸️ Yeşil kostümü giy! 🎈 Neşe topları at: tavşanlar sevinip büyür. Sonra 🔄 ile ağa geç, ağ at, donan tavşana dokun ve topla!', -.8);
   for (let x = 14; x <= 30; x += 2) { add(new THREE.BoxGeometry(.25, 1, .25), '#c98a4a', x, .5, -14); add(new THREE.BoxGeometry(.25, 1, .25), '#c98a4a', x, .5, -30); }
   for (let z = -30; z <= -14; z += 2) { add(new THREE.BoxGeometry(.25, 1, .25), '#c98a4a', 30, .5, z); }
   animal('rabbit', 22, -20, .55); animal('rabbit', 25, -25, .55); animal('rabbit', 19, -26, .55);
@@ -532,7 +559,7 @@ function buildForest() {
   // Kostüm sandıkları (bulunca kazanılır)
   suitChest('orange', 2, 7.5, 30.5); suitChest('blue', 15, 0, 3); suitChest('green', 4, 0, -16); suitChest('red', -39, 6, -33);
   // Güç topları (süreli)
-  orb('water', -18, 0, -40); orb('net', 30, 0, -40); orb('fire', 30, 7, 22); orb('water', 12, 0, -12); orb('fire', -30, 0, -12);
+  orb('water', -18, 0, -40); orb('net', 30, 0, -40); orb('joy', 0, 0, -26); orb('joy', -40, 0, -48); orb('fire', 30, 7, 22); orb('water', 12, 0, -12); orb('fire', -30, 0, -12);
   // Dikenli çalılar ve sandıklar (ateşle yakılır, dönerek kırılır)
   bramble(-6, -60, 6, -57); gearRing(0, 0, -63, 2.5, 6); crate(-2, -64); crate(2, -64);
   bramble(44, 8, 47, 14); crate(52, 11); crate(50, 13);
@@ -612,11 +639,11 @@ function applyLook() {
 }
 applyLook();
 
-const P = { pos: START.clone(), vel: new THREE.Vector3(), r: .42, h: 1.7, yaw: Math.PI, onGround: false, jumps: 0, spin: 0, spinCd: 0, dash: 0, dashCd: 0, pound: false, poundT: 0, hp: 3, inv: 0, t: 0, safe: START.clone(), safeT: 0, emitT: 0, netCd: 0 };
-const orbActive = { fire: 0, water: 0, net: 0 };
+const P = { flying: false, altT: 0, altUp: false, altDown: false, pos: START.clone(), vel: new THREE.Vector3(), r: .42, h: 1.7, yaw: Math.PI, onGround: false, jumps: 0, spin: 0, spinCd: 0, dash: 0, dashCd: 0, pound: false, poundT: 0, hp: 3, inv: 0, t: 0, safe: START.clone(), safeT: 0, emitT: 0, netCd: 0 };
+const orbActive = { fire: 0, water: 0, net: 0, joy: 0 };
 let powerSel = 0;
 const canFly = () => SV.suit === 'orange';
-function powersList() { const l = []; const sp = SUITS[SV.suit].power; if (sp && sp !== 'fly') l.push(sp); for (const k of ['fire', 'water', 'net']) if (orbActive[k] > 0 && !l.includes(k)) l.push(k); return l; }
+function powersList() { const l = []; const sp = SUITS[SV.suit].power; if (sp && sp !== 'fly') l.push(sp); if (sp === 'net') l.push('joy'); for (const k of ['fire', 'water', 'net', 'joy']) if (orbActive[k] > 0 && !l.includes(k)) l.push(k); return l; }
 function currentPower() { const l = powersList(); if (!l.length) return null; return l[powerSel % l.length]; }
 
 // =============== EVCİL HAYVAN ===============
@@ -658,7 +685,9 @@ function refreshPowerUI() {
   const cp = currentPower(), b = $('bPower');
   if (cp) { b.style.display = 'flex'; b.style.setProperty('--tint', POWER[cp].color); b.querySelector('i').textContent = POWER[cp].e; b.querySelector('span').textContent = POWER[cp].name; } else b.style.display = 'none';
   $('bSwap').style.display = powersList().length > 1 ? 'flex' : 'none';
-  $('bFly').style.display = canFly() ? 'flex' : 'none';
+  $('bFly').style.display = canFly() ? 'flex' : 'none'; $('bFly').classList.toggle('active', !!P.flying);
+  $('bFly').querySelector('span').textContent = P.flying ? 'İn' : 'Uç';
+  $('altWrap').style.display = P.flying ? 'block' : 'none';
   $('orbs').innerHTML = Object.keys(orbActive).filter(k => orbActive[k] > 0).map(k => `<span class="chip" style="--tint:${POWER[k].color}">${POWER[k].e} ${Math.ceil(orbActive[k])}</span>`).join('');
   $('suitBadge').textContent = SUITS[SV.suit].e;
   $('ad').style.display = !LEARN && Object.values(orbActive).some(v => v > 0) ? 'flex' : 'none';
@@ -677,6 +706,20 @@ function addXP(n) {
 let gearMilestone = Math.floor(SV.gears / 100);
 function addGears(n) { SV.gears += n; save(); hud(); const ms = Math.floor(SV.gears / 100); if (ms > gearMilestone) { gearMilestone = ms; if (!moment) powerMoment(`${ms * 100} DİŞLİ!`, 'Süper toplayıcı Robi!'); } }
 
+
+function setSuit(k, silent) {
+  if (!ownsSuit(k)) { SFX.bad(); toast(`🔒 ${SUITS[k].name}: ${LEARN ? '' : 'ormanda sandığını bul ya da 👕 gardıroptan ⚙️ ' + SUITS[k].price + ' ile al'}`); return false; }
+  if (SV.suit === k) return true;
+  SV.suit = k; powerSel = 0; if (k !== 'orange' && P.flying) setFlight(false);
+  save(); applyLook(); refreshPowerUI(); hud(); SFX.suit();
+  neonBurst(SUITS[k].power || 'white'); buildSuitBar();
+  if (!silent) toast(`${SUITS[k].e} ${SUITS[k].name}: ${SUITS[k].desc}`, 2.4);
+  return true;
+}
+function buildSuitBar() {
+  $('suitBar').innerHTML = Object.entries(SUITS).map(([k, s]) => `<button class="sb ${SV.suit === k ? 'on' : ''} ${ownsSuit(k) ? '' : 'lock'}" data-k="${k}" style="--c:${s.body}">${ownsSuit(k) ? s.e : '🔒'}</button>`).join('');
+  $('suitBar').querySelectorAll('.sb').forEach(b => b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); if (setSuit(b.dataset.k)) buildSuitBar(); }));
+}
 // =============== GARDIROP & MAĞAZA ===============
 let paused = false;
 function openWardrobe() {
@@ -694,18 +737,18 @@ function openWardrobe() {
     const t = b.dataset.t, k = b.dataset.k;
     const T = { suit: [SUITS, ownsSuit, 'suits'], cape: [CAPES, ownsCape, 'capes'], hat: [HATS, ownsHat, 'hats'] }[t];
     if (!T[1](k)) { const pr = T[0][k].price; if (SV.gears < pr) { SFX.bad(); toast('⚙️ Yeterli dişli yok! Topla ya da bul.'); return; } SV.gears -= pr; SV[T[2]][k] = true; SFX.buy(); }
-    if (t === 'suit') { SV.suit = k; powerSel = 0; SFX.suit(); sparkle(P.pos, SUITS[k].body, 24); }
+    if (t === 'suit') { setSuit(k, true); }
     else if (t === 'cape') SV.cape = k; else SV.hat = k === 'none' ? null : k;
-    save(); applyLook(); refreshPowerUI(); hud(); openWardrobe();
+    save(); applyLook(); refreshPowerUI(); hud(); buildSuitBar(); openWardrobe();
   });
 }
 $('wClose').onclick = () => { $('wardrobe').style.display = 'none'; paused = false; last = performance.now(); };
 function openShop() {
   paused = true; SFX.buy();
   const row = (attr, k, e, name, desc, btn, dis) => `<div class="item"><div class="ie">${e}</div><div class="it"><b>${name}</b><small>${desc}</small></div><button class="buy" data-${attr}="${k}" ${dis ? 'disabled' : ''}>${btn}</button></div>`;
-  const orbPrice = { fire: 35, water: 25, net: 20 };
+  const orbPrice = { fire: 35, water: 25, net: 20, joy: 20 };
   let html = `<div class="note">Seviye ${LVL} · Güç topu süresi ${orbTime()} sn</div><h3>Güç topları</h3>`;
-  html += ['fire', 'water', 'net'].map(k => row('orb', k, POWER[k].e, POWER[k].name + ' gücü', 'Hangi kostümde olursan ol kullan', `⚙️ ${orbPrice[k]}`, SV.gears < orbPrice[k])).join('');
+  html += ['fire', 'water', 'net', 'joy'].map(k => row('orb', k, POWER[k].e, POWER[k].name + ' gücü', 'Hangi kostümde olursan ol kullan', `⚙️ ${orbPrice[k]}`, SV.gears < orbPrice[k])).join('');
   html += '<h3>Hayvan arkadaş</h3>';
   [['dog', '🐶', 'Köpek', 120, 3, 'Dişli toplar, canavarlara havlar'], ['bird', '🐦', 'Kuş', 180, 5, 'Uzaktaki dişlileri getirir']].forEach(([k, e, n, pr, lv, d]) => {
     const own = SV.pets[k]; html += row('pet', k, e, n, own ? d : `Seviye ${lv}'te hediye`, pet.kind === k ? '✓ Seninle' : own ? 'Seç' : `⚙️ ${pr}`, !own && SV.gears < pr);
@@ -716,12 +759,31 @@ function openShop() {
 }
 $('shopClose').onclick = () => { $('shop').style.display = 'none'; paused = false; last = performance.now(); };
 function giveOrb(k) {
-  orbActive[k] += orbTime(); SFX.power();
+  orbActive[k] += orbTime(); neonBurst(k);
   const l = powersList(); powerSel = l.indexOf(k);
   toast(`${POWER[k].e} ${POWER[k].name} gücü! ${Math.round(orbActive[k])} sn${canFly() ? ' — uçarken de kullanabilirsin!' : ''}`, 3);
   refreshPowerUI();
 }
 
+
+// =============== DOKUNARAK NİŞAN (ejderha atışı) ===============
+const aim = { id: null, point: null, until: 0, sx: 0, sy: 0, t0: 0 };
+const raycaster = new THREE.Raycaster(), ndc = new THREE.Vector2();
+const aimRing = new THREE.Mesh(new THREE.RingGeometry(.7, 1, 32), new THREE.MeshBasicMaterial({ color: '#ff3d2e', transparent: true, opacity: .9, side: THREE.DoubleSide, depthWrite: false }));
+aimRing.rotation.x = -Math.PI / 2; aimRing.visible = false; scene.add(aimRing);
+function screenToWorld(x, y) {
+  ndc.set(x / innerWidth * 2 - 1, -(y / innerHeight) * 2 + 1); raycaster.setFromCamera(ndc, camera);
+  const o = raycaster.ray.origin, d = raycaster.ray.direction;
+  // önce hedef nesneler (hayvan, canavar, ateş) — yakın olanı seç
+  let best = null, bd = 2.2;
+  for (const t of [...animals, ...monsters, ...fires, ...brambles, ...crates]) { if (!t.alive) continue; const c = V(t.pos.x, t.pos.y + .8 * (t.scale || 1), t.pos.z); const tt = c.clone().sub(o).dot(d); if (tt < 0) continue; const dist = o.clone().addScaledVector(d, tt).distanceTo(c); const lim = 1.4 * (t.scale || 1); if (dist < lim && dist / lim < bd) { bd = dist / lim; best = V(t.pos.x, t.pos.y + .4, t.pos.z); } }
+  if (best) return best;
+  if (d.y >= -.01) return null;
+  let tt = -o.y / d.y; const p = o.clone().addScaledVector(d, tt);
+  const g = groundAt(p.x, p.z, 60); if (g > 0) { tt = (g - o.y) / d.y; p.copy(o).addScaledVector(d, tt); }
+  return p;
+}
+function aimActive() { return aim.point && (aim.id !== null || performance.now() < aim.until); }
 // =============== KONTROLLER ===============
 const input = { jump: false, spin: false, dash: false, power: false, powerHeld: false, fly: false };
 const keys = {};
@@ -731,13 +793,13 @@ addEventListener('keydown', e => {
   if (e.code === 'KeyF') input.spin = true;
   if (e.code === 'ShiftLeft' || e.code === 'KeyC') input.dash = true;
   if (e.code === 'KeyG') { input.power = true; input.powerHeld = true; }
-  if (e.code === 'KeyV') input.fly = true;
+  if (e.code === 'KeyV') setFlight(!P.flying);
   if (e.code === 'KeyR') swapPower();
   if (e.code === 'KeyK') openWardrobe();
   if (e.code === 'KeyB' && !LEARN) openShop();
   if (e.code === 'Escape' || e.code === 'KeyP') togglePause();
 });
-addEventListener('keyup', e => { keys[e.code] = false; if (e.code === 'KeyG') input.powerHeld = false; if (e.code === 'KeyV') input.fly = false; });
+addEventListener('keyup', e => { keys[e.code] = false; if (e.code === 'KeyG') input.powerHeld = false; });
 let camYaw = 0, camPitch = .35;
 const joy = { id: null, cx: 0, cy: 0, x: 0, y: 0 }, look = { id: null, lx: 0, ly: 0 };
 const zone = $('touch'), stickEl = $('stick'), knobEl = $('knob');
@@ -745,21 +807,32 @@ function stickHome() { stickEl.style.left = '22px'; stickEl.style.top = (innerHe
 addEventListener('resize', () => { if (joy.id === null) stickHome(); });
 zone.addEventListener('pointerdown', e => {
   if (e.clientX < innerWidth * .45 && joy.id === null) { joy.id = e.pointerId; joy.cx = e.clientX; joy.cy = e.clientY; stickEl.style.left = e.clientX - 60 + 'px'; stickEl.style.top = e.clientY - 60 + 'px'; knobEl.style.transform = 'translate(0,0)'; }
-  else if (look.id === null) { look.id = e.pointerId; look.lx = e.clientX; look.ly = e.clientY; }
-  zone.setPointerCapture(e.pointerId);
+  else if (P.flying && currentPower() && aim.id === null) { aim.id = e.pointerId; aim.point = screenToWorld(e.clientX, e.clientY); input.power = true; input.powerHeld = true; }
+  else if (look.id === null) { look.id = e.pointerId; look.lx = e.clientX; look.ly = e.clientY; aim.sx = e.clientX; aim.sy = e.clientY; aim.t0 = performance.now(); }
+  try { zone.setPointerCapture(e.pointerId); } catch (err) {}
 });
 zone.addEventListener('pointermove', e => {
   if (e.pointerId === joy.id) { let dx = e.clientX - joy.cx, dy = e.clientY - joy.cy; const d = Math.hypot(dx, dy), m = 55; if (d > m) { dx = dx / d * m; dy = dy / d * m; } joy.x = dx / m; joy.y = dy / m; knobEl.style.transform = `translate(${dx}px,${dy}px)`; }
+  else if (e.pointerId === aim.id) { const p = screenToWorld(e.clientX, e.clientY); if (p) aim.point = p; }
   else if (e.pointerId === look.id) { camYaw -= (e.clientX - look.lx) * .008; camPitch = Math.max(.05, Math.min(1.15, camPitch + (e.clientY - look.ly) * .005)); look.lx = e.clientX; look.ly = e.clientY; }
 });
-const endPtr = e => { if (e.pointerId === joy.id) { joy.id = null; joy.x = joy.y = 0; stickHome(); } if (e.pointerId === look.id) look.id = null; };
+const endPtr = e => {
+  if (e.pointerId === joy.id) { joy.id = null; joy.x = joy.y = 0; stickHome(); }
+  if (e.pointerId === aim.id) { aim.id = null; input.powerHeld = false; aim.until = performance.now() + 150; }
+  if (e.pointerId === look.id) {
+    look.id = null;
+    if (currentPower() && performance.now() - aim.t0 < 260 && Math.hypot(e.clientX - aim.sx, e.clientY - aim.sy) < 14) { const p = screenToWorld(e.clientX, e.clientY); if (p) { aim.point = p; aim.until = performance.now() + 450; input.power = true; } }
+  }
+};
 zone.addEventListener('pointerup', endPtr); zone.addEventListener('pointercancel', endPtr);
 function btn(id, down, up) { const b = $(id); b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); b.classList.add('down'); down(); }); ['pointerup', 'pointerleave', 'pointercancel'].forEach(t => b.addEventListener(t, () => { b.classList.remove('down'); up && up(); })); }
 btn('bJump', () => input.jump = true);
 btn('bSpin', () => input.spin = true);
 btn('bDash', () => input.dash = true);
 btn('bPower', () => { input.power = true; input.powerHeld = true; }, () => input.powerHeld = false);
-btn('bFly', () => input.fly = true, () => input.fly = false);
+btn('bFly', () => setFlight(!P.flying));
+btn('bUp', () => P.altUp = true, () => P.altUp = false);
+btn('bDown', () => P.altDown = true, () => P.altDown = false);
 btn('bSwap', () => swapPower());
 const topBtn = (id, fn) => $(id).addEventListener('pointerdown', e => { e.stopPropagation(); fn(); });
 topBtn('wardBtn', openWardrobe); topBtn('pauseBtn', () => togglePause());
@@ -777,6 +850,16 @@ $('pMenu').onclick = () => { musicStop(); try { if (window.parent !== window) { 
 $('pMusic').onclick = () => { SV.muted = !SV.muted; save(); $('pMusic').textContent = SV.muted ? '🔇 Müzik kapalı' : '🎵 Müzik açık'; };
 $('pMusic').textContent = SV.muted ? '🔇 Müzik kapalı' : '🎵 Müzik açık';
 
+
+// =============== UÇUŞ MODU (sabit yükseklik) ===============
+const MAX_ALT = 26;
+function setFlight(on) {
+  if (on && !canFly()) return;
+  P.flying = on;
+  if (on) { const g = groundAt(P.pos.x, P.pos.z, P.pos.y); P.altT = Math.max(P.pos.y, g) + 4; P.onGround = false; neonBurst('fly'); toast('🪽 Uçuyorsun! ⬆️⬇️ ile yükseklik seç. Sağ elle aşağı dokun: güç at!', 3); }
+  else { SFX.flap(); }
+  $('btns').classList.toggle('flying', on); refreshPowerUI();
+}
 // =============== FİZİK ===============
 const GRAV = 26, JUMP = 10, DJUMP = 9;
 function overlap(px, py, pz, b) { return px + P.r > b.x0 && px - P.r < b.x1 && pz + P.r > b.z0 && pz - P.r < b.z1 && py + P.h > b.y0 && py < b.y1; }
@@ -793,23 +876,29 @@ function movePlayer(dt) {
   if (Math.hypot(wx, wz) > .1 && !(input.powerHeld && currentPower())) { const tgt = Math.atan2(wx, wz); let d = tgt - P.yaw; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; P.yaw += d * Math.min(1, 12 * dt); }
   if (input.jump) {
     if (P.onGround) { P.vel.y = JUMP; P.jumps = 1; SFX.jump(); puff(P.pos, 6); }
-    else if (flying) { P.vel.y = Math.min(10, Math.max(P.vel.y, 0) + 7.5); SFX.flap(); puff(P.pos, 4, SUITS[SV.suit].acc); }
+    else if (P.flying) { P.altT += 3; SFX.flap(); }
+    else if (flying) { setFlight(true); }
     else if (P.jumps < 2) { P.vel.y = DJUMP; P.jumps = 2; SFX.djump(); puff(P.pos, 8, '#38e1ff'); }
   }
   input.jump = false;
-  // Uç butonu: basılı tut = yüksel
-  if (flying && input.fly) { if (P.onGround) { P.vel.y = 6; P.onGround = false; } P.vel.y += (7 - P.vel.y) * Math.min(1, 6 * dt); flapT -= dt; if (flapT <= 0) { SFX.flap(); flapT = .3; } }
+  if (P.flying) {
+    const g = groundAt(P.pos.x, P.pos.z, P.pos.y + 50);
+    if (P.altUp || keys.Space) P.altT += 7 * dt; if (P.altDown || keys.KeyX) P.altT -= 7 * dt;
+    P.altT = Math.max(g + 1.2, Math.min(MAX_ALT, P.altT));
+    flapT -= dt; if (flapT <= 0) { SFX.flap(); flapT = .45; }
+  }
   if (input.spin) {
     const gh = P.pos.y - groundAt(P.pos.x, P.pos.z, P.pos.y);
-    if (!P.onGround && gh > 1.3 && !P.pound) { P.pound = true; P.poundT = .14; P.dash = 0; SFX.spin(); }
+    if (!P.onGround && gh > 1.3 && !P.pound) { if (P.flying) setFlight(false); P.pound = true; P.poundT = .14; P.dash = 0; SFX.spin(); }
     else if (P.spinCd <= 0 && !P.pound) { P.spin = .4; P.spinCd = .55; SFX.spin(); if (!P.onGround && P.vel.y < 2) P.vel.y = 3; }
   }
   input.spin = false;
   if (input.dash && P.dashCd <= 0 && !P.pound) { P.dash = .3; P.dashCd = .75; SFX.dash(); puff(P.pos, 8); if (!P.onGround && P.vel.y < 0) P.vel.y = 2; }
   input.dash = false;
-  const gliding = flying && !input.fly && P.vel.y < 0;
-  P.vel.y -= GRAV * (gliding ? .35 : 1) * dt;
-  if (!P.pound && P.vel.y < (flying ? -6 : -30)) P.vel.y = flying ? -6 : -30;
+  const gliding = flying && P.vel.y < 0;
+  if (P.flying && !P.pound) P.vel.y = Math.max(-9, Math.min(9, (P.altT - P.pos.y) * 3.5));
+  else P.vel.y -= GRAV * (gliding ? .35 : 1) * dt;
+  if (!P.pound && !P.flying && P.vel.y < (flying ? -6 : -30)) P.vel.y = flying ? -6 : -30;
   if (P.pos.y > 30 && P.vel.y > 0) P.vel.y = 0;
   if (P.dash > 0) { P.vel.x = Math.sin(P.yaw) * 17; P.vel.z = Math.cos(P.yaw) * 17; }
   if (P.pound) { P.vel.x = P.vel.z = 0; if (P.poundT > 0) { P.poundT -= dt; P.vel.y = 1.5; } else P.vel.y = -32; }
@@ -827,6 +916,7 @@ function movePlayer(dt) {
   for (const b of colliders) { if (!overlap(P.pos.x, P.pos.y, P.pos.z, b)) continue; if (P.vel.y <= 0) { P.pos.y = b.y1; P.vel.y = 0; P.onGround = true; } else { P.pos.y = b.y0 - P.h; P.vel.y = 0; } }
   if (P.pos.y <= 0) { P.pos.y = 0; P.vel.y = 0; P.onGround = true; }
   if (P.onGround) { P.jumps = 0; if (!was) puff(P.pos, 4); if (P.pound) { P.pound = false; poundImpact(); } }
+  if (P.flying && P.onGround && P.vel.y <= 0) P.onGround = false;
   if (P.onGround && P.pos.y < .05 && isWater(P.pos.x, P.pos.z)) {
     SFX.splash(); for (let i = 0; i < 20; i++) fx({ pos: P.pos.clone().add(V(0, .3, 0)), vel: V((Math.random() - .5) * 6, 4 + Math.random() * 4, (Math.random() - .5) * 6), life: .9, size: .35, drop: true, grav: 14 });
     P.pos.copy(P.safe); P.vel.set(0, 0, 0); P.inv = 1;
@@ -842,7 +932,7 @@ function poundImpact() {
 }
 
 // =============== GÜÇLER: ATEŞ AKIŞI, SU, AĞ ===============
-const nets = [];
+const nets = [], joyBalls = [];
 const netTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); g.strokeStyle = '#ffffff'; g.lineWidth = 3; for (let i = 0; i <= 64; i += 10) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i, 64); g.stroke(); g.beginPath(); g.moveTo(0, i); g.lineTo(64, i); g.stroke(); } return new THREE.CanvasTexture(c); })();
 function aimTarget(list, range) {
   let best = null, bd = 1e9; const fx_ = Math.sin(P.yaw), fz = Math.cos(P.yaw);
@@ -855,22 +945,39 @@ function usePower(dt) {
   const fresh = input.power; input.power = false;
   if (pw === 'net') {
     if (!fresh || P.netCd > 0) return;
-    const tgt = aimTarget(animals.concat(monsters.filter(m => !m.dummy)), 22);
+    const tgt = aimActive() ? { pos: aim.point } : aimTarget(animals.concat(monsters.filter(m => !m.dummy)), 22);
     if (tgt) P.yaw = Math.atan2(tgt.pos.x - P.pos.x, tgt.pos.z - P.pos.z);
     const dir = V(Math.sin(P.yaw), 0, Math.cos(P.yaw)), o = V(P.pos.x + dir.x * .6, P.pos.y + 1.2, P.pos.z + dir.z * .6);
     const m = new THREE.Mesh(new THREE.SphereGeometry(.6, 10, 8), new THREE.MeshBasicMaterial({ map: netTex, transparent: true, side: THREE.DoubleSide, depthWrite: false })); m.position.copy(o); scene.add(m);
     let v = dir.clone().multiplyScalar(17); v.y = 4;
     if (tgt) { const d = Math.hypot(tgt.pos.x - o.x, tgt.pos.z - o.z), tt = d / 17; v.y = Math.min(9, (tgt.pos.y + .5 - o.y + .5 * 15 * tt * tt) / tt); }
-    nets.push({ m, v, life: 1.6 }); SFX.net(); P.netCd = .5;
+    nets.push({ m, v, life: 2.2 }); SFX.net(); P.netCd = .5;
+    return;
+  }
+  if (pw === 'joy') {
+    if (!fresh || P.netCd > 0) return;
+    const tgt = aimActive() ? { pos: aim.point } : aimTarget(animals.filter(a => !a.frozen), 22);
+    if (tgt) P.yaw = Math.atan2(tgt.pos.x - P.pos.x, tgt.pos.z - P.pos.z);
+    const dir = V(Math.sin(P.yaw), 0, Math.cos(P.yaw)), o = V(P.pos.x + dir.x * .6, P.pos.y + 1.2, P.pos.z + dir.z * .6);
+    ['#e53935', '#ffd166', '#2e8bff', '#22b573', '#a259ff'].slice(0, 3 + Math.floor(Math.random() * 2)).forEach((c, i) => {
+      const m = new THREE.Mesh(new THREE.SphereGeometry(.22, 12, 8), new THREE.MeshLambertMaterial({ color: c, emissive: c, emissiveIntensity: .35 })); m.position.copy(o); scene.add(m);
+      let v = dir.clone().multiplyScalar(15); v.x += (Math.random() - .5) * 2; v.z += (Math.random() - .5) * 2; v.y = 4;
+      if (tgt) { const d = Math.hypot(tgt.pos.x - o.x, tgt.pos.z - o.z), tt = Math.max(.2, d / 15); v.y = Math.min(12, (tgt.pos.y + .5 - o.y + .5 * 15 * tt * tt) / tt) + (Math.random() - .5); }
+      joyBalls.push({ m, v, life: 2.2, c });
+    });
+    SFX.net(); tone(880, .15, 'triangle', .06, 1.5); P.netCd = .35;
     return;
   }
   if (!input.powerHeld && !fresh) return;
   const list = pw === 'fire' ? monsters.concat(brambles, crates) : fires.concat(monsters);
-  const tgt = aimTarget(list, 15);
+  const useAim = aimActive();
+  const tgt = useAim ? { pos: aim.point } : aimTarget(list, 15);
   if (tgt) { const ty = Math.atan2(tgt.pos.x - P.pos.x, tgt.pos.z - P.pos.z); let d = ty - P.yaw; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; P.yaw += d * Math.min(1, 10 * dt); }
-  const dir = V(Math.sin(P.yaw), 0, Math.cos(P.yaw));
+  if (useAim) P.yaw = Math.atan2(aim.point.x - P.pos.x, aim.point.z - P.pos.z);
+  let dir = V(Math.sin(P.yaw), 0, Math.cos(P.yaw));
   const hand = V(P.pos.x + dir.x * .8 + Math.cos(P.yaw) * .35, P.pos.y + 1.1, P.pos.z + dir.z * .8 - Math.sin(P.yaw) * .35);
-  const tilt = P.onGround ? .12 : -.25; // havadayken aşağı doğru püskürt
+  let tilt = P.onGround ? .12 : -.25; // havadayken aşağı doğru püskürt
+  if (useAim) { const to = aim.point.clone().sub(hand); const hd = Math.hypot(to.x, to.z); const sp0 = pw === 'fire' ? 17 : 15, g0 = pw === 'fire' ? 5 : 10, tt = Math.max(.05, Math.hypot(hd, to.y) / sp0); tilt = (to.y + .5 * g0 * tt * tt) / tt / sp0; dir = V(to.x / Math.max(.01, hd), 0, to.z / Math.max(.01, hd)); }
   P.emitT -= dt; sfxLoopT -= dt;
   while (P.emitT <= 0) {
     P.emitT += pw === 'fire' ? .014 : .018;
@@ -887,6 +994,54 @@ function usePower(dt) {
   }
   if (sfxLoopT <= 0) { (pw === 'fire' ? SFX.fireLoop : SFX.waterLoop)(); sfxLoopT = .1; }
   if (pw === 'fire' && Math.random() < .5) fx({ pos: hand.clone(), vel: V(0, 1, 0), life: .2, size: .9, size2: .3, color: '#ffe066', add: true });
+}
+
+
+// =============== NEON GÜÇ HALKALARI ===============
+const NEON_COL = { fire: '#ff3d2e', water: '#2ea8ff', fly: '#ff9a1f', net: '#3dff7a', joy: '#ff5ad8', white: '#fff6a0' };
+const neonRings = [];
+const neonGeo = new THREE.TorusGeometry(.75, .07, 8, 40), neonGeo2 = new THREE.TorusGeometry(.75, .2, 8, 40);
+function neonBurst(kind, n = 5) {
+  const col = NEON_COL[kind] || kind;
+  for (let i = 0; i < n; i++) {
+    const g = new THREE.Group();
+    const core = new THREE.Mesh(neonGeo, new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+    const halo = new THREE.Mesh(neonGeo2, new THREE.MeshBasicMaterial({ color: col, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+    core.rotation.x = halo.rotation.x = Math.PI / 2; g.add(halo, core); g.visible = false; scene.add(g);
+    neonRings.push({ g, core, halo, t: -i * .11, col });
+  }
+  const base = { fire: 330, water: 440, fly: 523, net: 392, joy: 587 }[kind] || 494;
+  try { const t0 = ac().currentTime; [1, 1.26, 1.5, 2, 2.52].forEach((r, i) => { note(base * r, t0 + i * .07, .25, 'square', .045); note(base * r * 2, t0 + i * .07, .15, 'sine', .04); }); noise(.5, .06, 6000, t0, 0, 'highpass'); } catch (e) {}
+  for (let i = 0; i < 14; i++) { const a = Math.random() * 6.28; fx({ pos: V(P.pos.x + Math.cos(a) * .9, P.pos.y + .1, P.pos.z + Math.sin(a) * .9), vel: V(Math.cos(a) * .6, 3 + Math.random() * 2, Math.sin(a) * .6), life: .8, size: .25, size2: 0, color: col, add: true }); }
+}
+function updateNeon(dt) {
+  for (let i = neonRings.length - 1; i >= 0; i--) {
+    const r = neonRings[i]; r.t += dt;
+    if (r.t < 0) continue;
+    const k = r.t / .9, sc = robi.scale.x;
+    r.g.visible = true; r.g.position.set(P.pos.x, P.pos.y + (.05 + k * 2.3) * sc, P.pos.z);
+    const s = (1 + k * .5) * sc; r.g.scale.set(s, s, s);
+    r.core.material.opacity = Math.max(0, 1 - k) * .95; r.halo.material.opacity = Math.max(0, 1 - k) * .6;
+    if (k >= 1) { scene.remove(r.g); r.core.material.dispose(); r.halo.material.dispose(); neonRings.splice(i, 1); }
+  }
+}
+// =============== KOMBO KUTLAMA ===============
+const combo = { n: 0, t: 0 };
+function celebrate(text, sub, big = false) {
+  const el = $('combo'); el.innerHTML = `<b>${text}</b>${sub ? `<small>${sub}</small>` : ''}`;
+  el.classList.remove('anim'); void el.offsetWidth; el.classList.add('anim');
+  const conf = $('confetti'); conf.innerHTML = '';
+  for (let i = 0; i < (big ? 60 : 30); i++) { const d = document.createElement('i'); d.style.left = Math.random() * 100 + '%'; d.style.background = ['#e53935', '#ffd166', '#2e8bff', '#22b573', '#ff5ad8', '#a259ff'][i % 6]; d.style.animationDelay = Math.random() * .4 + 's'; d.style.animationDuration = 1.2 + Math.random() * 1 + 's'; d.style.transform = `rotate(${Math.random() * 360}deg)`; conf.appendChild(d); }
+  conf.classList.remove('anim'); void conf.offsetWidth; conf.classList.add('anim');
+  SFX.fanfare();
+}
+function onCatch(a) {
+  combo.n = combo.t > 0 ? combo.n + 1 : 1; combo.t = 8;
+  neonBurst(a.scale >= 3 ? 'joy' : 'net', a.scale >= 3 ? 7 : 4);
+  if (a.scale >= 5) celebrate('DEV AV!', `${ANIMAL_TR[a.kind]} ×${Math.round(a.scale)} büyüklükte!`, true);
+  else if (combo.n === 3) celebrate('SÜPER AVCI!', '3 av art arda! ×3', true);
+  else if (combo.n === 5) celebrate('EFSANE AVCI!', '5 av art arda! ×5', true);
+  else if (combo.n >= 2) { const el = $('combo'); el.innerHTML = `<b style="font-size:40px">×${combo.n}</b>`; el.classList.remove('anim'); void el.offsetWidth; el.classList.add('anim'); }
 }
 
 // =============== HASAR & ÖDÜLLER ===============
@@ -919,7 +1074,7 @@ function burnBramble(b) {
 }
 function freezeAnimal(a) {
   a.frozen = true; SFX.freeze();
-  const dome = new THREE.Mesh(new THREE.SphereGeometry(a.kind === 'deer' ? 1.5 : 1, 14, 10, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshBasicMaterial({ map: netTex, transparent: true, side: THREE.DoubleSide, depthWrite: false }));
+  const dome = new THREE.Mesh(new THREE.SphereGeometry((a.kind === 'deer' ? 1.5 : 1) * Math.max(1, a.scale * .9), 14, 10, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshBasicMaterial({ map: netTex, transparent: true, side: THREE.DoubleSide, depthWrite: false }));
   dome.position.copy(a.pos); scene.add(dome); a.dome = dome;
   sparkle(a.pos, '#b9ffb0', 12);
   toast(`🕸️ ${ANIMAL_TR[a.kind]} ağa takıldı, donup kaldı! Yanına git ve dokun: topla!`, 2.6);
@@ -927,10 +1082,10 @@ function freezeAnimal(a) {
 function collectAnimal(a) {
   a.alive = false; SFX.caught(); burst(a.pos, '#ffd166', 18);
   const g = a.g, dome = a.dome, sh = a.shadow; let tt = 0;
-  const anim = () => { tt += .035; g.scale.setScalar(Math.max(.01, 1 - tt)); dome.scale.setScalar(Math.max(.01, 1 - tt)); g.position.y = tt * 4; dome.position.y = tt * 4; if (tt < 1) requestAnimationFrame(anim); else { scene.remove(g); scene.remove(dome); scene.remove(sh); } };
-  anim(); addXP(10); addGears(6);
+  const s0 = a.scale; const anim = () => { tt += .035; g.scale.setScalar(Math.max(.01, s0 * (1 - tt))); dome.scale.setScalar(Math.max(.01, 1 - tt)); g.position.y = tt * 4; dome.position.y = tt * 4; if (tt < 1) requestAnimationFrame(anim); else { scene.remove(g); scene.remove(dome); scene.remove(sh); } };
+  const mult = Math.max(1, Math.round(a.scale)); anim(); addXP(10 * mult); addGears(6 * mult); onCatch(a);
   const left = animals.filter(x => x.alive).length;
-  toast(left ? `🐾 ${ANIMAL_TR[a.kind]} koruma alanına gönderildi! +6 ⚙️ (${animals.length - left}/${animals.length})` : '🏆 Bütün hayvanları kurtardın!');
+  toast(left ? `🐾 ${ANIMAL_TR[a.kind]} koruma alanına gönderildi! +${6 * mult} ⚙️ (${animals.length - left}/${animals.length})` : '🏆 Bütün hayvanları kurtardın!');
   checkMissions();
 }
 function checkMissions() {
@@ -967,7 +1122,7 @@ function powerMoment(title, sub) {
   if (moment) return;
   moment = { t: 0, title, sub, camFrom: camera.position.clone(), flashes: [.45, 1.1, 1.7, 2.3] };
   $('mTitle').textContent = title; $('mSub').textContent = sub;
-  $('moment').classList.add('on'); SFX.fanfare(); setTimeout(SFX.thunder, 400);
+  $('moment').classList.add('on'); SFX.fanfare(); setTimeout(SFX.thunder, 400); neonBurst('white', 6);
   musicGain && (musicGain.gain.value = .15);
 }
 function updateMoment(dt) {
@@ -993,7 +1148,7 @@ function updateMoment(dt) {
   bolts.forEach((b, i) => { const a = (i / bolts.length) * Math.PI * 2 + t * .8; b.position.set(Math.cos(a) * 2.4 * grow, Math.sin(a) * 2.2 * grow + 1.2, -.5); b.rotation.z = a - Math.PI / 2; b.material.opacity = (Math.sin(t * 30 + i * 2) > -.2 ? 1 : .1) * grow; });
   auraSp.scale.setScalar(6 * grow * (1 + .1 * Math.sin(t * 20))); auraSp.position.set(0, .2, -.8);
   if (Math.random() < .6) sparkle(P.pos.clone().add(V(0, .5, 0)), Math.random() < .5 ? '#fff06a' : '#7fe0ff', 1);
-  for (const f of m.flashes) if (t - dt < f && t >= f) { $('flash').classList.remove('go'); void $('flash').offsetWidth; $('flash').classList.add('go'); SFX.thunder(); }
+  for (const f of m.flashes) if (t - dt < f && t >= f) { $('flash').classList.remove('anim'); void $('flash').offsetWidth; $('flash').classList.add('anim'); SFX.thunder(); }
   if (t >= T) {
     moment = null; robi.scale.setScalar(1); u.torso.scale.set(1, 1, 1); u.armL.userData.mesh.scale.set(1, 1, 1); u.armR.userData.mesh.scale.set(1, 1, 1);
     boltGroup.visible = false; $('moment').classList.remove('on'); musicGain && (musicGain.gain.value = .55); last = performance.now();
@@ -1013,7 +1168,7 @@ function update(dt) {
   movePlayer(dt);
 
   // Robi animasyonu
-  const u = robi.userData, spd = Math.hypot(P.vel.x, P.vel.z), flying = canFly() && !P.onGround;
+  const u = robi.userData, spd = Math.hypot(P.vel.x, P.vel.z), flying = canFly() && (!P.onGround || P.flying);
   robi.position.copy(P.pos);
   robi.rotation.y = P.yaw + (P.spin > 0 ? (1 - P.spin / .4) * Math.PI * 4 : 0);
   const w = P.onGround ? Math.sin(P.t * 13) * Math.min(1, spd / 6) : 0;
@@ -1030,8 +1185,8 @@ function update(dt) {
   u.capeP.rotation.x = -Math.min(1.3, .15 + spd * .09 + (flying ? .5 : 0)) - Math.sin(P.t * 10) * .08;
   if (SV.cape === 'rainbow') capeMat.color.setHSL((P.t * .25) % 1, .85, .58);
   u.wings.visible = canFly();
-  if (canFly()) { const f = P.onGround ? Math.sin(P.t * 3) * .12 : Math.sin(P.t * (input.fly ? 28 : 14)) * .6; u.wLp.rotation.y = .3 + f; u.wRp.rotation.y = -.3 - f; }
-  if (flying && (input.fly || P.vel.y > 0)) for (const sx of [-.2, .2]) fx({ pos: V(P.pos.x + Math.cos(P.yaw) * sx, P.pos.y + .05, P.pos.z - Math.sin(P.yaw) * sx), vel: V(0, -4, 0), life: .25, size: .35, size2: .05, color: '#ffe066', color2: '#ff5a1f', add: true });
+  if (canFly()) { const f = P.onGround && !P.flying ? Math.sin(P.t * 3) * .12 : Math.sin(P.t * (P.altUp ? 28 : 16)) * .6; u.wLp.rotation.y = .3 + f; u.wRp.rotation.y = -.3 - f; }
+  if (flying && (P.flying || P.vel.y > 0)) for (const sx of [-.2, .2]) fx({ pos: V(P.pos.x + Math.cos(P.yaw) * sx, P.pos.y + .05, P.pos.z - Math.sin(P.yaw) * sx), vel: V(0, -4, 0), life: .25, size: .35, size2: .05, color: '#ffe066', color2: '#ff5a1f', add: true });
   if (hatObj && hatObj.userData.prop) hatObj.userData.prop.rotation.y += dt * (flying ? 30 : 8);
   robi.visible = P.inv > 0 ? Math.floor(P.t * 14) % 2 === 0 : true;
   const gy = groundAt(P.pos.x, P.pos.z, P.pos.y);
@@ -1070,7 +1225,7 @@ function update(dt) {
     if (s.pos.distanceTo(P.pos) < 1.8) {
       s.alive = false; s.lid.rotation.x = -1.2; s.lid.position.set(0, 1.4, -.5);
       setTimeout(() => scene.remove(s.g), 2500);
-      if (!SV.suits[s.suit]) { SV.suits[s.suit] = true; SV.suit = s.suit; powerSel = 0; save(); applyLook(); refreshPowerUI(); powerMoment(`${SUITS[s.suit].e} YENİ KOSTÜM!`, `${SUITS[s.suit].name}: ${SUITS[s.suit].desc}`); checkMissions(); }
+      if (!SV.suits[s.suit]) { SV.suits[s.suit] = true; SV.suit = s.suit; powerSel = 0; save(); applyLook(); refreshPowerUI(); buildSuitBar(); neonBurst(SUITS[s.suit].power); powerMoment(`${SUITS[s.suit].e} YENİ KOSTÜM!`, `${SUITS[s.suit].name}: ${SUITS[s.suit].desc}`); checkMissions(); }
       else { addGears(15); toast('🎁 Sandıktan 15 dişli çıktı!'); }
     }
   }
@@ -1124,26 +1279,48 @@ function update(dt) {
   for (const a of animals) {
     if (!a.alive) continue; a.t += dt;
     const dx = a.pos.x - P.pos.x, dz = a.pos.z - P.pos.z, dist = Math.hypot(dx, dz);
-    if (a.frozen) { a.g.rotation.z = Math.sin(a.t * 20) * .05; a.dome.rotation.y += dt; if (dist < 1.6 && Math.abs(P.pos.y - a.pos.y) < 2) collectAnimal(a); continue; }
+    if (a.scale !== a.scaleT) { a.scale += (a.scaleT - a.scale) * Math.min(1, dt * 4); if (Math.abs(a.scale - a.scaleT) < .01) a.scale = a.scaleT; a.g.scale.setScalar(a.scale); a.shadow.scale.setScalar(a.scale); }
+    if (a.frozen) { a.g.rotation.z = Math.sin(a.t * 20) * .05; a.dome.rotation.y += dt; if (dist < 1.6 + a.scale * .5 && Math.abs(P.pos.y - a.pos.y) < 2 + a.scale) collectAnimal(a); continue; }
     let speed = 1.3;
-    if (dist < 9) { a.dir = Math.atan2(dx, dz) + Math.sin(a.t * 2.5) * .7; speed = a.speed; }
+    if (a.happy > 0) { a.happy -= dt; a.g.position.copy(a.pos); a.g.position.y = Math.abs(Math.sin(a.t * 9)) * .4 * a.scale; a.g.rotation.y += dt * 4; a.shadow.position.set(a.pos.x, .07, a.pos.z); if (Math.random() < .1) fx({ pos: V(a.pos.x, a.pos.y + 1.4 * a.scale, a.pos.z), vel: V(0, 1.5, 0), life: .8, size: .5 * Math.sqrt(a.scale), color: '#ff4d6d', add: true }); continue; }
+    if (dist < 9 + a.scale) { a.dir = Math.atan2(dx, dz) + Math.sin(a.t * 2.5) * .7; speed = a.speed / (1 + a.joy * .35); }
     else { a.dir += (Math.random() - .5) * dt * 2; }
     if (a.pos.distanceTo(a.home) > a.leash) a.dir = Math.atan2(a.home.x - a.pos.x, a.home.z - a.pos.z) + (Math.random() - .5);
     const nx = a.pos.x + Math.sin(a.dir) * speed * dt, nz = a.pos.z + Math.cos(a.dir) * speed * dt;
-    if (!isWater(nx, nz) && !blockedAt(nx, nz, 0, .4, 1.2) && Math.abs(nx) < W - 3 && Math.abs(nz) < W - 3) { a.pos.x = nx; a.pos.z = nz; } else a.dir += Math.PI * (.6 + Math.random() * .8);
+    if (!isWater(nx, nz) && !blockedAt(nx, nz, 0, .4 * Math.min(2, a.scale), 1.2) && Math.abs(nx) < W - 3 && Math.abs(nz) < W - 3) { a.pos.x = nx; a.pos.z = nz; } else a.dir += Math.PI * (.6 + Math.random() * .8);
     a.g.position.copy(a.pos); a.g.rotation.y = a.dir;
-    if (a.kind === 'rabbit') a.g.position.y = Math.abs(Math.sin(a.t * (speed > 2 ? 12 : 5))) * (speed > 2 ? .5 : .15);
+    if (a.kind === 'rabbit') a.g.position.y = Math.abs(Math.sin(a.t * (speed > 2 ? 12 : 5))) * (speed > 2 ? .5 : .15) * a.scale;
     else a.g.userData.legs.forEach((l, i) => l.rotation.x = Math.sin(a.t * speed * 3 + (i % 2) * Math.PI + (i > 1 ? Math.PI : 0)) * .6);
     a.shadow.position.set(a.pos.x, .07, a.pos.z);
   }
 
+
+  // Neşe topları
+  for (let i = joyBalls.length - 1; i >= 0; i--) {
+    const b = joyBalls[i]; b.life -= dt; b.v.y -= 15 * dt; b.m.position.addScaledVector(b.v, dt);
+    if (Math.random() < .5) fx({ pos: b.m.position.clone(), life: .3, size: .25, size2: 0, color: b.c, add: true });
+    let hit = false; const sp = b.m.position;
+    for (const a of animals) if (a.alive && !a.frozen && Math.hypot(sp.x - a.pos.x, sp.z - a.pos.z) < 1.2 * a.scale && sp.y < a.pos.y + 1.6 * a.scale) {
+      a.joy++; a.scaleT = Math.min(10, 1 + a.joy * 1.5); a.happy = 3.5; hit = true;
+      for (let j = 0; j < 8; j++) fx({ pos: V(a.pos.x, a.pos.y + a.scale, a.pos.z), vel: V((Math.random() - .5) * 3, 3 + Math.random() * 2, (Math.random() - .5) * 3), life: 1, size: .5, size2: .2, color: '#ff4d6d', add: true, grav: 3 });
+      tone(660 + a.joy * 80, .15, 'triangle', .07, 1.4);
+      if (a.scaleT >= 10 && !a.maxed) { a.maxed = true; toast(`🎉 ${ANIMAL_TR[a.kind]} DEVLEŞTİ! (×10) Şimdi 🕸️ ağ at ve yakala!`, 3); }
+      else toast(`🎈 ${ANIMAL_TR[a.kind]} çok mutlu! Büyüyor: ×${a.scaleT.toFixed(1).replace('.0', '')}`, 1.6);
+      break;
+    }
+    if (hit || b.life <= 0 || sp.y <= groundAt(sp.x, sp.z, sp.y)) { if (!hit) burst(sp, b.c, 4); scene.remove(b.m); joyBalls.splice(i, 1); }
+  }
+  if (combo.t > 0) combo.t -= dt;
+  updateNeon(dt);
+  if (aimActive() && currentPower()) { aimRing.visible = true; aimRing.position.set(aim.point.x, aim.point.y + .08, aim.point.z); aimRing.material.color.set(POWER[currentPower()].color); const s = 1 + Math.sin(elapsed * 10) * .1; aimRing.scale.set(s, s, s); } else aimRing.visible = false;
+  if (P.flying) { $('altFill').style.height = Math.min(100, P.pos.y / MAX_ALT * 100) + '%'; $('altTxt').textContent = Math.round(P.pos.y) + 'm'; }
   // Ağ mermileri
   for (let i = nets.length - 1; i >= 0; i--) {
     const n = nets[i]; n.life -= dt; n.v.y -= 15 * dt; n.m.position.addScaledVector(n.v, dt); n.m.rotation.y += dt * 8; n.m.scale.setScalar(1 + (1.6 - n.life) * .6);
     let hit = false; const sp = n.m.position;
-    for (const a of animals) if (a.alive && !a.frozen && Math.hypot(sp.x - a.pos.x, sp.z - a.pos.z) < 1.5 && sp.y < 2.6) { freezeAnimal(a); hit = true; break; }
+    for (const a of animals) if (a.alive && !a.frozen && Math.hypot(sp.x - a.pos.x, sp.z - a.pos.z) < 1.5 * Math.max(1, a.scale * .7) && sp.y < 2.6 * a.scale) { freezeAnimal(a); hit = true; break; }
     if (!hit) for (const m of monsters) if (m.alive && !m.dummy && m.frozen <= 0 && Math.hypot(sp.x - m.pos.x, sp.z - m.pos.z) < 1.2 && sp.y < m.pos.y + 2) { m.frozen = 5; m.dome = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), n.m.material); m.dome.position.copy(m.pos); scene.add(m.dome); SFX.freeze(); toast('🕸️ Canavar ağa takıldı! Şimdi zıpla ya da dön!', 2); hit = true; break; }
-    if (hit || n.life <= 0 || sp.y <= 0) { scene.remove(n.m); nets.splice(i, 1); }
+    if (hit || n.life <= 0 || sp.y <= groundAt(sp.x, sp.z, sp.y)) { scene.remove(n.m); nets.splice(i, 1); }
   }
 
   // Parçacıklar (+ ateş/su çarpışmaları)
@@ -1205,7 +1382,7 @@ function update(dt) {
 function frame(now) {
   const rawDt = Math.min(.1, (now - last) / 1000), dt = Math.min(.033, rawDt); last = now;
   if (started && moment) {
-    updateMoment(rawDt);
+    updateMoment(rawDt); updateNeon(rawDt);
     for (const p of FX) { if (!p.alive) continue; p.life -= dt; if (p.life <= 0) { killFX(p); continue; } if (p.grav) p.vel.y -= p.grav * dt; p.sp.position.addScaledVector(p.vel, dt); const k = 1 - p.life / p.max; p.sp.scale.setScalar(p.s0 + (p.s1 - p.s0) * k); p.sp.material.opacity = p.a0 * Math.min(1, p.life / p.max * 2.2); }
   }
   else if (started && !paused) update(dt);
@@ -1222,13 +1399,13 @@ $('lvlIntro').textContent = `⭐ Seviye ${LVL} · ⚙️ ${SV.gears}`;
 $('start').onclick = () => {
   ac(); musicStart();
   $('intro').style.display = 'none'; ['hud', 'btns', 'topR', 'stick', 'missions'].forEach(id => $(id).style.display = ''); document.body.classList.add('playing');
-  stickHome(); started = true; camYaw = 0; hud(); refreshPowerUI();
+  stickHome(); started = true; camYaw = 0; hud(); refreshPowerUI(); buildSuitBar();
   if (SV.pet) setPet(SV.pet);
   toast(LEARN ? '🎓 Eğitim Bahçesine hoş geldin! Önce 👕 butonuna bas ve bir kostüm seç.' : '🌲 Orman yanıyor! Kostüm sandıklarını bul, ateşleri söndür, hayvanları kurtar!', 5);
 };
 hud();
 requestAnimationFrame(frame);
-window.__game = { cam: (y, p) => { camYaw = y; camPitch = p; }, P, SV, orbActive, giveOrb, fires, animals, monsters, rings, setPet, powerMoment, applyLook, refreshPowerUI, input, openWardrobe, get state() { return { LVL, missions: Object.fromEntries(Object.entries(MISSIONS).map(([k, m]) => [k, m.done])), moment: !!moment }; } };
+window.__game = { setSuit, setFlight, aim, screenToWorld, celebrate, neonBurst, cam: (y, p) => { camYaw = y; camPitch = p; }, P, SV, orbActive, giveOrb, fires, animals, monsters, rings, setPet, powerMoment, applyLook, refreshPowerUI, input, openWardrobe, get state() { return { LVL, missions: Object.fromEntries(Object.entries(MISSIONS).map(([k, m]) => [k, m.done])), moment: !!moment }; } };
 })();
 </script>
 </body>
