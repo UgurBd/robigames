@@ -60,7 +60,7 @@ h1{margin:0;font-size:30px;color:#ff5ad8;-webkit-text-stroke:2px var(--ink);text
 .thumb{border:2.5px solid var(--ink);border-radius:12px;background:#fff7e0;font-size:26px;padding:2px 0;line-height:1;touch-action:none}
 .thumb small{display:block;font-size:9px;font-weight:800}
 #stage canvas{position:absolute;inset:0;width:100%;height:100%}
-#objs{pointer-events:none}#objs g.o{pointer-events:auto}
+#topc{pointer-events:none}#objs{pointer-events:none}#objs g.o{pointer-events:auto}
 #objs g.o.sel>.selbox{display:block}
 .selbox{display:none;fill:none;stroke:#ff5ad8;stroke-width:3;stroke-dasharray:8 6}
 .tools{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
@@ -137,7 +137,7 @@ h1{margin:0;font-size:30px;color:#ff5ad8;-webkit-text-stroke:2px var(--ink);text
   <div class="shelf" id="shelf"></div>
   <div class="board">
     <div class="bar"><button class="btn" data-go="home">◀</button><span class="t">🖌️ Serbest Atölye <small style="color:#5a4f70">· nesneyi sürükle bırak, dokun: adını duy</small></span><button class="btn" id="sSave">📸 Albüme</button></div>
-    <div class="wrap" id="stage"><canvas id="bgc"></canvas><svg id="objs" viewBox="0 0 800 450" preserveAspectRatio="none"></svg><canvas id="topc"></canvas><div id="bubble"></div></div>
+    <div class="wrap" id="stage"><canvas id="bgc"></canvas><svg id="objs" viewBox="0 0 800 450"></svg><canvas id="topc"></canvas><div id="bubble"></div></div>
   </div>
   <div class="side">
     <div class="tools" id="stools"></div>
@@ -385,7 +385,7 @@ function glyphColorSvg(d) {
   return R('rect', 'x="0" y="0" width="400" height="300"') + stars + `<g transform="translate(${tx} ${ty}) scale(${s})"><path d="${d}" fill="none" stroke="#2b2340" stroke-width="30" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/><path class="r" data-stroke="1" d="${d}" fill="none" stroke="#fff" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" style="stroke:#fff;stroke-width:22px"/></g>`;
 }
 // ---------- SERBEST ATÖLYE ----------
-let st = null, sTool = 'fill', sCol = '#e53935', selObj = null, rainbowH = 0;
+let st = null, sTool = 'move', sCol = '#e53935', selObj = null, rainbowH = 0;
 const STOOLS = [['move', '✋', 'Taşı'], ['fill', '🪣', 'Kova'], ['pencil', '✏️', 'Kalem'], ['brush', '🖌️', 'Fırça'], ['spray', '💨', 'Sprey'], ['rainbow', '🌈', 'Gökkuşağı'], ['erase', '🧽', 'Silgi']];
 function studioInit() {
   if (!st) {
@@ -399,46 +399,105 @@ function studioInit() {
   }
   setTimeout(sizeCanvases, 30);
 }
+let VH = 450;
 function sizeCanvases() {
-  const r = $('stage').getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1);
+  const r = $('stage').getBoundingClientRect(); if (r.width > 10) { const nv = Math.round(800 * r.height / r.width); if (nv !== VH) { const k = nv / VH; document.querySelectorAll('#objs g.o').forEach(g => { g.dataset.y = g.dataset.y * k; placeObj(g); }); VH = nv; } $('objs').setAttribute('viewBox', `0 0 800 ${VH}`); }
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
   ['bgc', 'topc'].forEach(id => { const c = $(id); const old = c.width ? c.toDataURL() : null; c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr); const g = c.getContext('2d'); if (id === 'bgc' && !old) { g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height); } if (old) { const im = new Image(); im.onload = () => g.drawImage(im, 0, 0, c.width, c.height); im.src = old; } });
 }
 function stagePt(e) { const r = $('stage').getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top, vx: (e.clientX - r.left) / r.width * 800, vy: (e.clientY - r.top) / r.height * 450, r }; }
 function decorate(str) { return str.replace(/class="r" fill="#fff"/g, 'class="r" fill="#fff" stroke="#2b2340" stroke-width="3.5" stroke-linejoin="round"').replace(/class="ink"/g, 'class="ink" fill="none" stroke="#2b2340" stroke-width="3.5" stroke-linecap="round"').replace(/class="dot"/g, 'class="dot" fill="#2b2340"'); }
+function freeSpot() {
+  const objs = [...document.querySelectorAll('#objs g.o')].map(g => [+g.dataset.x, +g.dataset.y]); let best = [400, 240], bd = -1;
+  for (let j = 0; j < 3; j++) for (let i = 0; i < 5; i++) { const x = 100 + i * 150 + (j % 2) * 40, y = VH * (.22 + j * .28); const d = objs.length ? Math.min(...objs.map(([ox, oy]) => Math.hypot(ox - x, (oy - y) * 1.3))) : 999 - Math.hypot(x - 400, y - VH / 2); if (d > bd) { bd = d; best = [x, y]; } }
+  return best;
+}
 function addObj(id, vx, vy) {
   const o = libById(id), g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-  g.setAttribute('class', 'o'); g.dataset.id = id; g.dataset.x = vx; g.dataset.y = vy; g.dataset.s = .6;
-  g.innerHTML = `<g transform="translate(-200 -150)">${decorate(o.body())}<rect class="selbox" x="10" y="10" width="380" height="280" rx="20"/></g>`;
-  $('objs').appendChild(g); placeObj(g); select(g); tone(880, .08); tone(1175, .1, 'triangle', .06, .08);
+  if (vx === undefined) [vx, vy] = freeSpot();
+  g.setAttribute('class', 'o'); g.dataset.id = id; g.dataset.x = vx; g.dataset.y = vy; g.dataset.s = .42; g.dataset.r = 0;
+  g.innerHTML = `<g transform="translate(-200 -150)"><rect x="0" y="0" width="400" height="300" fill="transparent" class="hitbox"/>${decorate(o.body())}<rect class="selbox" x="10" y="10" width="380" height="280" rx="20"/></g>`;
+  $('objs').appendChild(g); placeObj(g); select(g, true); tone(880, .08); tone(1175, .1, 'triangle', .06, .08);
+  g.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250 });
   g.addEventListener('pointerdown', e => objDown(e, g));
   return g;
 }
-function placeObj(g) { g.setAttribute('transform', `translate(${g.dataset.x} ${g.dataset.y}) scale(${g.dataset.s})`); }
-function select(g) {
-  document.querySelectorAll('#objs g.o').forEach(x => x.classList.toggle('sel', x === g)); selObj = g; if (!g) { $('bubble').style.display = 'none'; return; }
-  const o = libById(g.dataset.id), r = $('stage').getBoundingClientRect();
-  const b = $('bubble'); b.innerHTML = `<span class="en">${o.en}</span><span class="tr">${o.tr}</span>`; b.style.display = 'block';
-  b.style.left = (g.dataset.x / 800 * r.width) + 'px'; b.style.top = Math.max(40, (g.dataset.y - 130 * g.dataset.s) / 450 * r.height) + 'px';
-  KB.sayBoth(o.tr, o.en);
+function placeObj(g) { g.setAttribute('transform', `translate(${g.dataset.x} ${g.dataset.y}) rotate(${g.dataset.r || 0}) scale(${g.dataset.s})`); if (g === selObj) handles(); }
+// seçili nesnenin köşe tutamaçları: ↘ büyüt/küçült/döndür, ✕ sil
+function corner(g, cx, cy) { const s = +g.dataset.s, a = (+g.dataset.r || 0) * Math.PI / 180, x = cx * s, y = cy * s; return [+g.dataset.x + x * Math.cos(a) - y * Math.sin(a), +g.dataset.y + x * Math.sin(a) + y * Math.cos(a)]; }
+function handles() {
+  let h = $('objs').querySelector('#hnd'); if (!selObj || !selObj.isConnected) { if (h) h.remove(); return; }
+  if (!h) { h = document.createElementNS('http://www.w3.org/2000/svg', 'g'); h.id = 'hnd'; h.innerHTML = '<g class="hdl" data-k="size"><circle r="24" fill="#ff5ad8" stroke="#2b2340" stroke-width="4"/><text text-anchor="middle" y="9" font-size="26" font-weight="800" fill="#fff">⤡</text></g><g class="hdl" data-k="del"><circle r="20" fill="#fff" stroke="#2b2340" stroke-width="4"/><text text-anchor="middle" y="8" font-size="22" font-weight="800" fill="#e53935">✕</text></g>'; h.querySelectorAll('.hdl').forEach(x => { x.style.pointerEvents = 'auto'; x.addEventListener('pointerdown', e => hdlDown(e, x.dataset.k)); }); }
+  $('objs').appendChild(h);
+  const [sx, sy] = corner(selObj, 190, 140), [dx, dy] = corner(selObj, -190, -140);
+  h.children[0].setAttribute('transform', `translate(${sx} ${sy})`); h.children[1].setAttribute('transform', `translate(${dx} ${dy})`);
+}
+function select(g, quiet) {
+  document.querySelectorAll('#objs g.o').forEach(x => x.classList.toggle('sel', x === g)); selObj = g; handles();
+  if (!g) { $('bubble').style.display = 'none'; return; }
+  bubble(g, quiet);
+}
+function bubble(g, quiet) {
+  const o = libById(g.dataset.id), r = $('stage').getBoundingClientRect(), b = $('bubble');
+  b.innerHTML = `<span class="en">${o.en}</span><span class="tr">${o.tr}</span>`; b.style.display = 'block';
+  const [bx, by] = toS(+g.dataset.x, g.dataset.y - 150 * g.dataset.s); b.style.left = Math.max(60, Math.min(r.width - 60, bx)) + 'px'; b.style.top = Math.max(40, by) + 'px';
+  if (!quiet) KB.sayBoth(o.tr, o.en);
 }
 function startDragNew(e, id) {
-  e.preventDefault(); const ghost = document.createElement('div'); ghost.textContent = libById(id).e; ghost.style.cssText = `position:fixed;z-index:20;font-size:54px;pointer-events:none;left:${e.clientX - 27}px;top:${e.clientY - 30}px`; document.body.appendChild(ghost);
+  e.preventDefault(); const ghost = document.createElement('div'); ghost.textContent = libById(id).e; ghost.style.cssText = `position:fixed;z-index:20;font-size:64px;pointer-events:none;left:${e.clientX - 32}px;top:${e.clientY - 36}px`; document.body.appendChild(ghost);
   const sx = e.clientX, sy = e.clientY;
-  const mv = ev => { ghost.style.left = ev.clientX - 27 + 'px'; ghost.style.top = ev.clientY - 30 + 'px'; };
-  const up = ev => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); ghost.remove(); const r = $('stage').getBoundingClientRect(); let x = ev.clientX, y = ev.clientY; if (Math.hypot(x - sx, y - sy) < 10) { x = r.left + r.width / 2 + (Math.random() - .5) * 80; y = r.top + r.height / 2; } if (x > r.left && x < r.right && y > r.top && y < r.bottom) addObj(id, (x - r.left) / r.width * 800, (y - r.top) / r.height * 450); };
+  const mv = ev => { ghost.style.left = ev.clientX - 32 + 'px'; ghost.style.top = ev.clientY - 36 + 'px'; };
+  const up = ev => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); ghost.remove(); const r = $('stage').getBoundingClientRect(); const x = ev.clientX, y = ev.clientY; if (Math.hypot(x - sx, y - sy) < 12) { addObj(id); return; } if (x > r.left && x < r.right && y > r.top && y < r.bottom) { const [vx, vy] = toV(x, y); addObj(id, Math.max(30, Math.min(770, vx)), Math.max(30, Math.min(VH - 30, vy))); } };
   window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up);
 }
-function objDown(e, g) {
-  if (sTool === 'fill' && e.target.classList.contains('r')) { e.stopPropagation(); e.target.setAttribute('fill', sCol); tone(500 + COLORS.indexOf(sCol) * 60, .08); if (selObj !== g) select(g); return; }
-  if (sTool === 'move') { e.stopPropagation(); e.preventDefault(); if (selObj !== g) select(g); $('objs').appendChild(g); const p0 = stagePt(e), x0 = +g.dataset.x, y0 = +g.dataset.y; const mv = ev => { const p = stagePt(ev); g.dataset.x = x0 + p.vx - p0.vx; g.dataset.y = y0 + p.vy - p0.vy; placeObj(g); }; const up = () => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); select(g); }; window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up); }
+// ---- parmak hareketleri: 1 parmak taşı, 2 parmak büyüt/döndür ----
+const DRAW_TOOLS = ['pencil', 'brush', 'spray', 'rainbow', 'erase'];
+const ptrs = new Map(); let gest = null;
+function toV(cx, cy) { const svg = $('objs'), p = svg.createSVGPoint(); p.x = cx; p.y = cy; const q = p.matrixTransform(svg.getScreenCTM().inverse()); return [q.x, q.y]; }
+function toS(vx, vy) { const svg = $('objs'), p = svg.createSVGPoint(); p.x = vx; p.y = vy; const q = p.matrixTransform(svg.getScreenCTM()), r = $('stage').getBoundingClientRect(); return [q.x - r.left, q.y - r.top]; }
+const vpt = e => toV(e.clientX, e.clientY);
+function startGesture() {
+  const g = selObj; if (!g) { gest = null; return; } const P2 = [...ptrs.values()];
+  if (P2.length >= 2) { const [a, b] = P2; gest = { g, type: 'pinch', d0: Math.hypot(b[0] - a[0], b[1] - a[1]) || 1, a0: Math.atan2(b[1] - a[1], b[0] - a[0]), s0: +g.dataset.s, r0: +g.dataset.r || 0, m0: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], x0: +g.dataset.x, y0: +g.dataset.y, moved: true }; }
+  else if (P2.length === 1) gest = { g, type: 'drag', p0: P2[0], x0: +g.dataset.x, y0: +g.dataset.y, moved: gest ? gest.moved : false, target: gest && gest.target };
 }
+function objDown(e, g) {
+  if (DRAW_TOOLS.includes(sTool)) return; // çizim araçlarında nesnenin üstüne de çizilir
+  e.stopPropagation(); e.preventDefault();
+  if (selObj !== g) select(g, true);
+  $('objs').appendChild(g); handles();
+  ptrs.set(e.pointerId, vpt(e)); gest = null; startGesture(); if (gest) gest.target = e.target;
+}
+function hdlDown(e, k) {
+  e.stopPropagation(); e.preventDefault(); const g = selObj; if (!g) return;
+  if (k === 'del') { g.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 180 }).onfinish = () => { g.remove(); select(null); }; tone(200, .1); return; }
+  const c = [+g.dataset.x, +g.dataset.y], p = vpt(e);
+  gest = { g, type: 'size', c, d0: Math.hypot(p[0] - c[0], p[1] - c[1]) || 1, a0: Math.atan2(p[1] - c[1], p[0] - c[0]), s0: +g.dataset.s, r0: +g.dataset.r || 0, moved: true }; ptrs.set(e.pointerId, p);
+}
+window.addEventListener('pointermove', e => {
+  if (!ptrs.has(e.pointerId) || !gest) return; e.preventDefault(); ptrs.set(e.pointerId, vpt(e)); const g = gest.g;
+  if (gest.type === 'drag') { const p = ptrs.get(e.pointerId), dx = p[0] - gest.p0[0], dy = p[1] - gest.p0[1]; if (Math.hypot(dx, dy) > 6) gest.moved = true; if (gest.moved) { g.dataset.x = Math.max(0, Math.min(800, gest.x0 + dx)); g.dataset.y = Math.max(0, Math.min(VH, gest.y0 + dy)); placeObj(g); $('bubble').style.display = 'none'; } }
+  else if (gest.type === 'pinch') { const [a, b] = [...ptrs.values()], d = Math.hypot(b[0] - a[0], b[1] - a[1]), an = Math.atan2(b[1] - a[1], b[0] - a[0]), m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]; g.dataset.s = Math.max(.15, Math.min(1.6, gest.s0 * d / gest.d0)); g.dataset.r = gest.r0 + (an - gest.a0) * 180 / Math.PI; g.dataset.x = gest.x0 + m[0] - gest.m0[0]; g.dataset.y = gest.y0 + m[1] - gest.m0[1]; placeObj(g); $('bubble').style.display = 'none'; }
+  else if (gest.type === 'size') { const p = ptrs.get(e.pointerId), d = Math.hypot(p[0] - gest.c[0], p[1] - gest.c[1]), an = Math.atan2(p[1] - gest.c[1], p[0] - gest.c[0]); g.dataset.s = Math.max(.15, Math.min(1.6, gest.s0 * d / gest.d0)); let r = gest.r0 + (an - gest.a0) * 180 / Math.PI; const snap = Math.round(r / 90) * 90; if (Math.abs(r - snap) < 8) r = snap; g.dataset.r = r; placeObj(g); $('bubble').style.display = 'none'; }
+}, { passive: false });
+const ptrUp = e => {
+  if (!ptrs.has(e.pointerId)) return; ptrs.delete(e.pointerId); if (!gest) return;
+  if (ptrs.size === 0) {
+    const g = gest.g;
+    if (gest.type === 'drag' && !gest.moved) { const t = gest.target; if (sTool === 'fill' && t && t.classList.contains('r')) { t.setAttribute('fill', sCol); tone(500 + COLORS.indexOf(sCol) * 60, .08); t.animate([{ opacity: .4 }, { opacity: 1 }], { duration: 200 }); bubble(g, true); } else bubble(g); }
+    else { tone(660, .05); bubble(g, true); }
+    gest = null;
+  } else startGesture();
+};
+window.addEventListener('pointerup', ptrUp); window.addEventListener('pointercancel', ptrUp);
 // fırça ve kova
 let painting = null;
 $('stage').addEventListener('pointerdown', e => {
   if (e.defaultPrevented || e.target.id === 'bubble') return;
+  if (!DRAW_TOOLS.includes(sTool) && gest && ptrs.size === 1 && selObj) { e.preventDefault(); ptrs.set(e.pointerId, vpt(e)); startGesture(); return; }
   const p = stagePt(e), dpr = $('topc').width / p.r.width;
   if (sTool === 'move') { select(null); return; }
-  if (sTool === 'fill') { floodFill(p.x * dpr, p.y * dpr); return; }
+  if (sTool === 'fill') { select(null); floodFill(p.x * dpr, p.y * dpr); return; }
   painting = { last: [p.x * dpr, p.y * dpr], dpr }; $('stage').setPointerCapture(e.pointerId); stroke(p.x * dpr, p.y * dpr);
 });
 $('stage').addEventListener('pointermove', e => { if (!painting) return; const p = stagePt(e); stroke(p.x * painting.dpr, p.y * painting.dpr); });
@@ -462,8 +521,8 @@ function floodFill(x, y) {
   for (const p of list) { const i = p * 4; d[i] = nr; d[i + 1] = ng; d[i + 2] = nb; d[i + 3] = 255; }
   g.putImageData(img, 0, 0); tone(520, .12);
 }
-$('oBig').onclick = () => { if (selObj) { selObj.dataset.s = Math.min(1.2, +selObj.dataset.s * 1.2); placeObj(selObj); } };
-$('oSmall').onclick = () => { if (selObj) { selObj.dataset.s = Math.max(.15, +selObj.dataset.s / 1.2); placeObj(selObj); } };
+$('oBig').onclick = () => { if (selObj) { selObj.dataset.s = Math.min(1.6, +selObj.dataset.s * 1.25); placeObj(selObj); tone(760, .06); } };
+$('oSmall').onclick = () => { if (selObj) { selObj.dataset.s = Math.max(.15, +selObj.dataset.s / 1.25); placeObj(selObj); tone(520, .06); } };
 $('oDel').onclick = () => { if (selObj) { selObj.remove(); select(null); tone(200, .1); } };
 $('sClear').onclick = () => { $('objs').innerHTML = ''; select(null); $('topc').getContext('2d').clearRect(0, 0, $('topc').width, $('topc').height); const b = $('bgc').getContext('2d'); b.fillStyle = '#fff'; b.fillRect(0, 0, $('bgc').width, $('bgc').height); };
 $('sSave').onclick = () => {
