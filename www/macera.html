@@ -157,8 +157,32 @@ body.robiAdOn #missions{top:44px}
 #netEnd{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;background:rgba(43,35,64,.55)}
 #netEnd .box{background:#fff;border:4px solid var(--ink);box-shadow:0 8px 0 var(--ink);border-radius:26px;padding:14px 24px;text-align:center;font-weight:800}
 #charPick{display:flex;gap:8px;justify-content:center;margin:6px 0}#charPick button{font-size:30px;width:58px;height:58px;border-radius:16px;border:3px solid var(--ink);background:#fff;box-shadow:0 3px 0 var(--ink)}#charPick button.on{background:#ffd166;transform:translateY(-3px)}
-#bThrow.dim{opacity:.55}
+#bThrow{right:186px;bottom:176px;width:60px;height:60px;font-size:13px}#bThrow.dim{opacity:.55}
 body.iAmEbe::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:4;box-shadow:inset 0 0 0 8px #ff2a2a,inset 0 0 60px #ff2a2a88;animation:ebeP 1s ease-in-out infinite}@keyframes ebeP{50%{opacity:.5}}
+
+.netPop{position:fixed;inset:0;z-index:40;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(43,35,64,.65);color:#fff;text-align:center;font-weight:800}
+.netPop h2{margin:6px 0 12px}
+#netBar .inv{pointer-events:auto;border:3px solid var(--ink);border-radius:12px;background:#ffd166;font-size:18px;box-shadow:0 3px 0 var(--ink);padding:0 6px}
+.pRow{display:flex;gap:6px;justify-content:center}.pRow .go{font-size:15px;padding:8px 10px}
+#pFriends .go{font-size:15px;padding:6px 10px;margin:2px}
+/* 5 yaş için sade üst kısım: seviye çubuğu ve sınırsız güç sayaçları gizli */
+#hud .lv,#orbs{display:none}
+/* telefon (yatay, alçak ekran): düğmeler küçülür ve aralanır, üst kısım sadeleşir */
+@media (max-height:520px){
+  #btns{transform:scale(.74);transform-origin:right bottom;right:6px;bottom:6px}
+  #suitBar{transform:translateX(-50%) scale(.68);transform-origin:center bottom;bottom:2px}
+  #photoBtn,#shopBtn,#wardBtn{display:none!important}
+  #hud{transform:scale(.8);transform-origin:left top}
+  #missions{transform:translateX(-50%) scale(.8);transform-origin:center top}
+  #topR{transform:scale(.85);transform-origin:right top}
+  #netBar{transform:scale(.8);transform-origin:right top;top:40px}
+  #netBar .code{display:none}
+  #guide{top:96px;font-size:13px;max-width:40vw}
+  #robiAd{height:26px!important;font-size:11px!important}
+  .screen .box{max-height:94vh;overflow:auto;padding-top:8px;padding-bottom:8px}
+  .screen .box .go{padding-top:7px;padding-bottom:7px;font-size:16px}
+  .screen .box h1{font-size:24px;margin:2px 0}
+}
 #tutHand{position:fixed;z-index:12;font-size:44px;display:none;pointer-events:none;filter:drop-shadow(0 3px 0 rgba(0,0,0,.25));transform:rotate(180deg)}
 </style>
 </head>
@@ -223,6 +247,7 @@ body.iAmEbe::after{content:'';position:fixed;inset:0;pointer-events:none;z-index
   <button class="go" id="pResume">▶ Devam et</button>
   <button class="go sec" id="pMusic">🎵 Müzik açık</button>
   <button class="go sec" id="pTut">❓ Nasıl oynanır?</button>
+  <div class="pRow"><button class="go sec" id="pPhoto">📷 Fotoğraf</button><button class="go sec" id="pWard">👕 Kostüm</button><button class="go sec" id="pShop">🛒 Mağaza</button></div>
   <button class="go sec" id="pMenu">🏠 Ana menü</button>
   <button class="go sec" id="pRestart">↺ Baştan başla</button>
 </div></div>
@@ -254,7 +279,7 @@ body.iAmEbe::after{content:'';position:fixed;inset:0;pointer-events:none;z-index
 const LEARN = location.hash === '#ogren';
 const BAHCE = location.hash === '#bahce';
 const BUILD = location.hash === '#tasarla' || /^#net-(arena|ebe|parkur)-/.test(location.hash);
-const NETH = (location.hash || '').match(/^#net-(orman|arena|ebe|parkur)-(\d{5})$/), NETMODE = NETH ? NETH[1] : null;
+const NETH = (location.hash || '').match(/^#net-(orman|arena|ebe|parkur)-(\d{5})(-a)?$/), NETMODE = NETH ? NETH[1] : null;
 const WID = NETMODE ? (NETMODE === 'orman' ? 'orman' : 'tasarla') : (location.hash || '#orman').slice(1);
 const NETFX = { stuck: 0, wet: 0, burn: 0, big: 0, inv: 0 };
 const AN = window.RobiAnaliz || { screen() {}, done() {}, ev() {}, btn() {}, bannerShow() {}, interstitial(f) { f && f(); } };
@@ -1567,11 +1592,15 @@ $('pZoomIn').onclick = () => photo && (photo.dist = Math.max(2.2, photo.dist - .
 $('sleepMenu').onclick = () => $('pMenu').onclick();
 $('jellyOk').onclick = () => { jellyClose(); };
 $('jellyMenu').onclick = () => { jellyClose(); $('pMenu').onclick(); }; topBtn('pauseBtn', () => togglePause());
+$('pPhoto').onclick = () => { togglePause(false); $('photoBtn').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); };
+$('pWard').onclick = () => { togglePause(false); $('wardBtn').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); };
+$('pShop').onclick = () => { togglePause(false); $('shopBtn').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); };
 if (!LEARN) topBtn('shopBtn', openShop); else $('shopBtn').remove();
 function swapPower() { const l = powersList(); if (l.length < 2) return; powerSel = (powerSel + 1) % l.length; SFX.power(); refreshPowerUI(); }
 function togglePause(force) {
   if (!started) return;
   const on = force !== undefined ? force : $('pause').style.display !== 'flex';
+  if (on && NET && NET.pauseFriends) NET.pauseFriends();
   $('pause').style.display = on ? 'flex' : 'none'; paused = on; last = performance.now();
   if (on) musicStop(); else musicStart();
 }
@@ -2050,18 +2079,20 @@ if (NETMODE) (function () {
   const coop = NETMODE === 'orman'; window.__net = N; N.fx = NETFX;
   N.look = () => netSend({ t: 'look', suit: SV.suit, ch: SV.char || 'robi' });
   // ---------- uzak oyuncu modeli ----------
-  function label(text, col) { const c = document.createElement('canvas'); c.width = 128; c.height = 64; const g = c.getContext('2d'); g.fillStyle = col; g.beginPath(); g.roundRect(4, 6, 120, 52, 24); g.fill(); g.strokeStyle = '#2b2340'; g.lineWidth = 5; g.stroke(); g.font = '36px system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, 64, 34); const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), depthTest: false })); sp.scale.set(.9, .45, 1); sp.position.y = 2.6; sp.renderOrder = 9; return sp; }
+  function label(text, col) { const c = document.createElement('canvas'); c.width = 320; c.height = 64; const g = c.getContext('2d'); g.font = '800 34px system-ui'; const w = Math.min(310, g.measureText(text).width + 34); g.fillStyle = col; g.beginPath(); g.roundRect(160 - w / 2, 6, w, 52, 24); g.fill(); g.strokeStyle = '#2b2340'; g.lineWidth = 5; g.stroke(); g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, 160, 34); const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), depthTest: false })); sp.scale.set(2.25, .45, 1); sp.position.y = 2.6; sp.renderOrder = 9; return sp; }
   function makeRemote(p) {
+    N.info[p.slot] = { av: p.av, name: p.name, pid: p.pid };
     const M = { suit: new THREE.MeshLambertMaterial({ color: '#f4f6fb' }), acc: new THREE.MeshLambertMaterial({ color: '#ff7a2f' }), cape: new THREE.MeshLambertMaterial({ color: RN.COL[p.slot], side: THREE.DoubleSide }) };
     const g = makeRobi(M); scene.add(g); const sh = blobShadow(.5);
-    const tag = label(RN.AV[p.slot], RN.COL[p.slot]); g.add(tag);
+    const tag = label(avOf(p.slot) + ' ' + nameOf(p.slot).slice(0, 9), RN.COL[p.slot]); g.add(tag);
     const ring = new THREE.Mesh(new THREE.TorusGeometry(.75, .07, 8, 30), new THREE.MeshBasicMaterial({ color: RN.COL[p.slot] })); ring.rotation.x = Math.PI / 2; ring.position.y = .06; g.add(ring);
     const ebeTag = ebeSprite(); g.add(ebeTag);
     const r = { slot: p.slot, g, M, sh, tag, ring, ebeTag, pos: V(START.x + (p.slot - 2.5) * 1.5, START.y, START.z), tgt: null, yaw: 0, tyaw: 0, st: {}, last: performance.now(), walk: 0, net: null };
     setRemoteLook(r, p.suit || 'white', p.ch || 'robi'); r.g.position.copy(r.pos); return r;
   }
   function setRemoteLook(r, suit, ch) { const s = SUITS[suit] || SUITS.white; r.M.suit.color.set(s.body); r.M.acc.color.set(s.acc); r.suit = suit; r.ch = ch; charParts(ch, r.g.userData); }
-  function tagText(slot) { return (N.wins[slot] ? '🏆' : '') + RN.AV[slot] + (NETMODE === 'arena' ? ' ' + (N.score[slot] || 0) : ''); }
+  N.info = {}; const avOf = s => (N.info[s] && N.info[s].av) || RN.AV[s], nameOf = s => (N.info[s] && N.info[s].name) || ['Köpek', 'Kedi', 'Tavşan', 'Tilki', 'Panda', 'Kurbağa'][s];
+  function tagText(slot) { return (N.wins[slot] ? '🏆' : '') + avOf(slot) + ' ' + nameOf(slot).slice(0, 9) + (NETMODE === 'arena' ? ' ' + (N.score[slot] || 0) : ''); }
   function refreshLabels() {
     for (const r of Object.values(N.players)) { const t = tagText(r.slot); if (r.tagT !== t) { r.g.remove(r.tag); r.tag = label(t, RN.COL[r.slot]); r.g.add(r.tag); r.tagT = t; } r.ebeTag.visible = r.slot === N.ebe; r.ring.material.color.set(r.slot === N.ebe ? '#ff2a2a' : RN.COL[r.slot]); }
     const mt = tagText(N.me); if (N.myTagT !== mt) { if (N.myTag) robi.remove(N.myTag); N.myTag = label(mt, RN.COL[Math.max(0, N.me)]); robi.add(N.myTag); N.myTagT = mt; }
@@ -2072,7 +2103,7 @@ if (NETMODE) (function () {
   function dropRemote(slot) { const r = N.players[slot]; if (!r) return; scene.remove(r.g); scene.remove(r.sh); if (r.net) scene.remove(r.net); delete N.players[slot]; }
   // ---------- bağlantı ----------
   function connect() {
-    const u = SERVER.replace(/^http/, 'ws') + `/ws?code=${code}&ch=${encodeURIComponent(SV.char || 'robi')}&suit=${SV.suit}`;
+    const u = SERVER.replace(/^http/, 'ws') + `/ws?code=${code}&ch=${encodeURIComponent(SV.char || 'robi')}&suit=${SV.suit}&${RN.q ? RN.q() : ''}${NETH[3] && !N.admitted ? '&ask=1' : ''}`;
     let ws; try { ws = new WebSocket(u); } catch (e) { return fail(); } N.ws = ws;
     ws.onopen = () => { N.retry = 0; };
     ws.onmessage = e => { let m; try { m = JSON.parse(e.data); } catch (x) { return; } if (m.t) sys(m); else if (m.m) msg(m.s, m.m); };
@@ -2082,17 +2113,20 @@ if (NETMODE) (function () {
   const isHost = () => Object.keys(N.players).every(s => +s > N.me);
   function sys(m) {
     if (m.t === 'welcome') {
-      N.me = m.me.slot; N.ok = true; Object.keys(N.players).forEach(dropRemote);
+      N.me = m.me.slot; N.ok = true; N.admitted = true; N.info[N.me] = { av: m.me.av, name: m.me.name, pid: m.me.pid }; if ($('netWait')) $('netWait').remove(); Object.keys(N.players).forEach(dropRemote);
       for (const p of m.peers) N.players[p.slot] = makeRemote(p);
       P.pos.set(START.x + (N.me - 2.5) * 1.5, START.y, START.z);
       if (!coop) { if (m.layout) { layout = m.layout; rebuildParkur(); } else if (isHost()) netSend({ t: 'layout', layout }); }
       if (NETMODE === 'ebe' && isHost() && N.ebe < 0) setEbe(N.me, true);
       if (PVP) { for (const k of ['fire', 'water', 'net', 'joy']) orbActive[k] = 1e9; spawnBalls(); refreshPowerUI(); }
       SFX.join(); joinFx(P.pos, RN.COL[N.me]); refreshLabels();
-      hudNet(); toast(`🔑 Oda ${code} · ${RN.AV[N.me]} sensin!`, 3); SAY(`Odaya girdin! Senin hayvanın ${['köpek', 'kedi', 'tavşan', 'tilki', 'panda', 'kurbağa'][N.me]}.`);
+      hudNet(); toast(`🔑 Oda ${code} · ${avOf(N.me)} ${nameOf(N.me)}`, 3); SAY(`Odaya girdin! Hoş geldin ${nameOf(N.me)}!`);
     }
-    if (m.t === 'join') { const r = N.players[m.p.slot] = makeRemote(m.p); SFX.join(); joinFx(r.pos, RN.COL[m.p.slot]); toast(`🎉 ${RN.AV[m.p.slot]} odaya geldi! Yaşasın!`, 2.5); setTimeout(() => SAY(`Yaşasın! ${['Köpek', 'Kedi', 'Tavşan', 'Tilki', 'Panda', 'Kurbağa'][m.p.slot]} geldi!`), 700); refreshLabels(); if (isHost()) hostSync(m.p.slot); hudNet(); }
-    if (m.t === 'leave') { dropRemote(m.slot); refreshLabels(); toast(`${RN.AV[m.slot]} odadan çıktı`, 2); if (N.ebe === m.slot && isHost()) setEbe(N.me, true); hudNet(); }
+    if (m.t === 'wait') { const w = document.createElement('div'); w.id = 'netWait'; w.className = 'netPop'; w.innerHTML = '<div style="font-size:60px">⏳</div><h2>Oda sahibine soruluyor...</h2><p>İzin verince oyuna gireceksin!</p>'; document.body.appendChild(w); SAY('Oda sahibine soruyorum. Biraz bekle!'); }
+    if (m.t === 'denied') { N.closing = true; toast('😕 Oda sahibi şimdi izin vermedi', 3); SAY('Oda sahibi şimdi izin vermedi.'); setTimeout(() => $('pMenu').onclick(), 2500); }
+    if (m.t === 'ask') { const p = m.p, w = document.createElement('div'); w.className = 'netPop'; w.innerHTML = `<div style="font-size:64px">${p.av || '🙂'}</div><h2>${p.name || 'Bir arkadaş'} girmek istiyor!</h2><div style="display:flex;gap:12px;justify-content:center"><button class="go" data-ok="1" style="font-size:24px">✅ Gelsin</button><button class="go" data-ok="0" style="font-size:24px;background:#fff;color:var(--ink)">❌ Hayır</button></div>`; document.body.appendChild(w); SFX.ring(); SAY(`${p.name || 'Bir arkadaş'} girmek istiyor! Gelsin mi?`); w.querySelectorAll('[data-ok]').forEach(b => b.onclick = () => { netSend({ t: 'allow', slot: p.slot, ok: b.dataset.ok === '1' }); w.remove(); }); setTimeout(() => w.isConnected && w.remove(), 60000); }
+    if (m.t === 'join') { const r = N.players[m.p.slot] = makeRemote(m.p); SFX.join(); joinFx(r.pos, RN.COL[m.p.slot]); toast(`🎉 ${avOf(m.p.slot)} ${nameOf(m.p.slot)} geldi! Yaşasın!`, 2.5); setTimeout(() => SAY(`Yaşasın! ${nameOf(m.p.slot)} geldi!`), 700); refreshLabels(); if (isHost()) hostSync(m.p.slot); hudNet(); }
+    if (m.t === 'leave') { dropRemote(m.slot); refreshLabels(); toast(`${avOf(m.slot)} ${nameOf(m.slot)} odadan çıktı`, 2); if (N.ebe === m.slot && isHost()) setEbe(N.me, true); hudNet(); }
   }
   // yeni gelene dünyanın son hali (sadece oda sahibi gönderir)
   function joinFx(p, col) {
@@ -2123,7 +2157,7 @@ if (NETMODE) (function () {
     else if (m.t === 'ebe') setEbe(m.s);
     else if (m.t === 'layout' && !coop) { layout = m.layout; rebuildParkur(); P.pos.set(START.x + (N.me - 2.5) * 1.5, START.y, START.z); won = false; parkurT = 0; N.finish = []; toast('🧱 Yeni parkur geldi!', 2.5); SAY('Yeni parkur hazır!'); }
     else if (m.t === 'restart') restartRound();
-    else if (m.t === 'fin') { N.finish.push(s); toast(`🏁 ${RN.AV[s]} bitirdi! ${N.finish.length}.`, 2.5); hudNet(); }
+    else if (m.t === 'fin') { N.finish.push(s); toast(`🏁 ${avOf(s)} bitirdi! ${N.finish.length}.`, 2.5); hudNet(); }
   }
   // ---------- atışlar ----------
   const rshots = [];
@@ -2185,9 +2219,9 @@ if (NETMODE) (function () {
     const prev = N.ebe; N.ebe = s; N.ebeImm = 2.5;
     if (announce) netSend({ t: 'ebe', s });
     refreshLabels(); SFX.ebe(); const er = s === N.me ? P.pos : N.players[s] && N.players[s].pos; if (er) { joinFx(er, '#ff2a2a'); } setTimeout(() => SFX.giggle(), 300);
-    if (s !== N.me && prev !== N.me) toast(`🏃 Ebe artık ${RN.AV[s]}!`, 2);
+    if (s !== N.me && prev !== N.me) toast(`🏃 Ebe artık ${avOf(s)}!`, 2);
     if (s === N.me) { toast('🏃 EBE SENSİN! Ağ at ya da dokun, ebeyi devret!', 3); SAY('Ebe sensin! Birine ağ at ya da dokun!'); if (prev !== s) N.score['e' + s] = (N.score['e' + s] || 0) + 1; }
-    else if (prev === N.me) { toast(`😅 Kurtuldun! Ebe artık ${RN.AV[s]}`, 2.5); SAY('Kurtuldun! Kaç kaç!'); }
+    else if (prev === N.me) { toast(`😅 Kurtuldun! Ebe artık ${avOf(s)}`, 2.5); SAY('Kurtuldun! Kaç kaç!'); }
     hudNet();
   }
   // ---------- tur ve yeniden başlatma ----------
@@ -2195,17 +2229,22 @@ if (NETMODE) (function () {
   function endRound(winner) {
     N.ended = true;
     const ranks = [N.me, ...Object.keys(N.players).map(Number)].map(s => [s, N.score[s] || 0]).sort((a, b) => b[1] - a[1]);
-    $('netEndList').innerHTML = ranks.map(([s, v], i) => `<div style="font-size:${i ? 22 : 34}px">${['🥇', '🥈', '🥉', '⭐', '⭐', '⭐'][i]} ${RN.AV[s]} ${s === N.me ? '(sen)' : ''} — ${v} ⭐</div>`).join('');
-    $('netEndList').innerHTML = `<div style="font-size:40px">🏆 ${RN.AV[winner]} ${winner === N.me ? 'KAZANDIN!' : 'kazandı!'}</div>` + $('netEndList').innerHTML;
+    $('netEndList').innerHTML = ranks.map(([s, v], i) => `<div style="font-size:${i ? 22 : 34}px">${['🥇', '🥈', '🥉', '⭐', '⭐', '⭐'][i]} ${avOf(s)} ${s === N.me ? '(sen)' : ''} — ${v} ⭐</div>`).join('');
+    $('netEndList').innerHTML = `<div style="font-size:40px">🏆 ${avOf(winner)} ${winner === N.me ? 'KAZANDIN!' : 'kazandı!'}</div>` + $('netEndList').innerHTML;
     refreshLabels(); $('netEnd').style.display = 'flex'; paused = true; neonBurst('white', 6); SFX.join(); SAY(winner === N.me ? 'Yaşasın! Kazandın!' : 'Çok güzel oynadın! Bir tur daha?');
   }
-  if (window.parent !== window) { const ib = document.createElement('button'); ib.className = 'go sec'; ib.textContent = '📨 Arkadaşını davet et'; ib.onclick = () => parent.postMessage(`robi-invite:${NETMODE}:${code}`, '*'); $('pMenu').parentNode.insertBefore(ib, $('pMenu')); }
+  N.invite = () => { try { parent.postMessage(`robi-invite:${NETMODE}:${code}`, '*'); } catch (e) {} };
+  if (window.parent !== window) { const ib = document.createElement('button'); ib.className = 'go sec'; ib.textContent = '📨 Arkadaşını çağır'; ib.onclick = N.invite; $('pMenu').parentNode.insertBefore(ib, $('pMenu'));
+    const fb = document.createElement('div'); fb.id = 'pFriends'; $('pMenu').parentNode.insertBefore(fb, $('pMenu')); }
+  N.pauseFriends = () => { const el = $('pFriends'); if (!el) return; const mine = (RO.friends ? RO.friends() : []).map(f => f.pid); const others = Object.keys(N.players).map(Number).filter(s => N.info[s] && N.info[s].pid && !mine.includes(N.info[s].pid));
+    el.innerHTML = others.length ? '<p style="margin:6px 0 2px;font-weight:800">❤️ Arkadaş olalım mı?</p>' + others.map(s => `<button class="go sec" data-fs="${s}">❤️ ${avOf(s)} ${nameOf(s)}</button>`).join('') : '';
+    el.querySelectorAll('[data-fs]').forEach(b => b.onclick = () => { const i = N.info[+b.dataset.fs]; parent.postMessage(`robi-addfriend:${i.pid}:${i.av}:${i.name}`, '*'); b.disabled = true; b.textContent = '💌 İstek gitti'; }); };
   $('netAgain').onclick = () => { netSend({ t: 'restart' }); restartRound(); };
   $('netMenu').onclick = () => { N.closing = true; try { N.ws.close(); } catch (e) {} $('pMenu').onclick(); };
   // ---------- HUD ----------
   function hudNet() {
     const all = [N.me, ...Object.keys(N.players).map(Number)].filter(s => s >= 0).sort();
-    $('netBar').innerHTML = `<span class="code">🔑 ${code.slice(0, 2)}-${code.slice(2)}</span>` + all.map(s => `<span class="pl ${s === N.me ? 'me' : ''}" style="--c:${RN.COL[s]}">${RN.AV[s]}${s === N.ebe ? '🏃' : ''}${coop ? '' : ' ' + (NETMODE === 'parkur' ? (N.finish.indexOf(s) >= 0 ? '🏁' + (N.finish.indexOf(s) + 1) : '') : (N.score[s] || 0) + (NETMODE === 'arena' ? '/' + WIN : '⭐'))}${N.wins[s] ? ' 🏆' + N.wins[s] : ''}</span>`).join('') + (N.roundT > 0 ? `<span class="code">⏱ ${Math.floor(N.roundT / 60)}:${String(Math.floor(N.roundT % 60)).padStart(2, '0')}</span>` : '');
+    $('netBar').innerHTML = `<button class="inv" onclick="window.__net.invite()">📨</button><span class="code">🔑 ${code.slice(0, 2)}-${code.slice(2)}</span>` + all.map(s => `<span class="pl ${s === N.me ? 'me' : ''}" style="--c:${RN.COL[s]}">${avOf(s)}${s === N.ebe ? '🏃' : ''}${coop ? '' : ' ' + (NETMODE === 'parkur' ? (N.finish.indexOf(s) >= 0 ? '🏁' + (N.finish.indexOf(s) + 1) : '') : (N.score[s] || 0) + (NETMODE === 'arena' ? '/' + WIN : '⭐'))}${N.wins[s] ? ' 🏆' + N.wins[s] : ''}</span>`).join('') + (N.roundT > 0 ? `<span class="code">⏱ ${Math.floor(N.roundT / 60)}:${String(Math.floor(N.roundT % 60)).padStart(2, '0')}</span>` : '');
   }
   N.hud = hudNet; N.isHost = isHost;
   // ---------- her kare ----------

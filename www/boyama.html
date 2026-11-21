@@ -548,7 +548,7 @@ $('sSave').onclick = () => {
 setInterval(() => { if (document.hidden) return; if (RO.tick(5) <= 0) { document.body.innerHTML = '<div style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#2b2340;color:#fff;font-weight:800;font-size:24px;text-align:center"><div style="font-size:70px">😴🌙</div>Robi\'nin uyku zamanı!<br><small>Bugünlük oyun süresi bitti.</small></div>'; } }, 5000);
 
 // ---------- BİRLİKTE BOYA (aynı tuvalde, oda kodu ile) ----------
-const SNETH = (location.hash || '').match(/^#net-boya-(\d{5})$/);
+const SNETH = (location.hash || '').match(/^#net-boya-(\d{5})(-a)?$/);
 let SNET = null;
 function netSend(o) { if (SNET && SNET.ws && SNET.ws.readyState === 1) try { SNET.ws.send(JSON.stringify(o)); } catch (e) {} }
 let segBuf = [], segT = 0;
@@ -583,9 +583,12 @@ if (SNETH) (function () {
     netSend({ t: 'snap', to, objs: [...document.querySelectorAll('#objs g.o')].map(g => ({ ...objState(g), f: [...g.querySelectorAll('.r')].map(r => r.getAttribute('fill') === '#fff' ? 0 : r.getAttribute('fill')) })), img: cv.toDataURL('image/jpeg', .6) });
   }
   function connect() {
-    const ws = N.ws = new WebSocket(SERVER.replace(/^http/, 'ws') + `/ws?code=${code}&ch=boya`);
+    const ws = N.ws = new WebSocket(SERVER.replace(/^http/, 'ws') + `/ws?code=${code}&ch=boya&${RN.q()}${SNETH[2] && !N.in ? '&ask=1' : ''}`);
     ws.onmessage = e => { let m; try { m = JSON.parse(e.data); } catch (x) { return; }
-      if (m.t === 'welcome') { N.me = m.me.slot; m.peers.forEach(p => N.peers[p.slot] = 1); hud(); joinParty(N.me); }
+      if (m.t === 'wait') { const b = $('bubble'); b.style.display = 'block'; b.style.left = '50%'; b.style.top = '45%'; b.innerHTML = '<span class="tr">⏳ Oda sahibine soruluyor...</span>'; KB.speak('Oda sahibine soruyorum, biraz bekle!', 'tr-TR'); }
+      else if (m.t === 'denied') { N.closing = true; KB.speak('Oda sahibi şimdi izin vermedi.', 'tr-TR'); setTimeout(() => $('back').onclick(), 2000); }
+      else if (m.t === 'ask') { const p = m.p, w = document.createElement('div'); w.style.cssText = 'position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(43,35,64,.65);color:#fff;font-weight:800;font-size:22px'; w.innerHTML = `<div style="font-size:64px">${p.av || '🙂'}</div><p>${p.name || 'Bir arkadaş'} girmek istiyor!</p><div><button class="btn go" data-ok="1">✅ Gelsin</button> <button class="btn" data-ok="0">❌ Hayır</button></div>`; document.body.appendChild(w); KB.speak(`${p.name || 'Bir arkadaş'} girmek istiyor! Gelsin mi?`, 'tr-TR'); w.querySelectorAll('[data-ok]').forEach(b => b.onclick = () => { netSend({ t: 'allow', slot: p.slot, ok: b.dataset.ok === '1' }); w.remove(); }); }
+      else if (m.t === 'welcome') { N.in = true; $('bubble').style.display = 'none'; N.me = m.me.slot; m.peers.forEach(p => N.peers[p.slot] = 1); hud(); joinParty(N.me); }
       else if (m.t === 'join') { N.peers[m.p.slot] = 1; hud(); joinParty(m.p.slot); if (isHost()) setTimeout(() => snapFor(m.p.slot), 400); }
       else if (m.t === 'leave') { delete N.peers[m.slot]; hud(); }
       else if (m.m) apply(m.s, m.m); };

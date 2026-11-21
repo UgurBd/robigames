@@ -115,6 +115,12 @@ const Robi = window.RobiOrtak = {
     } catch (e) { return false; }
   },
   // jelibon hakkı: sayaç
+  // Oyuncu kimliği (arkadaşlık için) — ad ebeveyn tarafından yazılır ya da hazırlardan seçilir
+  profile() { const s = load(); if (!s.profile || !s.profile.pid) { s.profile = Object.assign({ name: '', av: '🦊' }, s.profile || {}, { pid: String(10000000 + Math.floor(Math.random() * 89999999)) }); store(s); } return s.profile; },
+  setProfile(p) { const s = load(); s.profile = Object.assign(Robi.profile(), p); store(s); return s.profile; },
+  friends() { return load().friends || []; },
+  addFriend(f) { const s = load(); s.friends = (s.friends || []).filter(x => x.pid !== f.pid); s.friends.push({ pid: f.pid, name: String(f.name || '').slice(0, 16), av: f.av || '🙂' }); store(s); },
+  delFriend(pid) { const s = load(); s.friends = (s.friends || []).filter(x => x.pid !== pid); store(s); },
   jelly() { const s = load(); const p = Robi.parent(); p.jellyToday = (p.jellyToday || 0) + 1; p.jellyTotal = (p.jellyTotal || 0) + 1; s.parent = p; store(s); return `Bugün ${p.jellyToday}. jelibon hakkın 🍬 · Toplam ${p.jellyTotal}`; },
   // fotoğraflar
   photos() { try { return JSON.parse(localStorage.getItem('robi_photos') || '[]'); } catch (e) { return []; } },
