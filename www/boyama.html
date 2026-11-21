@@ -3,90 +3,171 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>Robi Boyama Atölyesi</title>
+<title>Robi Sanat Atölyesi</title>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&display=swap" rel="stylesheet">
 <style>
 :root{--ink:#2b2340}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
-html,body{margin:0;height:100%;overflow:hidden;font-family:'Baloo 2',system-ui,sans-serif;color:var(--ink);background:#fff7e0;background-image:radial-gradient(#ffd16655 2px,transparent 2px);background-size:22px 22px}
+html,body{margin:0;height:100%;overflow:hidden;font-family:'Baloo 2',system-ui,sans-serif;color:var(--ink);background:#fff7e0;background-image:radial-gradient(#ffd16655 2px,transparent 2px);background-size:22px 22px;touch-action:none}
 button{font-family:inherit;color:var(--ink);cursor:pointer}
 .btn{border:3.5px solid var(--ink);border-radius:14px;background:#fff;box-shadow:0 4px 0 var(--ink);font-weight:800;font-size:16px;padding:4px 12px}
 .btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
 .btn.go{background:#22b573;color:#fff;text-shadow:0 1px 0 var(--ink)}
-/* bölüm seçimi */
-#select{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;padding:10px;gap:8px}
-#select h1{margin:0;font-size:30px;color:#ff5ad8;-webkit-text-stroke:2px var(--ink);text-shadow:0 4px 0 var(--ink)}
-.top{display:flex;gap:8px;align-items:center;width:100%;justify-content:space-between;max-width:820px}
-#levels{display:grid;grid-template-columns:repeat(10,1fr);gap:7px;width:min(820px,100%);overflow-y:auto;padding:4px}
-.lv{border:3px solid var(--ink);border-radius:14px;background:#fff;box-shadow:0 3px 0 var(--ink);font-weight:800;font-size:18px;padding:3px 0;line-height:1.05}
-.lv small{display:block;font-size:11px;letter-spacing:-1px;color:#f5b400}
-.lv i{display:block;font-style:normal;font-size:18px}
-.lv.lock{background:#e9e5f2;color:#999}
-.lv.done{background:#fff3c4}
+.scr{position:fixed;inset:0;display:none;padding:8px}
+h1{margin:0;font-size:30px;color:#ff5ad8;-webkit-text-stroke:2px var(--ink);text-shadow:0 4px 0 var(--ink);line-height:1}
+.top{display:flex;gap:8px;align-items:center;width:100%;justify-content:space-between}
+/* ana ekran */
+#home{flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.modes{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.mode{width:min(30vw,230px);border:4px solid var(--ink);border-radius:22px;box-shadow:0 6px 0 var(--ink);background:#fff;padding:0;overflow:hidden;text-align:center}
+.mode .art{height:min(30vh,120px);display:flex;align-items:center;justify-content:center;font-size:min(13vh,56px);border-bottom:4px solid var(--ink)}
+.mode b{display:block;font-size:20px;margin-top:4px}.mode small{display:block;font-size:13px;color:#5a4f70;font-weight:700;padding:0 8px 8px}
+/* bölüm listeleri */
+#select,#tsel{flex-direction:column;align-items:center;gap:6px}
+.grid{display:grid;grid-template-columns:repeat(10,1fr);gap:7px;width:min(860px,100%);overflow-y:auto;padding:4px;flex:1;align-content:start}
+.lv{border:3px solid var(--ink);border-radius:14px;background:#fff;box-shadow:0 3px 0 var(--ink);font-weight:800;font-size:17px;padding:3px 0;line-height:1.05}
+.lv small{display:block;font-size:11px;letter-spacing:-1px;color:#f5b400}.lv i{display:block;font-style:normal;font-size:18px}
+.lv.lock{background:#e9e5f2;color:#999}.lv.done{background:#fff3c4}
 .tier{grid-column:1/-1;font-weight:800;font-size:14px;text-align:left;margin-top:4px}
-/* boyama ekranı */
-#paint{position:fixed;inset:0;display:none;padding:8px;gap:10px}
-#board{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
-#svgWrap{flex:1;background:#fff;border:4px solid var(--ink);border-radius:20px;box-shadow:0 6px 0 var(--ink);overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:0}
-#svgWrap svg{width:100%;height:100%}
-#svgWrap .r{stroke:var(--ink);stroke-width:3.5;stroke-linejoin:round;cursor:pointer;transition:fill .15s}
-#svgWrap .ink{fill:none;stroke:var(--ink);stroke-width:3.5;stroke-linecap:round;pointer-events:none}
-#svgWrap .dot{fill:var(--ink);pointer-events:none}
-.bar{display:flex;gap:6px;align-items:center}
-.bar .t{font-weight:800;font-size:17px;flex:1}
-#side{width:178px;display:flex;flex-direction:column;gap:8px}
-#pal{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;background:#fff;border:3.5px solid var(--ink);box-shadow:0 4px 0 var(--ink);border-radius:18px;padding:8px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.tab{border:3px solid var(--ink);border-radius:12px;background:#fff;font-weight:800;font-size:15px;padding:1px 12px}
+.tab.on{background:#ffd166;box-shadow:0 3px 0 var(--ink)}
+/* boyama / çizim tuvali */
+#paint,#trace,#studio{gap:10px}
+.board{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+.wrap{flex:1;background:#fff;border:4px solid var(--ink);border-radius:20px;box-shadow:0 6px 0 var(--ink);overflow:hidden;position:relative;min-height:0}
+.wrap svg{position:absolute;inset:0;width:100%;height:100%}
+.wrap .r{stroke:var(--ink);stroke-width:3.5;stroke-linejoin:round;cursor:pointer;transition:fill .15s}
+.wrap .ink{fill:none;stroke:var(--ink);stroke-width:3.5;stroke-linecap:round;pointer-events:none}
+.wrap .dot{fill:var(--ink);pointer-events:none}
+.bar{display:flex;gap:6px;align-items:center}.bar .t{font-weight:800;font-size:16px;flex:1;line-height:1.1}
+.side{width:178px;display:flex;flex-direction:column;gap:7px}
+.pal{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;background:#fff;border:3.5px solid var(--ink);box-shadow:0 4px 0 var(--ink);border-radius:18px;padding:8px}
 .c{aspect-ratio:1;border-radius:50%;border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink);padding:0}
 .c.on{transform:scale(1.15) translateY(-2px);box-shadow:0 0 0 3px #fff,0 0 0 6px var(--ink)}
-#side .btn{width:100%}
-#prog{height:14px;border:3px solid var(--ink);border-radius:8px;background:#eee;overflow:hidden}#prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffd166,#ff5ad8);transition:width .2s}
+.side .btn{width:100%}
+.prog{height:14px;border:3px solid var(--ink);border-radius:8px;background:#eee;overflow:hidden;width:160px}.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffd166,#ff5ad8);transition:width .2s}
+/* çizim (izleme) */
+.guide{fill:none;stroke:#9a8fb0;stroke-width:4;stroke-dasharray:9 9;stroke-linecap:round;stroke-linejoin:round}
+.guide.glyph{stroke-width:7;stroke-dasharray:4 12}
+.pen{fill:none;stroke-linecap:round;stroke-linejoin:round}
+.start{fill:#22b573;stroke:var(--ink);stroke-width:3}
+.label{position:absolute;left:0;right:0;text-align:center;font-weight:800;pointer-events:none;text-shadow:0 2px 0 #fff}
+.label.en{top:6px;font-size:22px;color:#2e8bff}.label.tr{bottom:6px;font-size:26px;color:#e53935}
+.speak{position:absolute;right:8px;top:8px;z-index:2;width:44px;height:44px;border-radius:14px;border:3px solid var(--ink);background:#ffd166;box-shadow:0 3px 0 var(--ink);font-size:22px}
+/* serbest atölye */
+#studio .shelf{width:132px;background:#fff;border:3.5px solid var(--ink);box-shadow:0 4px 0 var(--ink);border-radius:18px;padding:6px;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:5px;align-content:start}
+.thumb{border:2.5px solid var(--ink);border-radius:12px;background:#fff7e0;font-size:26px;padding:2px 0;line-height:1;touch-action:none}
+.thumb small{display:block;font-size:9px;font-weight:800}
+#stage canvas{position:absolute;inset:0;width:100%;height:100%}
+#objs{pointer-events:none}#objs g.o{pointer-events:auto}
+#objs g.o.sel>.selbox{display:block}
+.selbox{display:none;fill:none;stroke:#ff5ad8;stroke-width:3;stroke-dasharray:8 6}
+.tools{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.tool{border:3px solid var(--ink);border-radius:12px;background:#fff;box-shadow:0 3px 0 var(--ink);font-size:20px;padding:2px 0;line-height:1.05}
+.tool small{display:block;font-size:10px;font-weight:800}
+.tool.on{background:#ffd166;transform:translateY(-2px)}
+#bubble{position:absolute;z-index:3;pointer-events:none;background:#fff;border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink);border-radius:14px;padding:2px 10px;text-align:center;font-weight:800;display:none;transform:translate(-50%,-100%)}
+#bubble .en{color:#2e8bff;font-size:14px;display:block}#bubble .tr{color:#e53935;font-size:17px;display:block}
 /* kutlama */
 #party{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(43,35,64,.45);z-index:10}
 #party .box{background:#fff;border:4px solid var(--ink);box-shadow:0 8px 0 var(--ink);border-radius:26px;padding:10px 18px 14px;text-align:center;width:min(560px,94vw);position:relative;overflow:hidden}
-#party h2{margin:0;font-size:32px;color:#ff5ad8;-webkit-text-stroke:2px var(--ink);text-shadow:0 4px 0 var(--ink)}
-.stars{font-size:40px;letter-spacing:6px}
-.stage{position:relative;height:150px;margin:4px auto 6px;width:100%}
-.stage .robi{position:absolute;left:50%;top:10px;width:84px;margin-left:-42px;animation:jumpy .6s ease-in-out infinite}
-.stage .an{position:absolute;font-size:38px;animation:hop .5s ease-in-out infinite}
+#party h2{margin:0;font-size:34px;color:#ff5ad8;-webkit-text-stroke:2px var(--ink);text-shadow:0 4px 0 var(--ink)}
+.stars{font-size:38px;letter-spacing:6px}
+.stage2{position:relative;height:150px;margin:4px auto 6px;width:100%}
+.stage2 .robi{position:absolute;left:50%;top:10px;width:84px;margin-left:-42px;animation:jumpy .6s ease-in-out infinite}
+.stage2 .an{position:absolute;font-size:38px;animation:hop .5s ease-in-out infinite}
 @keyframes jumpy{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-26px) rotate(4deg)}}
 @keyframes hop{0%,100%{transform:translateY(0)}50%{transform:translateY(-18px) scale(1.1)}}
-.arm{animation:wave .3s ease-in-out infinite alternate;transform-origin:50% 0}
+.arm{animation:wave .3s ease-in-out infinite alternate}
 @keyframes wave{from{transform:rotate(-30deg)}to{transform:rotate(30deg)}}
 .conf{position:absolute;top:-20px;width:9px;height:13px;border:2px solid var(--ink);border-radius:2px;animation:fall linear forwards}
 @keyframes fall{to{top:110%;transform:rotate(540deg)}}
 </style>
 </head>
 <body>
-<div id="select">
-  <div class="top"><button class="btn" id="back">🏠 Menü</button><h1>🎨 Boyama Atölyesi</h1><span class="btn" id="total">⭐ 0</span></div>
-  <div id="levels"></div>
-</div>
-<div id="paint">
-  <div id="board">
-    <div class="bar"><button class="btn" id="toSel">◀ Bölümler</button><span class="t" id="title"></span><div id="prog" style="width:160px"><i></i></div></div>
-    <div id="svgWrap"></div>
+<!-- ANA -->
+<div class="scr" id="home">
+  <div class="top" style="max-width:860px"><button class="btn" id="back">🏠 Menü</button><h1>🎨 Sanat Atölyesi</h1><span class="btn" id="hstat">⭐ 0</span></div>
+  <div class="modes">
+    <button class="mode" data-go="select"><div class="art" style="background:conic-gradient(#e53935,#ffd166,#22b573,#2e8bff,#a259ff,#e53935)">🖍️</div><b>Boyama</b><small>120 bölüm · arka plan da boyanır</small></button>
+    <button class="mode" data-go="tsel"><div class="art" style="background:#e8f4ff">✏️</div><b>Çizim Odası</b><small>Kesik çizgilerin üstünden geç, boyama hakkı kazan</small></button>
+    <button class="mode" data-go="studio"><div class="art" style="background:#ffe3f1">🖌️</div><b>Serbest Atölye</b><small>Nesneleri sürükle, çiz, boya · Türkçe & English</small></button>
   </div>
-  <div id="side">
-    <div id="pal"></div>
+</div>
+<!-- BOYAMA BÖLÜMLERİ -->
+<div class="scr" id="select">
+  <div class="top" style="max-width:860px"><button class="btn" data-go="home">◀ Atölye</button><h1>🖍️ Boyama</h1><span class="btn" id="total">⭐ 0</span></div>
+  <div class="grid" id="levels"></div>
+</div>
+<!-- BOYAMA -->
+<div class="scr" id="paint" style="display:none">
+  <div class="board">
+    <div class="bar"><button class="btn" id="toSel">◀</button><span class="t" id="title"></span><button class="btn" id="pSpeak" style="padding:2px 8px">🔊</button><div class="prog" id="prog"><i></i></div></div>
+    <div class="wrap" id="svgWrap"></div>
+  </div>
+  <div class="side">
+    <div class="pal" id="pal"></div>
     <button class="btn" id="undo">↩️ Geri al</button>
     <button class="btn" id="clear">🧽 Temizle</button>
     <button class="btn go" id="done">✅ Bitti!</button>
   </div>
 </div>
+<!-- ÇİZİM SEÇİMİ -->
+<div class="scr" id="tsel">
+  <div class="top" style="max-width:860px"><button class="btn" data-go="home">◀ Atölye</button><h1>✏️ Çizim Odası</h1><span class="btn" id="tstat">✏️ 0</span></div>
+  <div class="tabs" id="ttabs"></div>
+  <div class="grid" id="tgrid" style="grid-template-columns:repeat(auto-fill,minmax(76px,1fr))"></div>
+</div>
+<!-- ÇİZİM -->
+<div class="scr" id="trace">
+  <div class="board">
+    <div class="bar"><button class="btn" id="tBack">◀</button><span class="t" id="tTitle"></span><div class="prog" id="tprog"><i></i></div></div>
+    <div class="wrap" id="tWrap"><button class="speak" id="tSpeak">🔊</button><div class="label en" id="tEn"></div><div class="label tr" id="tTr"></div></div>
+  </div>
+  <div class="side">
+    <div class="pal" id="tpal"></div>
+    <div class="tools" id="tsize"></div>
+    <button class="btn" id="tClear">🧽 Sil, baştan</button>
+    <button class="btn go" id="tCheck">✅ Bitti!</button>
+  </div>
+</div>
+<!-- SERBEST -->
+<div class="scr" id="studio">
+  <div class="shelf" id="shelf"></div>
+  <div class="board">
+    <div class="bar"><button class="btn" data-go="home">◀</button><span class="t">🖌️ Serbest Atölye <small style="color:#5a4f70">· nesneyi sürükle bırak, dokun: adını duy</small></span><button class="btn" id="sSave">📸 Albüme</button></div>
+    <div class="wrap" id="stage"><canvas id="bgc"></canvas><svg id="objs" viewBox="0 0 800 450" preserveAspectRatio="none"></svg><canvas id="topc"></canvas><div id="bubble"></div></div>
+  </div>
+  <div class="side">
+    <div class="tools" id="stools"></div>
+    <div class="pal" id="spal"></div>
+    <div class="tools"><button class="tool" id="oBig">➕<small>Büyüt</small></button><button class="tool" id="oSmall">➖<small>Küçült</small></button><button class="tool" id="oDel">🗑️<small>Sil</small></button></div>
+    <button class="btn" id="sClear">🧽 Hepsini temizle</button>
+  </div>
+</div>
+<!-- KUTLAMA -->
 <div id="party"><div class="box">
-  <h2 id="pTitle">Harika boyadın!</h2>
-  <div class="stars" id="pStars"></div>
-  <div class="stage" id="stage"></div>
+  <h2 id="pTitle"></h2><div class="stars" id="pStars"></div>
+  <div class="stage2" id="stage2"></div>
   <div id="pMsg" style="font-weight:800;margin-bottom:8px"></div>
-  <div style="display:flex;gap:8px;justify-content:center"><button class="btn" id="again">🖌️ Tekrar boya</button><button class="btn go" id="next">Sonraki ▶</button></div>
+  <div style="display:flex;gap:8px;justify-content:center" id="pBtns"></div>
 </div></div>
 <script src="ortak.js"></script>
+<script src="kutuphane.js"></script>
+<script src="analiz.js"></script>
 <script>
 const $ = id => document.getElementById(id);
-const RO = window.RobiOrtak || { award: () => null, tick: () => Infinity, timeLeft: () => Infinity };
+const RO = window.RobiOrtak || { award: () => null, tick: () => Infinity, load: () => ({}), addPhoto: () => true };
+const KB = window.RobiKutuphane;
+const AN = window.RobiAnaliz || { screen() {}, done() {}, ev() {}, btn() {}, interstitial(f) { f(); } };
 const COLORS = ['#e53935', '#ff7a2f', '#ffd166', '#22b573', '#2bd4c4', '#2e8bff', '#a259ff', '#ff5ad8', '#8b5a2b', '#ffffff', '#9aa3ad', '#2b2340'];
 let AC = null;
 function tone(f, d = .1, type = 'triangle', vol = .07, t0 = 0) { try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); const t = AC.currentTime + t0, o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.value = f; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + d); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + d + .02); } catch (e) {} }
+const SCREENS = ['home', 'select', 'paint', 'tsel', 'trace', 'studio'];
+function show(id) { AN.screen('atolye:' + id); SCREENS.forEach(s => $(s).style.display = s === id ? 'flex' : 'none'); if (id === 'select') renderSelect(); if (id === 'tsel') renderTsel(); if (id === 'studio') studioInit(); if (id === 'home') renderHome(); }
+document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { tone(660, .06); show(b.dataset.go); });
+$('back').onclick = () => { try { if (window.parent !== window) { parent.postMessage('robi-menu', '*'); return; } } catch (e) {} location.href = 'index.html'; };
 
 // ---------- Resimler (10 resim × 4 zorluk = 40 bölüm) ----------
 // r(): boyanabilir bölge, k(): çizgi, d(): siyah nokta
@@ -162,72 +243,240 @@ const PICS = [
     v >= 1 ? [[120, 148], [150, 140], [180, 140], [210, 148]].map(([x, y]) => R('path', `d="M${x - 14} ${y + 6}L${x} ${y - 18}L${x + 14} ${y + 6}Z"`)).join('') + R('ellipse', 'cx="170" cy="205" rx="45" ry="18"') : '', D(273, 70, 5),
   ] },
 ];
-const LEVELS = []; for (let v = 0; v < 4; v++) PICS.forEach((p, i) => LEVELS.push({ pic: i, v }));
-const TIER = ['🌱 Kolay', '🌼 Orta', '🌈 Zor', '🏆 Usta'];
-// ---------- Kayıt ----------
+
+// ---------- Kütüphane (30 nesne) ----------
+const LIB = KB.OLD_META.map(([id, tr, en, cat, e], i) => ({ id, tr, en, cat, e, body: () => PICS[i].draw(0).join('') })).concat(KB.NEW);
+const libById = id => LIB.find(x => x.id === id);
+// ---------- 120 bölüm ----------
+const FRAME = () => [[0, 0, 400, 14], [0, 286, 400, 14], [0, 14, 14, 272], [386, 14, 14, 272]].map(([x, y, w, h]) => R('rect', `x="${x}" y="${y}" width="${w}" height="${h}"`)).join('') + [[0, 0], [386, 0], [0, 286], [386, 286]].map(([x, y]) => R('rect', `x="${x}" y="${y}" width="14" height="14"`)).join('');
+const NIGHT = () => R('path', 'd="M340 40a26 26 0 1 0 22 40a20 20 0 1 1-22-40z"') + [[60, 40], [140, 25], [250, 45], [300, 95]].map(([x, y]) => R('path', `d="M${x} ${y - 9}l3 6l7 1l-5 5l1 7l-6-3l-6 3l1-7l-5-5l7-1z"`)).join('');
+const TUFTS = () => [40, 120, 280, 360].map(x => R('path', `d="M${x - 14} 290Q${x - 8} 262 ${x} 290Q${x + 6} 258 ${x + 12} 290Z"`)).join('');
+const LEVELS = [];
+for (let v = 0; v < 4; v++) PICS.forEach((p, i) => LEVELS.push({ name: p.name, e: p.e, tr: KB.OLD_META[i][1], en: KB.OLD_META[i][2], svg: () => p.draw(v).join('') }));
+for (let w = 0; w < 3; w++) KB.NEW.forEach(o => LEVELS.push({ name: o.tr, e: o.e, tr: o.tr, en: o.en, svg: () => SKY + GROUND + (w >= 1 ? SUN(345, 50) + CLOUD(30, 40) : '') + (w >= 2 ? TUFTS() + FRAME() : '') + o.body() }));
+PICS.forEach((p, i) => LEVELS.push({ name: p.name, e: p.e, tr: KB.OLD_META[i][1], en: KB.OLD_META[i][2], svg: () => p.draw(3).join('') + NIGHT() }));
+PICS.forEach((p, i) => LEVELS.push({ name: p.name, e: p.e, tr: KB.OLD_META[i][1], en: KB.OLD_META[i][2], svg: () => p.draw(3).join('') + FRAME() }));
+const TIERS = { 0: '🌱 Kolay', 10: '🌼 Orta', 20: '🌈 Zor', 30: '🏆 Usta', 40: '☀️ Yeni Dostlar', 60: '🌤️ Gökyüzü', 80: '🖼️ Çerçeveli', 100: '🌙 Gece', 110: '👑 Büyük Usta' };
 const KEY = 'robi_boyama';
-let SB = { stars: {}, fills: {} }; try { SB = Object.assign(SB, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
+let SB = { stars: {}, fills: {}, trace: {} }; try { SB = Object.assign(SB, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
+SB.trace = SB.trace || {};
 const sv = () => { try { localStorage.setItem(KEY, JSON.stringify(SB)); } catch (e) { SB.fills = {}; try { localStorage.setItem(KEY, JSON.stringify(SB)); } catch (e2) {} } };
-const doneCount = () => Object.keys(SB.stars).length;
+const doneCount = () => Object.keys(SB.stars).filter(k => !isNaN(k)).length;
 const unlocked = n => n === 0 || SB.stars[n - 1] || (RO.load && RO.load().unlockAll);
-// ---------- Bölüm seçimi ----------
+function renderHome() { $('hstat').textContent = `🖍️ ${doneCount()}/120 · ✏️ ${Object.keys(SB.trace).length}`; }
 function renderSelect() {
-  $('select').style.display = 'flex'; $('paint').style.display = 'none';
-  $('total').textContent = `⭐ ${Object.values(SB.stars).reduce((a, b) => a + b, 0)} · ${doneCount()}/40`;
+  $('total').textContent = `⭐ ${Object.entries(SB.stars).filter(([k]) => !isNaN(k)).reduce((a, [, b]) => a + b, 0)} · ${doneCount()}/120`;
   let h = '';
-  LEVELS.forEach((L, n) => { if (n % 10 === 0) h += `<div class="tier">${TIER[n / 10]}</div>`; const st = SB.stars[n], op = unlocked(n); h += `<button class="lv ${op ? '' : 'lock'} ${st ? 'done' : ''}" data-n="${n}"><i>${op ? PICS[L.pic].e : '🔒'}</i>${n + 1}<small>${st ? '★'.repeat(st) : '&nbsp;'}</small></button>`; });
+  LEVELS.forEach((L, n) => { if (TIERS[n]) h += `<div class="tier">${TIERS[n]}</div>`; const st = SB.stars[n], op = unlocked(n); h += `<button class="lv ${op ? '' : 'lock'} ${st ? 'done' : ''}" data-n="${n}"><i>${op ? L.e : '🔒'}</i>${n + 1}<small>${st ? '★'.repeat(st) : '&nbsp;'}</small></button>`; });
   $('levels').innerHTML = h;
-  $('levels').querySelectorAll('.lv').forEach(b => b.onclick = () => { const n = +b.dataset.n; if (!unlocked(n)) { tone(160, .2, 'sawtooth'); b.animate([{ transform: 'translateX(-5px)' }, { transform: 'translateX(5px)' }, { transform: 'none' }], { duration: 250 }); return; } openLevel(n); });
+  $('levels').querySelectorAll('.lv').forEach(b => b.onclick = () => { const n = +b.dataset.n; if (!unlocked(n)) { tone(160, .2, 'sawtooth'); b.animate([{ transform: 'translateX(-5px)' }, { transform: 'translateX(5px)' }, { transform: 'none' }], { duration: 250 }); return; } openPaint({ level: n }); });
 }
-// ---------- Boyama ----------
-let cur = 0, color = COLORS[0], hist = [];
-function openLevel(n) {
-  cur = n; hist = []; const L = LEVELS[n], P = PICS[L.pic];
-  $('select').style.display = 'none'; $('paint').style.display = 'flex';
-  $('title').textContent = `${n + 1}. bölüm · ${P.e} ${P.name} · ${TIER[L.v]}`;
-  $('svgWrap').innerHTML = `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">${P.draw(L.v).join('')}</svg>`;
-  const regs = [...$('svgWrap').querySelectorAll('.r')];
-  const saved = SB.fills[n]; if (saved) regs.forEach((el, i) => saved[i] && el.setAttribute('fill', saved[i]));
-  regs.forEach((el, i) => el.addEventListener('pointerdown', e => { e.preventDefault(); const old = el.getAttribute('fill'); if (old === color) return; hist.push([i, old]); el.setAttribute('fill', color); tone(500 + COLORS.indexOf(color) * 60, .08); el.animate([{ opacity: .4 }, { opacity: 1 }], { duration: 200 }); progress(); }));
+// ---------- Boyama ekranı ----------
+let cur = null, color = COLORS[0], hist = [];
+function withBg(svg) { return /x="0" y="0" width="400" height="(210|300)"/.test(svg) ? svg : R('rect', 'x="0" y="0" width="400" height="300"') + svg; }
+function openPaint(o) {
+  cur = o; hist = [];
+  let markup, title;
+  if (o.level !== undefined) { const L = LEVELS[o.level]; markup = withBg(L.svg()); title = `${o.level + 1}. bölüm · ${L.e} ${L.en} / ${L.tr}`; cur.tr = L.tr; cur.en = L.en; }
+  else if (o.glyph) { markup = glyphColorSvg(o.glyph); title = `🎨 ${o.tr} boyama hakkı!`; }
+  else { const it = libById(o.lib); markup = SKY + GROUND + it.body(); title = `🎨 ${it.e} ${it.en} / ${it.tr} — boyama hakkı!`; cur.tr = it.tr; cur.en = it.en; }
+  show('paint');
+  $('title').textContent = title;
+  $('svgWrap').innerHTML = `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">${markup}</svg>`;
+  const regs = paintRegs(), key = o.level !== undefined ? o.level : 'x_' + (o.lib || o.glyphId), saved = SB.fills[key];
+  if (saved) regs.forEach((el, i) => saved[i] && setCol(el, saved[i]));
+  regs.forEach((el, i) => el.addEventListener('pointerdown', e => { e.preventDefault(); const old = getCol(el); if (old === color) return; hist.push([i, old]); setCol(el, color); tone(500 + COLORS.indexOf(color) * 60, .08); el.animate([{ opacity: .4 }, { opacity: 1 }], { duration: 200 }); progress(); }));
   progress();
 }
-function regs() { return [...$('svgWrap').querySelectorAll('.r')]; }
-function progress() { const rs = regs(), c = rs.filter(e => e.getAttribute('fill') !== '#fff').length; $('prog').firstChild.style.width = (c / rs.length * 100) + '%'; SB.fills[cur] = rs.map(e => e.getAttribute('fill') === '#fff' ? 0 : e.getAttribute('fill')); sv(); }
-$('pal').innerHTML = COLORS.map(c => `<button class="c ${c === color ? 'on' : ''}" style="background:${c}" data-c="${c}"></button>`).join('');
-$('pal').querySelectorAll('.c').forEach(b => b.onclick = () => { color = b.dataset.c; $('pal').querySelectorAll('.c').forEach(x => x.classList.toggle('on', x === b)); tone(700, .05); });
-$('undo').onclick = () => { const h = hist.pop(); if (!h) return; regs()[h[0]].setAttribute('fill', h[1]); progress(); tone(300, .08); };
-$('clear').onclick = () => { regs().forEach(e => e.setAttribute('fill', '#fff')); hist = []; progress(); };
-$('toSel').onclick = renderSelect;
-$('back').onclick = () => { try { if (window.parent !== window) { parent.postMessage('robi-menu', '*'); return; } } catch (e) {} location.href = 'index.html'; };
+const getCol = el => el.dataset.stroke ? el.getAttribute('stroke') : el.getAttribute('fill');
+const setCol = (el, c) => { if (el.dataset.stroke) { el.setAttribute('stroke', c); el.style.stroke = c; } else el.setAttribute('fill', c); };
+function paintRegs() { return [...$('svgWrap').querySelectorAll('.r')]; }
+function progress() { const rs = paintRegs(), c = rs.filter(e => getCol(e) !== '#fff').length; $('prog').firstChild.style.width = (c / rs.length * 100) + '%'; const key = cur.level !== undefined ? cur.level : 'x_' + (cur.lib || cur.glyphId); SB.fills[key] = rs.map(e => getCol(e) === '#fff' ? 0 : getCol(e)); sv(); }
+function palette(el, onPick) { el.innerHTML = COLORS.map(c => `<button class="c ${c === color ? 'on' : ''}" style="background:${c}" data-c="${c}"></button>`).join(''); el.querySelectorAll('.c').forEach(b => b.onclick = () => { onPick(b.dataset.c); el.querySelectorAll('.c').forEach(x => x.classList.toggle('on', x === b)); tone(700, .05); }); }
+palette($('pal'), c => color = c);
+$('undo').onclick = () => { const h = hist.pop(); if (!h) return; setCol(paintRegs()[h[0]], h[1]); progress(); tone(300, .08); };
+$('clear').onclick = () => { paintRegs().forEach(e => setCol(e, '#fff')); hist = []; progress(); };
+$('toSel').onclick = () => show(cur && cur.level !== undefined ? 'select' : 'tsel');
+$('pSpeak').onclick = () => cur && cur.tr && KB.sayBoth(cur.tr, cur.en);
 $('done').onclick = () => {
-  const rs = regs(), empty = rs.filter(e => e.getAttribute('fill') === '#fff' && !e.closest('[data-white]'));
-  const filled = rs.length - empty.length;
-  if (filled < rs.length) { empty.forEach(e => e.animate([{ fill: '#ffd166' }, { fill: '#fff' }], { duration: 500, iterations: 3 })); tone(200, .2, 'sawtooth'); $('title').textContent = `🖍️ ${empty.length} boş yer kaldı! Parlayan yerleri boya.`; return; }
-  const kinds = new Set(rs.map(e => e.getAttribute('fill'))).size;
-  const stars = kinds >= 5 ? 3 : kinds >= 3 ? 2 : 1;
-  SB.stars[cur] = Math.max(SB.stars[cur] || 0, stars); sv();
-  if (doneCount() >= 10) RO.award && RO.award('painter');
-  party(stars, kinds);
+  const rs = paintRegs(), empty = rs.filter(e => getCol(e) === '#fff');
+  if (empty.length) { empty.forEach(e => e.animate(e.dataset.stroke ? [{ stroke: '#ffd166' }, { stroke: '#fff' }] : [{ fill: '#ffd166' }, { fill: '#fff' }], { duration: 500, iterations: 3 })); tone(200, .2, 'sawtooth'); $('title').textContent = `🖍️ ${empty.length} boş yer kaldı! Parlayan yerleri boya.`; return; }
+  const kinds = new Set(rs.map(getCol)).size, stars = kinds >= 5 ? 3 : kinds >= 3 ? 2 : 1;
+  if (cur.level !== undefined) { SB.stars[cur.level] = Math.max(SB.stars[cur.level] || 0, stars); sv(); if (doneCount() >= 10) RO.award('painter'); }
+  const n = cur.level; AN.done(); AN.ev(n !== undefined ? 'boyama_bitti' : 'cizim_boyandi');
+  party({ title: ['Güzel!', 'Çok güzel!', 'MUHTEŞEM!'][stars - 1], stars, msg: stars < 3 ? `${kinds} renk kullandın. 5 farklı renk = 3 yıldız!` : `${kinds} renkle harika! Robi ve arkadaşları çok mutlu!`, say: cur.tr ? [cur.tr, cur.en] : null,
+    buttons: n !== undefined ? [['🖌️ Tekrar', '', () => $('clear').onclick()], ...(n < 119 ? [['Sonraki ▶', 'go', () => AN.interstitial(() => openPaint({ level: n + 1 }), 'boyama')]] : [])] : [['✏️ Çizime dön', 'go', () => show('tsel')]] });
 };
-// ---------- Kutlama: Robi ve hayvanlar dans eder ----------
-function party(stars, kinds) {
-  $('party').style.display = 'flex';
-  $('pTitle').textContent = ['Güzel!', 'Çok güzel!', 'MUHTEŞEM!'][stars - 1];
-  $('pStars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
-  $('pMsg').textContent = stars < 3 ? `${kinds} renk kullandın. 5 farklı renk kullanırsan 3 yıldız!` : `${kinds} renkle harika bir resim! Robi ve arkadaşları çok mutlu!`;
-  const robi = `<svg class="robi" viewBox="0 0 120 150"><line x1="60" y1="14" x2="60" y2="30" stroke="#2b2340" stroke-width="5"/><circle cx="60" cy="11" r="8" fill="#ff7a2f" stroke="#2b2340" stroke-width="3"/><rect x="22" y="28" width="76" height="54" rx="15" fill="#f4f6fb" stroke="#2b2340" stroke-width="5"/><rect x="32" y="42" width="56" height="26" rx="11" fill="#2b2340"/><path d="M41 56q6-8 12 0M67 56q6-8 12 0" stroke="#38e1ff" stroke-width="5" fill="none"/><rect x="32" y="86" width="56" height="38" rx="10" fill="#ff5ad8" stroke="#2b2340" stroke-width="5"/><g class="arm" style="transform-origin:28px 90px"><rect x="8" y="64" width="16" height="32" rx="8" fill="#f4f6fb" stroke="#2b2340" stroke-width="4"/></g><g class="arm" style="transform-origin:92px 90px;animation-direction:alternate-reverse"><rect x="96" y="64" width="16" height="32" rx="8" fill="#f4f6fb" stroke="#2b2340" stroke-width="4"/></g><rect x="40" y="124" width="14" height="18" rx="6" fill="#2b2340"/><rect x="66" y="124" width="14" height="18" rx="6" fill="#2b2340"/></svg>`;
-  const an = ['🐰', '🦊', '🐢', '🐶', '🐦', '🦌'].map((e, i) => { const a = i / 6 * Math.PI * 2; return `<span class="an" style="left:calc(50% + ${Math.cos(a) * 140 - 20}px);top:${60 + Math.sin(a) * 45}px;animation-delay:${i * .08}s">${e}</span>`; }).join('');
-  $('stage').innerHTML = robi + an;
+// ---------- Kutlama ----------
+const ROBI_DANCE = `<svg class="robi" viewBox="0 0 120 150"><line x1="60" y1="14" x2="60" y2="30" stroke="#2b2340" stroke-width="5"/><circle cx="60" cy="11" r="8" fill="#ff7a2f" stroke="#2b2340" stroke-width="3"/><rect x="22" y="28" width="76" height="54" rx="15" fill="#f4f6fb" stroke="#2b2340" stroke-width="5"/><rect x="32" y="42" width="56" height="26" rx="11" fill="#2b2340"/><path d="M41 56q6-8 12 0M67 56q6-8 12 0" stroke="#38e1ff" stroke-width="5" fill="none"/><rect x="32" y="86" width="56" height="38" rx="10" fill="#ff5ad8" stroke="#2b2340" stroke-width="5"/><g class="arm" style="transform-origin:16px 66px"><rect x="8" y="64" width="16" height="32" rx="8" fill="#f4f6fb" stroke="#2b2340" stroke-width="4"/></g><g class="arm" style="transform-origin:104px 66px;animation-direction:alternate-reverse"><rect x="96" y="64" width="16" height="32" rx="8" fill="#f4f6fb" stroke="#2b2340" stroke-width="4"/></g><rect x="40" y="124" width="14" height="18" rx="6" fill="#2b2340"/><rect x="66" y="124" width="14" height="18" rx="6" fill="#2b2340"/></svg>`;
+function party(o) {
+  $('party').style.display = 'flex'; $('pTitle').textContent = o.title; $('pStars').textContent = o.stars ? '⭐'.repeat(o.stars) + '☆'.repeat(3 - o.stars) : '🎉🎉🎉'; $('pMsg').textContent = o.msg || '';
+  $('stage2').innerHTML = ROBI_DANCE + ['🐰', '🦊', '🐢', '🐶', '🐦', '🦌'].map((e, i) => { const a = i / 6 * Math.PI * 2; return `<span class="an" style="left:calc(50% + ${Math.cos(a) * 140 - 20}px);top:${60 + Math.sin(a) * 45}px;animation-delay:${i * .08}s">${e}</span>`; }).join('');
   const box = $('party').querySelector('.box'); box.querySelectorAll('.conf').forEach(c => c.remove());
   for (let i = 0; i < 40; i++) { const c = document.createElement('i'); c.className = 'conf'; c.style.left = Math.random() * 100 + '%'; c.style.background = COLORS[i % 8]; c.style.animationDuration = 1.4 + Math.random() + 's'; c.style.animationDelay = Math.random() * .5 + 's'; box.appendChild(c); }
   [523, 659, 784, 1046, 784, 1046, 1318].forEach((f, i) => tone(f, .18, 'square', .05, i * .12));
-  try { const v = RO.voices && RO.voices(); if (v && v.power) { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); setTimeout(() => RO.playVoice(AC, 'power'), 900); } } catch (e) {}
-  $('next').style.display = cur < 39 ? '' : 'none';
+  setTimeout(() => { try { const v = RO.voices && RO.voices(); if (v && v.power) { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); RO.playVoice(AC, 'power'); } else if (o.say) KB.sayBoth(o.say[0], o.say[1]); else KB.speak('Yaşasın!', 'tr-TR'); } catch (e) {} }, 800);
+  $('pBtns').innerHTML = ''; o.buttons.forEach(([t, cls, fn]) => { const b = document.createElement('button'); b.className = 'btn ' + cls; b.textContent = t; b.onclick = () => { $('party').style.display = 'none'; fn(); }; $('pBtns').appendChild(b); });
 }
-$('again').onclick = () => { $('party').style.display = 'none'; $('clear').onclick(); };
-$('next').onclick = () => { $('party').style.display = 'none'; openLevel(cur + 1); };
+// ---------- ÇİZİM ODASI (kesik çizgiyi izle) ----------
+const TCATS = [['sayi', '🔢 Sayılar'], ['harf', '🔤 Harfler'], ['hayvan', '🐶 Hayvanlar'], ['arac', '🚗 Araçlar'], ['pasta', '🎂 Pastalar'], ['bitki', '🌷 Bitkiler'], ['ev', '🏠 Evler']];
+let tcat = 'sayi';
+function titems(cat) {
+  if (cat === 'sayi') return KB.DIGITS.map(([n, tr, en, d]) => ({ id: 'd' + n, glyph: d, big: n, tr, en, label: n, wide: n === '10' }));
+  if (cat === 'harf') return KB.LETTERS.map(([L, d, tr, en, e]) => ({ id: 'l' + L, glyph: d, big: L, tr: `${L}: ${tr}`, en: `${en}`, label: L, e, word: [tr, en] }));
+  return LIB.filter(x => x.cat === cat).map(x => ({ id: 'o' + x.id, lib: x.id, tr: x.tr, en: x.en, label: x.e }));
+}
+function renderTsel() {
+  $('ttabs').innerHTML = TCATS.map(([k, t]) => `<button class="tab ${k === tcat ? 'on' : ''}" data-k="${k}">${t}</button>`).join('');
+  $('ttabs').querySelectorAll('.tab').forEach(b => b.onclick = () => { tcat = b.dataset.k; tone(600, .05); renderTsel(); });
+  $('tstat').textContent = `✏️ ${Object.keys(SB.trace).length} çizim`;
+  $('tgrid').innerHTML = titems(tcat).map(it => `<button class="lv ${SB.trace[it.id] ? 'done' : ''}" data-id="${it.id}" style="font-size:24px"><i style="font-size:26px">${it.label}</i><small style="font-size:11px;color:#5a4f70;letter-spacing:0">${it.tr.split(':')[0]}${SB.trace[it.id] ? ' ✅' : ''}</small></button>`).join('');
+  $('tgrid').querySelectorAll('.lv').forEach(b => b.onclick = () => openTrace(titems(tcat).find(x => x.id === b.dataset.id)));
+}
+let tr = null, penC = '#2e8bff', penW = 12;
+palette($('tpal'), c => penC = c);
+$('tsize').innerHTML = [[6, '✏️', 'İnce'], [12, '🖍️', 'Orta'], [20, '🖌️', 'Kalın']].map(([w, e, t]) => `<button class="tool ${w === penW ? 'on' : ''}" data-w="${w}">${e}<small>${t}</small></button>`).join('');
+$('tsize').querySelectorAll('.tool').forEach(b => b.onclick = () => { penW = +b.dataset.w; $('tsize').querySelectorAll('.tool').forEach(x => x.classList.toggle('on', x === b)); });
+function openTrace(it) {
+  show('trace'); tr = { it, strokes: [], pts: [], guide: [], drawing: null };
+  $('tTitle').textContent = `✏️ Kesik çizgilerin üstünden geç!`;
+  $('tEn').textContent = it.glyph ? (it.word ? `${it.big} · ${it.en} ${it.e}` : `${it.big} · ${it.en}`) : `${it.en}`;
+  $('tTr').textContent = it.glyph ? (it.word ? `${it.big} · ${it.word[0]} ${it.e}` : `${it.big} · ${it.tr} ${'🍎'.repeat(Math.min(10, +it.big || 0))}`) : `${it.tr}`;
+  let inner;
+  if (it.glyph) { const s = 1.45, w = it.wide ? 105 : 100, tx = 200 - w * s / 2, ty = 150 - 80 * s - 8; inner = `<g transform="translate(${tx} ${ty}) scale(${s})"><path class="guide glyph gpath" vector-effect="non-scaling-stroke" d="${it.glyph}"/></g>`; tr.xf = [tx, ty, s]; }
+  else { const body = libById(it.lib).body(); const tmp = document.createElement('div'); tmp.innerHTML = `<svg>${body}</svg>`; tmp.querySelectorAll('.ink,.dot').forEach(x => x.remove()); tmp.querySelectorAll('.r').forEach(x => { x.setAttribute('class', 'guide gpath'); x.removeAttribute('fill'); }); inner = `<g transform="translate(40 30) scale(.8)">${tmp.firstChild.innerHTML}</g>`; tr.xf = [40, 30, .8]; }
+  const old = $('tWrap').querySelector('svg'); if (old) old.remove();
+  $('tWrap').insertAdjacentHTML('afterbegin', `<svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">${inner}<g id="penLayer"></g><g id="hintLayer"></g></svg>`);
+  const svg = $('tWrap').querySelector('svg'); tr.svg = svg;
+  // kılavuz noktaları
+  const [tx, ty, s] = tr.xf;
+  svg.querySelectorAll('.gpath').forEach(p => { const L = p.getTotalLength(); for (let d = 0; d <= L; d += 5 / s) { const q = p.getPointAtLength(d); tr.guide.push([tx + q.x * s, ty + q.y * s, false]); } });
+  if (tr.guide.length) { const [x, y] = tr.guide[0]; svg.querySelector('#hintLayer').innerHTML = `<circle class="start" cx="${x}" cy="${y}" r="9"><animate attributeName="r" values="7;12;7" dur="1s" repeatCount="indefinite"/></circle>`; }
+  tprog(); setTimeout(() => KB.sayBoth(it.glyph && it.word ? `${it.big}. ${it.word[0]}` : it.tr, it.glyph && it.word ? `${it.big}. ${it.word[1]}` : it.en), 300);
+}
+$('tSpeak').onclick = () => { const it = tr && tr.it; if (it) KB.sayBoth(it.word ? `${it.big}. ${it.word[0]}` : it.tr, it.word ? `${it.big}. ${it.word[1]}` : it.en); };
+function svgPt(e) { const p = tr.svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; const q = p.matrixTransform(tr.svg.getScreenCTM().inverse()); return [q.x, q.y]; }
+$('tWrap').addEventListener('pointerdown', e => { if (!tr || e.target.id === 'tSpeak') return; e.preventDefault(); $('tWrap').setPointerCapture(e.pointerId); const pl = document.createElementNS('http://www.w3.org/2000/svg', 'polyline'); pl.setAttribute('class', 'pen'); pl.setAttribute('stroke', penC); pl.setAttribute('stroke-width', penW); tr.svg.querySelector('#penLayer').appendChild(pl); tr.drawing = { pl, pts: [] }; addPt(e); });
+$('tWrap').addEventListener('pointermove', e => { if (tr && tr.drawing) addPt(e); });
+const endDraw = () => { if (tr && tr.drawing) { tr.drawing = null; tprog(); const cov = coverage(); if (cov.c >= .9 && cov.p >= .55) setTimeout(checkTrace, 300); } };
+$('tWrap').addEventListener('pointerup', endDraw); $('tWrap').addEventListener('pointercancel', endDraw);
+function addPt(e) { const [x, y] = svgPt(e); const d = tr.drawing; d.pts.push([x, y]); tr.pts.push([x, y]); d.pl.setAttribute('points', d.pts.map(p => p.join(',')).join(' ')); const R2 = 13 + penW / 2; let hit = false; for (const g of tr.guide) if (!g[2] && (g[0] - x) ** 2 + (g[1] - y) ** 2 < R2 * R2) { g[2] = true; hit = true; } if (hit && Math.random() < .3) tone(700 + Math.random() * 500, .04, 'sine', .03); if (tr.pts.length % 8 === 0) tprog(); }
+function coverage() { const c = tr.guide.filter(g => g[2]).length / Math.max(1, tr.guide.length); let near = 0; for (const [x, y] of tr.pts) { for (const g of tr.guide) if ((g[0] - x) ** 2 + (g[1] - y) ** 2 < 24 * 24) { near++; break; } } return { c, p: tr.pts.length ? near / tr.pts.length : 0 }; }
+function tprog() { $('tprog').firstChild.style.width = (coverage().c * 100) + '%'; }
+$('tClear').onclick = () => { tr.svg.querySelector('#penLayer').innerHTML = ''; tr.pts = []; tr.guide.forEach(g => g[2] = false); tprog(); };
+$('tBack').onclick = () => show('tsel');
+$('tCheck').onclick = checkTrace;
+function checkTrace() {
+  if (!tr || $('party').style.display === 'flex') return;
+  const { c, p } = coverage();
+  if (c >= .75 && p >= .55) {
+    SB.trace[tr.it.id] = true; sv(); const it = tr.it; AN.done(); AN.ev('cizim_basarili:' + tcat);
+    party({ title: 'YAŞASIN! 🎉', stars: c > .92 ? 3 : c > .83 ? 2 : 1, msg: `Çok güzel çizdin! 🎨 Boyama hakkı kazandın!`, say: it.word ? [`Yaşasın! ${it.big}. ${it.word[0]}`, `${it.big}. ${it.word[1]}`] : [`Yaşasın! ${it.tr}`, it.en],
+      buttons: [['🎨 Şimdi boya!', 'go', () => it.glyph ? openPaint({ glyph: it.glyph, glyphId: it.id, wide: it.wide, tr: it.tr, en: it.en }) : openPaint({ lib: it.lib })], ['Sonraki ▶', '', () => AN.interstitial(() => { const L = titems(tcat), i = L.findIndex(x => x.id === it.id); openTrace(L[(i + 1) % L.length]); }, 'cizim')]] });
+  } else {
+    AN.ev('cizim_tekrar'); tone(200, .25, 'sawtooth'); $('tTitle').textContent = c < .75 ? `🙂 Biraz daha! Parlayan noktaların üstünden geç (${Math.round(c * 100)}%)` : '🙂 Çizgilerin dışına çok çıktın, tekrar dene!';
+    const hl = tr.svg.querySelector('#hintLayer'); hl.innerHTML += tr.guide.filter((g, i) => !g[2] && i % 3 === 0).map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5" fill="#ff5ad8"><animate attributeName="opacity" values="1;0;1" dur=".6s" repeatCount="3"/></circle>`).join('');
+    setTimeout(() => { if (tr) { const [x, y] = tr.guide[0] || [0, 0]; hl.innerHTML = `<circle class="start" cx="${x}" cy="${y}" r="9"><animate attributeName="r" values="7;12;7" dur="1s" repeatCount="indefinite"/></circle>`; } }, 1900);
+  }
+}
+function glyphColorSvg(d) {
+  const s = 1.45, w = cur.wide ? 105 : 100, tx = 200 - w * s / 2, ty = 150 - 80 * s - 8;
+  const stars = [[50, 50], [350, 50], [50, 250], [350, 250], [90, 150], [310, 150]].map(([x, y]) => R('path', `d="M${x} ${y - 16}l5 10l11 2l-8 8l2 11l-10-5l-10 5l2-11l-8-8l11-2z"`)).join('');
+  return R('rect', 'x="0" y="0" width="400" height="300"') + stars + `<g transform="translate(${tx} ${ty}) scale(${s})"><path d="${d}" fill="none" stroke="#2b2340" stroke-width="30" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/><path class="r" data-stroke="1" d="${d}" fill="none" stroke="#fff" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke" style="stroke:#fff;stroke-width:22px"/></g>`;
+}
+// ---------- SERBEST ATÖLYE ----------
+let st = null, sTool = 'fill', sCol = '#e53935', selObj = null, rainbowH = 0;
+const STOOLS = [['move', '✋', 'Taşı'], ['fill', '🪣', 'Kova'], ['pencil', '✏️', 'Kalem'], ['brush', '🖌️', 'Fırça'], ['spray', '💨', 'Sprey'], ['rainbow', '🌈', 'Gökkuşağı'], ['erase', '🧽', 'Silgi']];
+function studioInit() {
+  if (!st) {
+    st = { objs: [] };
+    $('shelf').innerHTML = LIB.map(o => `<button class="thumb" data-id="${o.id}">${o.e}<small>${o.tr}</small></button>`).join('');
+    $('stools').innerHTML = STOOLS.map(([k, e, t]) => `<button class="tool ${k === sTool ? 'on' : ''}" data-k="${k}">${e}<small>${t}</small></button>`).join('');
+    $('stools').querySelectorAll('.tool').forEach(b => b.onclick = () => { sTool = b.dataset.k; $('stools').querySelectorAll('.tool').forEach(x => x.classList.toggle('on', x === b)); tone(600, .05); });
+    palette($('spal'), c => sCol = c);
+    $('shelf').querySelectorAll('.thumb').forEach(b => b.addEventListener('pointerdown', e => startDragNew(e, b.dataset.id)));
+    window.addEventListener('resize', sizeCanvases);
+  }
+  setTimeout(sizeCanvases, 30);
+}
+function sizeCanvases() {
+  const r = $('stage').getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1);
+  ['bgc', 'topc'].forEach(id => { const c = $(id); const old = c.width ? c.toDataURL() : null; c.width = Math.round(r.width * dpr); c.height = Math.round(r.height * dpr); const g = c.getContext('2d'); if (id === 'bgc' && !old) { g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height); } if (old) { const im = new Image(); im.onload = () => g.drawImage(im, 0, 0, c.width, c.height); im.src = old; } });
+}
+function stagePt(e) { const r = $('stage').getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top, vx: (e.clientX - r.left) / r.width * 800, vy: (e.clientY - r.top) / r.height * 450, r }; }
+function decorate(str) { return str.replace(/class="r" fill="#fff"/g, 'class="r" fill="#fff" stroke="#2b2340" stroke-width="3.5" stroke-linejoin="round"').replace(/class="ink"/g, 'class="ink" fill="none" stroke="#2b2340" stroke-width="3.5" stroke-linecap="round"').replace(/class="dot"/g, 'class="dot" fill="#2b2340"'); }
+function addObj(id, vx, vy) {
+  const o = libById(id), g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  g.setAttribute('class', 'o'); g.dataset.id = id; g.dataset.x = vx; g.dataset.y = vy; g.dataset.s = .6;
+  g.innerHTML = `<g transform="translate(-200 -150)">${decorate(o.body())}<rect class="selbox" x="10" y="10" width="380" height="280" rx="20"/></g>`;
+  $('objs').appendChild(g); placeObj(g); select(g); tone(880, .08); tone(1175, .1, 'triangle', .06, .08);
+  g.addEventListener('pointerdown', e => objDown(e, g));
+  return g;
+}
+function placeObj(g) { g.setAttribute('transform', `translate(${g.dataset.x} ${g.dataset.y}) scale(${g.dataset.s})`); }
+function select(g) {
+  document.querySelectorAll('#objs g.o').forEach(x => x.classList.toggle('sel', x === g)); selObj = g; if (!g) { $('bubble').style.display = 'none'; return; }
+  const o = libById(g.dataset.id), r = $('stage').getBoundingClientRect();
+  const b = $('bubble'); b.innerHTML = `<span class="en">${o.en}</span><span class="tr">${o.tr}</span>`; b.style.display = 'block';
+  b.style.left = (g.dataset.x / 800 * r.width) + 'px'; b.style.top = Math.max(40, (g.dataset.y - 130 * g.dataset.s) / 450 * r.height) + 'px';
+  KB.sayBoth(o.tr, o.en);
+}
+function startDragNew(e, id) {
+  e.preventDefault(); const ghost = document.createElement('div'); ghost.textContent = libById(id).e; ghost.style.cssText = `position:fixed;z-index:20;font-size:54px;pointer-events:none;left:${e.clientX - 27}px;top:${e.clientY - 30}px`; document.body.appendChild(ghost);
+  const sx = e.clientX, sy = e.clientY;
+  const mv = ev => { ghost.style.left = ev.clientX - 27 + 'px'; ghost.style.top = ev.clientY - 30 + 'px'; };
+  const up = ev => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); ghost.remove(); const r = $('stage').getBoundingClientRect(); let x = ev.clientX, y = ev.clientY; if (Math.hypot(x - sx, y - sy) < 10) { x = r.left + r.width / 2 + (Math.random() - .5) * 80; y = r.top + r.height / 2; } if (x > r.left && x < r.right && y > r.top && y < r.bottom) addObj(id, (x - r.left) / r.width * 800, (y - r.top) / r.height * 450); };
+  window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up);
+}
+function objDown(e, g) {
+  if (sTool === 'fill' && e.target.classList.contains('r')) { e.stopPropagation(); e.target.setAttribute('fill', sCol); tone(500 + COLORS.indexOf(sCol) * 60, .08); if (selObj !== g) select(g); return; }
+  if (sTool === 'move') { e.stopPropagation(); e.preventDefault(); if (selObj !== g) select(g); $('objs').appendChild(g); const p0 = stagePt(e), x0 = +g.dataset.x, y0 = +g.dataset.y; const mv = ev => { const p = stagePt(ev); g.dataset.x = x0 + p.vx - p0.vx; g.dataset.y = y0 + p.vy - p0.vy; placeObj(g); }; const up = () => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); select(g); }; window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up); }
+}
+// fırça ve kova
+let painting = null;
+$('stage').addEventListener('pointerdown', e => {
+  if (e.defaultPrevented || e.target.id === 'bubble') return;
+  const p = stagePt(e), dpr = $('topc').width / p.r.width;
+  if (sTool === 'move') { select(null); return; }
+  if (sTool === 'fill') { floodFill(p.x * dpr, p.y * dpr); return; }
+  painting = { last: [p.x * dpr, p.y * dpr], dpr }; $('stage').setPointerCapture(e.pointerId); stroke(p.x * dpr, p.y * dpr);
+});
+$('stage').addEventListener('pointermove', e => { if (!painting) return; const p = stagePt(e); stroke(p.x * painting.dpr, p.y * painting.dpr); });
+['pointerup', 'pointercancel'].forEach(t => $('stage').addEventListener(t, () => painting = null));
+function stroke(x, y) {
+  const g = $('topc').getContext('2d'), d = painting.dpr, [lx, ly] = painting.last;
+  g.globalCompositeOperation = sTool === 'erase' ? 'destination-out' : 'source-over';
+  if (sTool === 'spray') { g.fillStyle = sCol; for (let i = 0; i < 18; i++) { const a = Math.random() * 6.28, r = Math.random() * 22 * d; g.fillRect(x + Math.cos(a) * r, y + Math.sin(a) * r, 2.2 * d, 2.2 * d); } }
+  else { g.lineCap = g.lineJoin = 'round'; g.lineWidth = ({ pencil: 5, brush: 18, rainbow: 16, erase: 30 }[sTool] || 8) * d; if (sTool === 'rainbow') { rainbowH = (rainbowH + 4) % 360; g.strokeStyle = `hsl(${rainbowH},90%,55%)`; } else g.strokeStyle = sCol; g.beginPath(); g.moveTo(lx, ly); g.lineTo(x + .01, y); g.stroke(); }
+  g.globalCompositeOperation = 'source-over'; painting.last = [x, y];
+}
+function hexRgb(h) { const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+function floodFill(x, y) {
+  const c = $('topc'), g = c.getContext('2d'), W = c.width, H = c.height; x = Math.floor(x); y = Math.floor(y);
+  const img = g.getImageData(0, 0, W, H), d = img.data, i0 = (y * W + x) * 4, t = [d[i0], d[i0 + 1], d[i0 + 2], d[i0 + 3]], [nr, ng, nb] = hexRgb(sCol);
+  if (t[3] > 200 && t[0] === nr && t[1] === ng && t[2] === nb) return;
+  const same = i => t[3] < 40 ? d[i + 3] < 40 : Math.abs(d[i] - t[0]) + Math.abs(d[i + 1] - t[1]) + Math.abs(d[i + 2] - t[2]) < 60 && d[i + 3] > 120;
+  const seen = new Uint8Array(W * H), stack = [y * W + x]; let n = 0; const list = [];
+  while (stack.length) { const p = stack.pop(); if (seen[p]) continue; seen[p] = 1; if (!same(p * 4)) continue; list.push(p); n++; const px = p % W, py = (p / W) | 0; if (px > 0) stack.push(p - 1); if (px < W - 1) stack.push(p + 1); if (py > 0) stack.push(p - W); if (py < H - 1) stack.push(p + W); }
+  if (t[3] < 40 && n > W * H * .55) { const b = $('bgc').getContext('2d'); b.fillStyle = sCol; b.fillRect(0, 0, W, H); tone(400, .15); return; }
+  for (const p of list) { const i = p * 4; d[i] = nr; d[i + 1] = ng; d[i + 2] = nb; d[i + 3] = 255; }
+  g.putImageData(img, 0, 0); tone(520, .12);
+}
+$('oBig').onclick = () => { if (selObj) { selObj.dataset.s = Math.min(1.2, +selObj.dataset.s * 1.2); placeObj(selObj); } };
+$('oSmall').onclick = () => { if (selObj) { selObj.dataset.s = Math.max(.15, +selObj.dataset.s / 1.2); placeObj(selObj); } };
+$('oDel').onclick = () => { if (selObj) { selObj.remove(); select(null); tone(200, .1); } };
+$('sClear').onclick = () => { $('objs').innerHTML = ''; select(null); $('topc').getContext('2d').clearRect(0, 0, $('topc').width, $('topc').height); const b = $('bgc').getContext('2d'); b.fillStyle = '#fff'; b.fillRect(0, 0, $('bgc').width, $('bgc').height); };
+$('sSave').onclick = () => {
+  const W = 960, H = Math.round(W * $('bgc').height / $('bgc').width), out = document.createElement('canvas'); out.width = W; out.height = H; const g = out.getContext('2d');
+  g.drawImage($('bgc'), 0, 0, W, H);
+  const sel = selObj; select(null);
+  const xml = new XMLSerializer().serializeToString($('objs')).replace('<svg', `<svg width="${W}" height="${H}"`);
+  const im = new Image(); im.onload = () => { g.drawImage(im, 0, 0, W, H); g.drawImage($('topc'), 0, 0, W, H); const ok = RO.addPhoto(out.toDataURL('image/jpeg', .8)); RO.award('photo'); tone(1400, .05, 'square'); $('bubble').style.display = 'block'; $('bubble').innerHTML = ok ? '<span class="tr">📒 Albüme kaydedildi!</span>' : '<span class="tr">Albüm dolu</span>'; $('bubble').style.left = '50%'; $('bubble').style.top = '60px'; setTimeout(() => { $('bubble').style.display = 'none'; }, 1800); if (sel) select(sel); };
+  im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml);
+};
 setInterval(() => { if (document.hidden) return; if (RO.tick(5) <= 0) { document.body.innerHTML = '<div style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#2b2340;color:#fff;font-weight:800;font-size:24px;text-align:center"><div style="font-size:70px">😴🌙</div>Robi\'nin uyku zamanı!<br><small>Bugünlük oyun süresi bitti.</small></div>'; } }, 5000);
-renderSelect();
+show('home');
+
 </script>
 </body>
 </html>

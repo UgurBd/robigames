@@ -219,6 +219,7 @@ body:not(.playing) #editBtn{display:none!important}
   <button class="go sec" id="keep">Burada oynamaya devam</button>
 </div></div>
 <script src="ortak.js"></script>
+<script src="analiz.js"></script>
 <script>/**
  * @license
  * Copyright 2010-2023 Three.js Authors
@@ -233,6 +234,8 @@ const LEARN = location.hash === '#ogren';
 const BAHCE = location.hash === '#bahce';
 const BUILD = location.hash === '#tasarla';
 const WID = (location.hash || '#orman').slice(1);
+const AN = window.RobiAnaliz || { screen() {}, done() {}, ev() {}, btn() {}, bannerShow() {}, interstitial(f) { f && f(); } };
+AN.screen('macera:' + WID);
 const TOPLA = WID === 'toplama';
 const DENIZ = WID === 'deniz', OKUL = WID === 'okul', UCURUM = WID === 'ucurum', UZAY = WID === 'uzay';
 const VOID = UCURUM || UZAY, GMUL = UZAY ? .42 : 1;
@@ -1331,7 +1334,7 @@ function refreshPowerUI() {
   $('altWrap').style.display = P.flying ? 'block' : 'none';
   $('orbs').innerHTML = Object.keys(orbActive).filter(k => orbActive[k] > 0).map(k => `<span class="chip" style="--tint:${POWER[k].color}">${POWER[k].e} ${Math.ceil(orbActive[k])}</span>`).join('');
   $('suitBadge').textContent = SUITS[SV.suit].e;
-  $('ad').style.display = !LEARN && !BAHCE && Object.values(orbActive).some(v => v > 0) ? 'flex' : 'none';
+  $('ad').style.display = 'none';
 }
 function addXP(n) {
   SV.xp += n; const nl = levelOf(SV.xp);
@@ -1471,7 +1474,7 @@ const endPtr = e => {
   }
 };
 zone.addEventListener('pointerup', endPtr); zone.addEventListener('pointercancel', endPtr);
-function btn(id, down, up) { const b = $(id); b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); b.classList.add('down'); down(); }); ['pointerup', 'pointerleave', 'pointercancel'].forEach(t => b.addEventListener(t, () => { b.classList.remove('down'); up && up(); })); }
+function btn(id, down, up) { const b = $(id); b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); b.classList.add('down'); AN.btn(id); down(); }); ['pointerup', 'pointerleave', 'pointercancel'].forEach(t => b.addEventListener(t, () => { b.classList.remove('down'); up && up(); })); }
 btn('bJump', () => input.jump = true);
 btn('bSpin', () => input.spin = true);
 btn('bDash', () => input.dash = true);
@@ -1501,7 +1504,7 @@ $('pResume').onclick = () => togglePause(false);
 $('pRestart').onclick = () => location.reload();
 $('pTut').onclick = () => { togglePause(false); tutStart(); };
 $('tutSkip').onclick = () => tutEnd(false); $('tutOk').onclick = () => tutEnd(true);
-$('pMenu').onclick = () => { musicStop(); try { if (window.parent !== window) { parent.postMessage('robi-menu', '*'); return; } } catch (e) {} location.reload(); };
+$('pMenu').onclick = () => { musicStop(); window.RobiAnaliz && RobiAnaliz.flush(); try { if (window.parent !== window) { parent.postMessage('robi-menu', '*'); return; } } catch (e) {} location.reload(); };
 $('pMusic').onclick = () => { SV.muted = !SV.muted; save(); $('pMusic').textContent = SV.muted ? '🔇 Müzik kapalı' : '🎵 Müzik açık'; };
 $('pMusic').textContent = SV.muted ? '🔇 Müzik kapalı' : '🎵 Müzik açık';
 
@@ -1725,9 +1728,9 @@ function voice(slot) { if (!RO.playVoice) return; const now = performance.now();
 // =============== HASAR & ÖDÜLLER ===============
 function hurt(from) {
   if (P.inv > 0 || P.spin > 0 || P.dash > 0 || P.pound || moment) return;
-  P.hp--; P.inv = 1.4; SFX.hurt(); hud();
+  P.hp--; P.inv = 1.4; SFX.hurt(); hud(); AN.ev('hasar:' + WID);
   const d = new THREE.Vector3().subVectors(P.pos, from); d.y = 0; d.normalize(); P.vel.x = d.x * 10; P.vel.z = d.z * 10; P.vel.y = 6;
-  if (P.hp <= 0) { toast('🔋 Robi\'nin pili bitti! Şarj olup başlangıca dönüyor...', 3); P.pos.copy(START); P.vel.set(0, 0, 0); P.hp = 3; P.inv = 2; hud(); }
+  if (P.hp <= 0) { AN.ev('pil_bitti:' + WID); toast('🔋 Robi\'nin pili bitti! Şarj olup başlangıca dönüyor...', 3); P.pos.copy(START); P.vel.set(0, 0, 0); P.hp = 3; P.inv = 2; hud(); }
 }
 function killMonster(m) {
   if (!m.alive) return;
@@ -1778,7 +1781,7 @@ function checkMissions() {
 }
 const k2 = m => !m.bonus; // orman: kostüm toplamak bonus görev
 function finishWorld() {
-  if (won) return; won = true;
+  if (won) return; won = true; AN.done(); AN.ev('bitti:' + WID);
   if (TOPLA) { setTimeout(jellyMoment, 900); return; }
   if (BUILD) { sticker('builder'); celebrate('PARKUR BİTTİ!', `⏱ ${parkurT.toFixed(1)} saniye`, true); voice('power'); setTimeout(() => toast('✏️ Düzenle ile parkuru değiştir ya da 🔁 tekrar dene!', 4), 2200); return; }
   SV.cleared = SV.cleared || {}; SV.cleared[WID] = true; if (LEARN) SV.trained = true; save();
@@ -1791,7 +1794,7 @@ function finishWorld() {
   }, LEARN ? 4200 : 1500);
 }
 $('keep').onclick = () => { $('win').style.display = 'none'; paused = false; last = performance.now(); };
-$('winMenu').onclick = () => $('pMenu').onclick();
+$('winMenu').onclick = () => { musicStop(); window.RobiAnaliz && RobiAnaliz.flush(); try { if (window.parent !== window) { parent.postMessage('robi-menu-break', '*'); return; } } catch (e) {} AN.interstitial(() => location.reload(), WID); };
 
 
 let parentT = 0, warned = false;
@@ -2168,6 +2171,7 @@ function update(dt) {
 }
 
 function frame(now) {
+  AN.bannerShow(started && !paused && !moment && !photo && !jelly);
   const rawDt = Math.min(.1, (now - last) / 1000), dt = Math.min(.033, rawDt); last = now;
   if (started && moment) {
     updateMoment(rawDt); updateNeon(rawDt);

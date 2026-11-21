@@ -153,6 +153,7 @@ select{font-family:inherit;font-weight:800;font-size:15px;border:3px solid var(-
 <div id="loading">Yükleniyor... 🤖</div>
 <iframe id="game" allow="autoplay; fullscreen"></iframe>
 <script src="ortak.js"></script>
+<script src="analiz.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const RO = window.RobiOrtak;
@@ -186,7 +187,7 @@ function launch(w, b) {
   loading.style.display = 'flex';
   try { const el = document.documentElement; const p = el.requestFullscreen ? el.requestFullscreen() : null; if (p) p.then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape')).catch(() => {}); } catch (e) {}
   frame.onload = () => { loading.style.display = 'none'; frame.style.display = 'block'; menu.style.display = 'none'; try { frame.contentWindow.focus(); } catch (e) {} };
-  frame.src = w.src;
+  AN.screen(null); frame.src = w.src;
 }
 function refresh() {
   const s = RO.load();
@@ -196,12 +197,17 @@ function refresh() {
   $('tDaily').classList.toggle('has', RO.chestStatus().can);
   return true;
 }
+const AN = window.RobiAnaliz || { screen() {}, resync() {}, interstitial(f) { f(); }, cfg: () => ({}), profiles: () => [], report: () => null };
+AN.screen('menu');
 refresh();
 function openS(id) { $(id).style.display = 'flex'; tone(660, .08); }
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => { b.closest('.screen').style.display = 'none'; refresh(); });
 
 addEventListener('message', e => {
-  if (e.data === 'robi-menu') { frame.onload = null; frame.style.display = 'none'; frame.src = 'about:blank'; menu.style.display = 'flex'; refresh(); }
+  if (e.data === 'robi-menu' || e.data === 'robi-menu-break') {
+    const back = () => { frame.onload = null; frame.style.display = 'none'; frame.src = 'about:blank'; menu.style.display = 'flex'; setTimeout(() => { AN.resync(); AN.screen('menu'); }, 300); refresh(); };
+    if (e.data === 'robi-menu-break') { frame.onload = null; frame.style.display = 'none'; frame.src = 'about:blank'; menu.style.display = 'flex'; refresh(); setTimeout(() => { AN.resync(); AN.interstitial(() => { AN.screen('menu'); refresh(); }, 'dunya_sonu'); }, 400); } else back();
+  }
 });
 
 // Günlük sandık + görevler
@@ -257,12 +263,55 @@ function renderParent() {
     <div class="row"><div><b>🍬 Jelibon Odası: eşya sayısı</b><small>Çocuk bu kadar oyuncağı toplayınca jelibon hakkı kazanır</small><input type="range" id="roomN" min="1" max="100" value="${p.roomItems || 10}" style="width:100%;accent-color:#ff5ad8"></div><b id="roomV" style="font-size:22px;min-width:44px;text-align:right">${p.roomItems || 10}</b></div>
     <div class="row"><div><b>🍬 Kazanılan jelibon hakları</b><small>Bugün: ${p.jellyToday || 0} · Toplam: ${p.jellyTotal || 0}</small></div><b>🍬</b></div>
     <div class="row"><div><b>🔓 Bütün dünyaları aç</b><small>Sırayla bitirmeden her dünyaya girilsin</small></div><button class="btn sec" id="unl">${s.unlockAll ? '✅ Açık' : 'Kapalı'}</button></div>
+    <div class="row"><div><b>📊 Test analizi & reklam testi</b><small>Aktif çocuk: <b>${AN.cfg().profile}</b> · veriler sadece bu tablette</small></div><button class="btn go" id="anBtn">Aç</button></div>
     <div class="row" style="border:0"><div><b>🛒 Satın almalar</b><small>Oyunda sadece oyun içi dişli harcanır, gerçek para yoktur.</small></div><b>✅</b></div>`;
   $('lim').onchange = e => { RO.setParent({ limit: +e.target.value }); renderParent(); };
   $('bonus').onclick = () => { RO.setParent({ bonus: (RO.parent().bonus || 0) + 10 }); renderParent(); };
   $('mus').onclick = () => { const s2 = RO.load(); s2.muted = !s2.muted; RO.store(s2); renderParent(); };
   $('roomN').oninput = e => { $('roomV').textContent = e.target.value; }; $('roomN').onchange = e => RO.setParent({ roomItems: +e.target.value });
+  $('anBtn').onclick = renderAnaliz;
   $('unl').onclick = () => { const s2 = RO.load(); s2.unlockAll = !s2.unlockAll; RO.store(s2); renderParent(); refresh(); };
+}
+// ---------- Test analizi (sadece cihazda) ----------
+function heatSvg(h) {
+  if (!h) return ''; const mx = Math.max(1, ...h);
+  return `<svg viewBox="0 0 160 90" style="width:100%;border:2px solid #2b2340;border-radius:8px;background:#f4f1fa">${h.map((v, i) => v ? `<rect x="${i % 16 * 10}" y="${Math.floor(i / 16) * 10}" width="10" height="10" fill="#ff3d6e" opacity="${(.12 + .88 * v / mx).toFixed(2)}"/>` : '').join('')}<rect x="45" y="0" width="70" height="4" fill="none" stroke="#2b2340" stroke-width=".6" stroke-dasharray="2 1"/></svg>`;
+}
+function renderAnaliz() {
+  const c = AN.cfg(), profs = [...new Set([c.profile, ...AN.profiles()])], r = AN.report(c.profile);
+  const bar = (k, v, f) => `<div style="display:flex;gap:6px;align-items:center;font-size:12px;margin:2px 0"><span style="width:38%;text-align:left">${k}</span><span style="flex:1;height:10px;background:#eee;border-radius:5px;overflow:hidden"><i style="display:block;height:100%;width:${Math.round(f * 100)}%;background:#22b573"></i></span><b style="width:70px;text-align:right">${v}</b></div>`;
+  const a = r ? r.ads : null, hk = r ? Object.keys(r.heat) : [];
+  $('parentBody').innerHTML = `
+    <div class="row"><div><b>👤 Test eden çocuk</b><small>Tableti vermeden önce seçin (takma ad kullanın)</small></div><select id="anProf">${profs.map(p => `<option ${p === c.profile ? 'selected' : ''}>${p}</option>`).join('')}<option value="+">➕ Yeni çocuk…</option></select></div>
+    <div class="row"><div><b>📊 Analiz kaydı</b><small>Süre, dünya, buton, dokunma haritası</small></div><button class="btn sec" id="anOn">${c.an ? '✅ Açık' : 'Kapalı'}</button></div>
+    <div class="row"><div><b>📢 Reklam testi</b><small>Üst şerit + level sonu ara reklam (örnek reklamlar)</small></div><button class="btn sec" id="adOn">${c.ads ? '✅ Açık' : 'Kapalı'}</button></div>
+    <div class="row"><div><b>🔁 Şerit yenileme</b><small>AdMob: 30–150 sn, önerilen 60+</small></div><select id="anRef">${[30, 60, 90, 120].map(v => `<option ${c.refresh === v ? 'selected' : ''} value="${v}">${v} sn</option>`).join('')}</select></div>
+    <div class="row"><div><b>⏳ Ara reklam aralığı</b><small>En az bu kadar arayla</small></div><select id="anGap">${[60, 120, 180, 300].map(v => `<option ${c.gap === v ? 'selected' : ''} value="${v}">${v / 60} dk</option>`).join('')}</select></div>
+    ${r && r.tot > 0 ? `
+    <h3 style="margin:10px 0 4px">⏱ ${r.totS} · ${r.nSess} oturum · ort. ${r.avg}</h3><small>En uzun oturum ${r.longest} · son kaldığı yer: ${r.last}</small>
+    <h3 style="margin:10px 0 4px">🌍 Nerede ne kadar</h3>${r.time.map(([k, v, f]) => bar(k, v, f)).join('')}
+    ${r.quits.length ? `<h3 style="margin:10px 0 4px">🚪 Bitirmeden çıktığı yerler</h3>${r.quits.map(([k, v]) => bar(k, v + ' kez', v / r.quits[0][1])).join('')}` : ''}
+    <h3 style="margin:10px 0 4px">📢 Reklam testi</h3>
+    <div style="font-size:13px;text-align:left;line-height:1.6">Üst şerit ekranda: <b>${AN.fmt(a.bSec)}</b> (oyunun %${r.adPct}'i) · <b>${a.bImp}</b> gösterim<br>
+    Şeride dokunma: <b style="color:${+r.tapRate > 2 ? '#e53935' : '#22b573'}">${a.bTap}</b> (gösterim başına %${r.tapRate}${+r.tapRate > 2 ? ' ⚠️ yüksek: yanlışlıkla basılıyor olabilir' : ''})<br>
+    Ara reklam: <b>${a.iShow}</b> kez · ortalama <b>${r.iAvg} sn</b>'de kapattı · reklama dokunma ${a.iTap} · erken ✕ denemesi ${a.iSkip}<br>
+    Varsayımsal gelir: ≈ <b>$${r.rev}</b> <small>(eCPM $${c.ecpm} varsayımı; gerçek değer AdMob'da görülür)</small></div>
+    <h3 style="margin:10px 0 4px">👆 Dokunma haritası</h3><select id="anHeat">${hk.map(k => `<option>${k}</option>`).join('')}</select><div id="anHeatV">${heatSvg(r.heat[hk[0]])}</div><small>Kesikli çerçeve: reklam şeridinin yeri</small>
+    ${r.btn.length ? `<h3 style="margin:10px 0 4px">🎮 En çok basılan butonlar</h3>${r.btn.map(([k, v]) => bar(k, v, v / r.btn[0][1])).join('')}` : ''}
+    ${r.ev.length ? `<h3 style="margin:10px 0 4px">📌 Olaylar</h3>${r.ev.map(([k, v]) => bar(k, v, v / r.ev[0][1])).join('')}` : ''}` : '<p style="margin:14px 0">Bu çocuk için henüz veri yok. Tableti verin, oynasın 🙂</p>'}
+    <textarea id="anTxt" readonly style="width:100%;height:70px;margin-top:10px;font-size:11px;display:none"></textarea>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:10px"><button class="btn go" id="anCopy">📋 Raporu kopyala/paylaş</button><button class="btn sec" id="anJson">🧾 Tüm veri (JSON)</button><button class="btn sec" id="anDel">🗑️ Bu çocuğun verisini sil</button><button class="btn sec" id="anBack">◀ Geri</button></div>`;
+  $('anProf').onchange = e => { let v = e.target.value; if (v === '+') { v = (prompt('Çocuğun takma adı:', 'Çocuk ' + (profs.length + 1)) || '').trim(); if (!v) return renderAnaliz(); } AN.setCfg({ profile: v }); AN.resync(); AN.session(); renderAnaliz(); };
+  $('anOn').onclick = () => { AN.setCfg({ an: !c.an }); renderAnaliz(); };
+  $('adOn').onclick = () => { AN.setCfg({ ads: !c.ads }); renderAnaliz(); };
+  $('anRef').onchange = e => AN.setCfg({ refresh: +e.target.value });
+  $('anGap').onchange = e => AN.setCfg({ gap: +e.target.value });
+  if ($('anHeat')) $('anHeat').onchange = e => $('anHeatV').innerHTML = heatSvg(r.heat[e.target.value]);
+  const share = async txt => { const t = $('anTxt'); t.style.display = 'block'; t.value = txt; try { if (navigator.share) { await navigator.share({ title: 'Robi test raporu', text: txt }); return; } } catch (e) {} try { await navigator.clipboard.writeText(txt); $('anCopy').textContent = '✅ Kopyalandı'; } catch (e) { t.select(); } };
+  $('anCopy').onclick = () => share(AN.text(c.profile) || 'Veri yok');
+  $('anJson').onclick = () => share(AN.exportJSON());
+  $('anDel').onclick = () => { if (confirm(c.profile + ' verisi silinsin mi?')) { AN.reset(c.profile); renderAnaliz(); } };
+  $('anBack').onclick = renderParent;
 }
 $('tParent').onclick = () => { renderGate(); openS('sParent'); };
 
