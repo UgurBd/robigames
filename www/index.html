@@ -33,7 +33,7 @@ h1{margin:2px 0 0;font-size:clamp(24px,5.5vh,38px);line-height:1;color:#ffd166;-
 .paint .art{background:conic-gradient(#e53935,#ffd166,#22b573,#2e8bff,#a259ff,#e53935)}
 .jelly .art{background:linear-gradient(135deg,#ffd6e7,#ffe9d6)}
 .room .art{background:linear-gradient(#cfe8f7,#e2b47c)}.forest .art{background:linear-gradient(#9fd8ff 40%,#6ab84a 40%)}
-.learn .art{background:linear-gradient(135deg,#ffd6f0,#c9b8ff)}.build .art{background:linear-gradient(135deg,#bde0ff,#ffd166)}.garden .art{background:linear-gradient(135deg,#ffe3f1,#bff0c9)}
+.learn .art{background:linear-gradient(135deg,#ffd6f0,#c9b8ff)}.build .art{background:linear-gradient(135deg,#bde0ff,#ffd166)}.multi .art{background:linear-gradient(135deg,#ffb3b3,#b3d4ff,#b9f5c9)}.garden .art{background:linear-gradient(135deg,#ffe3f1,#bff0c9)}
 .wt{padding:6px 9px 8px;display:flex;flex-direction:column;justify-content:flex-start;min-width:0;flex:1}.wt b{font-size:16px;line-height:1.05}.wt small{color:#5a4f70;font-size:12px;line-height:1.15;font-weight:700}
 .play{display:inline-block;margin-top:3px;background:#ff7a2f;color:#fff;border:2.5px solid var(--ink);border-radius:9px;padding:0 9px;font-weight:800;font-size:13px;align-self:flex-start;text-shadow:0 1px 0 var(--ink)}
 .world.locked{filter:grayscale(.8)}.world.locked .art{opacity:.6}
@@ -127,6 +127,11 @@ select{font-family:inherit;font-weight:800;font-size:15px;border:3px solid var(-
   <div id="albumBody"></div>
 </div></div>
 
+<div class="screen" id="sCok"><div class="box" style="max-width:640px">
+  <button class="x" data-close>✖</button>
+  <h2>👫 Birlikte Oyna</h2>
+  <div id="cokBody"></div>
+</div></div>
 <div class="screen" id="sParent"><div class="box">
   <button class="x" data-close>✖</button>
   <h2>👨‍👩‍👦 Ebeveyn Paneli</h2>
@@ -154,6 +159,7 @@ select{font-family:inherit;font-weight:800;font-size:15px;border:3px solid var(-
 <iframe id="game" allow="autoplay; fullscreen"></iframe>
 <script src="ortak.js"></script>
 <script src="analiz.js"></script>
+<script src="net.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const RO = window.RobiOrtak;
@@ -170,6 +176,7 @@ const WORLDS = [
   { id: 'boyama', cls: 'paint', art: '🎨🖍️', name: 'Boyama Atölyesi', sub: '40 bölüm boyama', src: 'boyama.html' },
   { id: 'toplama', cls: 'jelly', art: '🧸🍬', name: 'Jelibon Odası', sub: 'Odanı topla, jelibon kazan', src: 'macera.html#toplama' },
   { id: 'oda', cls: 'room', art: '🛏️🧸', name: 'Dev Oda', sub: 'Arkadaşlarını kurtar', src: 'oda.html' },
+  { id: 'cok', cls: 'multi', art: '👫🌐', name: 'Birlikte Oyna', sub: 'Arkadaşınla aynı odada, 6 kişiye kadar', multi: true },
   { id: 'bahce', cls: 'garden', art: '🌳💗', name: 'Koruma Bahçesi', sub: 'Kurtardığın hayvanları sev', src: 'macera.html#bahce' },
   { id: 'tasarla', cls: 'build', art: '🧱⭐', name: 'Parkur Atölyesi', sub: 'Kendi parkurunu kur', src: 'macera.html#tasarla' },
 ];
@@ -184,6 +191,7 @@ function launch(w, b) {
   const s = RO.load();
   if (!isOpen(w, s)) { const prev = WORLDS.find(x => x.id === w.need); RO.say && RO.say(`${w.name} kilitli. Önce ${prev ? prev.name : 'önceki dünyayı'} bitir!`); b.animate([{ transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'none' }], { duration: 300 }); tone(160, .2, 'sawtooth'); return; }
   if (RO.timeLeft() <= 0) { openS('sSleep'); return; }
+  if (w.multi) { openCok(); return; }
   RO.say && RO.say(w.name + '! Hadi gidelim!');
   loading.style.display = 'flex';
   try { const el = document.documentElement; const p = el.requestFullscreen ? el.requestFullscreen() : null; if (p) p.then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape')).catch(() => {}); } catch (e) {}
@@ -276,6 +284,39 @@ function renderParent() {
   $('anBtn').onclick = renderAnaliz;
   $('unl').onclick = () => { const s2 = RO.load(); s2.unlockAll = !s2.unlockAll; RO.store(s2); renderParent(); refresh(); };
 }
+// ---------- Birlikte Oyna: oda kur / katıl ----------
+const RN = window.RobiNet;
+let cokCode = '';
+function cokGo(mode, code) { $('sCok').style.display = 'none'; launch({ id: 'net', name: RN.MODES[mode][1], src: `macera.html#net-${mode}-${code}` }, document.body); }
+function openCok() { renderCok(); openS('sCok'); RO.say && RO.say('Birlikte oyna! Yeni oda kur ya da arkadaşının odasına katıl.'); }
+function renderCok() {
+  $('cokBody').innerHTML = `<p style="font-weight:800;margin:4px 0">🏠 Yeni oda kur: oyunu seç</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${Object.entries(RN.MODES).map(([k, [e, n, d]]) => `<button class="btn sec" data-mode="${k}" style="padding:8px;text-align:center"><div style="font-size:34px">${e}</div><b>${n}</b><br><small style="font-weight:600">${d}</small></button>`).join('')}</div>
+    <p style="font-weight:800;margin:12px 0 4px">🔑 Arkadaşının odasına katıl</p>
+    <div id="cokCode" style="font-size:34px;font-weight:800;letter-spacing:6px;min-height:44px">${(cokCode + '_____').slice(0, 5).split('').map(c => c === '_' ? '▢' : c).join('')}</div>
+    <div style="font-size:26px;min-height:32px">${RN.codeEmoji(cokCode)}</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:6px">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map(d => `<button class="btn sec" data-d="${d}" style="padding:4px 0;font-size:22px">${d}<br><span style="font-size:22px">${RN.ANIMALS[d]}</span></button>`).join('')}</div>
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:8px"><button class="btn sec" id="cokDel">⌫ Sil</button><button class="btn go" id="cokJoin" ${cokCode.length === 5 ? '' : 'disabled style="opacity:.5"'}>▶ Katıl</button></div>
+    <p id="cokMsg" style="font-weight:700;color:#e53935;min-height:20px;margin:6px 0 0"></p>`;
+  $('cokBody').querySelectorAll('[data-mode]').forEach(b => b.onclick = async () => {
+    const m = b.dataset.mode; $('cokMsg').style.color = '#5a4f70'; $('cokMsg').textContent = '⏳ Oda kuruluyor...';
+    try { const r = await RN.create(m); RO.say && RO.say('Oda kuruldu! Kodu arkadaşına söyle.'); showCode(m, r.code); } catch (e) { $('cokMsg').style.color = '#e53935'; $('cokMsg').textContent = '📡 İnternete bağlanılamadı. Tekrar dene.'; }
+  });
+  $('cokBody').querySelectorAll('[data-d]').forEach(b => b.onclick = () => { if (cokCode.length < 5) { cokCode += b.dataset.d; tone(500 + cokCode.length * 80, .06); RO.say && RO.say(b.dataset.d); renderCok(); } });
+  $('cokDel').onclick = () => { cokCode = cokCode.slice(0, -1); renderCok(); };
+  $('cokJoin').onclick = async () => {
+    if (cokCode.length !== 5) return; $('cokMsg').style.color = '#5a4f70'; $('cokMsg').textContent = '⏳ Oda aranıyor...';
+    try { const i = await RN.info(cokCode); if (!i) { $('cokMsg').style.color = '#e53935'; $('cokMsg').textContent = '😕 Bu kodda oda yok. Kodu kontrol et.'; RO.say && RO.say('Bu kodda oda yok.'); return; } if (i.n >= i.max) { $('cokMsg').textContent = '😕 Oda dolu (6 kişi).'; RO.say && RO.say('Oda dolu.'); return; } const c = cokCode; cokCode = ''; cokGo(i.mode, c); } catch (e) { $('cokMsg').style.color = '#e53935'; $('cokMsg').textContent = '📡 İnternete bağlanılamadı.'; }
+  };
+}
+function showCode(mode, code) {
+  const [e, n] = RN.MODES[mode];
+  $('cokBody').innerHTML = `<p style="font-weight:800">${e} ${n} odası hazır!</p><p>Arkadaşın <b>👫 Birlikte Oyna → Katıl</b> deyip bu kodu girsin:</p>
+    <div style="font-size:52px;font-weight:800;letter-spacing:8px">${code.slice(0, 2)}-${code.slice(2)}</div><div style="font-size:40px">${RN.codeEmoji(code)}</div>
+    <button class="btn go" id="cokStart" style="font-size:22px;margin-top:10px">▶ Odaya gir</button>`;
+  $('cokStart').onclick = () => cokGo(mode, code);
+}
+
 // ---------- Test analizi (sadece cihazda) ----------
 function heatSvg(h) {
   if (!h) return ''; const mx = Math.max(1, ...h);
