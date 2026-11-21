@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Robi'nin Macerası</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{margin:0;height:100%;overflow:hidden;font-family:'Baloo 2',system-ui,sans-serif;color:#2b2340}
+#menu{position:fixed;inset:0;background:linear-gradient(180deg,#8fd3ff 0%,#c9ecff 55%,#7cc957 55%,#5eaa40 100%);display:flex;align-items:center;justify-content:center;gap:22px;padding:16px;flex-wrap:wrap;overflow:auto}
+.hero{display:flex;flex-direction:column;align-items:center;text-align:center}
+.hero svg{width:min(24vh,130px);height:auto;animation:bob 2s ease-in-out infinite;filter:drop-shadow(0 8px 0 rgba(0,0,0,.12))}
+@keyframes bob{50%{transform:translateY(-8px)}}
+h1{margin:4px 0 0;font-size:clamp(28px,6vh,44px);line-height:1;color:#fff;text-shadow:0 3px 0 #ff7a2f,0 6px 0 rgba(0,0,0,.15)}
+.stats{margin-top:8px;background:rgba(255,255,255,.9);border-radius:999px;padding:3px 14px;font-weight:800;font-size:16px}
+.worlds{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.world{width:min(24vw,180px);border:0;border-radius:24px;padding:0;overflow:hidden;background:#fff;box-shadow:0 6px 0 rgba(0,0,0,.18);font-family:inherit;text-align:left;cursor:pointer;transition:transform .12s}
+.world:active{transform:scale(.96) translateY(3px)}
+.art{height:min(22vh,120px);display:flex;align-items:center;justify-content:center;font-size:min(9vh,54px);letter-spacing:4px}
+.room .art{background:linear-gradient(#cfe8f7,#e2b47c)}
+.forest .art{background:linear-gradient(#9fd8ff 40%,#6ab84a 40%)}
+.learn .art{background:linear-gradient(135deg,#ffd6f0,#c9b8ff)}
+.world.locked{filter:grayscale(.7);opacity:.8}
+.world{backdrop-filter:blur(10px)}
+.wt{padding:8px 12px 10px}.wt b{font-size:20px;display:block;line-height:1.1}.wt small{color:#7a6f8f;font-size:13px}
+.play{display:inline-block;margin-top:6px;background:#ff7a2f;color:#fff;border-radius:12px;padding:2px 12px;font-weight:800}
+#game{position:fixed;inset:0;width:100%;height:100%;border:0;display:none;background:#9fd8ff}
+#loading{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#9fd8ff;font-size:24px;font-weight:800;color:#fff;z-index:3}
+
+#rotate{position:fixed;inset:0;z-index:50;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:linear-gradient(160deg,#ff9ec4,#ffd166);color:#2b2340;font-weight:800;font-size:22px;text-align:center;padding:24px}
+#rotate .ph{width:70px;height:120px;border:6px solid #2b2340;border-radius:16px;background:#fff;box-shadow:0 6px 0 #2b2340;animation:rot 1.8s ease-in-out infinite}
+@keyframes rot{0%,20%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
+@media (orientation:portrait) and (pointer:coarse){#rotate{display:flex}}
+</style>
+</head>
+<body>
+<div id="menu">
+  <div class="hero">
+    <svg viewBox="0 0 120 150" xmlns="http://www.w3.org/2000/svg">
+      <line x1="60" y1="14" x2="60" y2="30" stroke="#2b2340" stroke-width="4"/><circle cx="60" cy="11" r="7" fill="#ff7a2f"/>
+      <rect x="24" y="28" width="72" height="52" rx="14" fill="#f4f6fb" stroke="#2b2340" stroke-width="3"/>
+      <circle cx="22" cy="54" r="8" fill="#ff7a2f"/><circle cx="98" cy="54" r="8" fill="#ff7a2f"/>
+      <rect x="34" y="42" width="52" height="24" rx="10" fill="#2b2340"/>
+      <circle cx="48" cy="54" r="6" fill="#38e1ff"/><circle cx="72" cy="54" r="6" fill="#38e1ff"/>
+      <rect x="32" y="84" width="56" height="38" rx="10" fill="#f4f6fb" stroke="#2b2340" stroke-width="3"/>
+      <rect x="32" y="108" width="56" height="10" fill="#ff7a2f"/><circle cx="60" cy="98" r="6" fill="#38e1ff"/>
+      <rect x="10" y="88" width="16" height="30" rx="8" fill="#f4f6fb" stroke="#2b2340" stroke-width="3" transform="rotate(20 18 88)"/>
+      <rect x="94" y="88" width="16" height="30" rx="8" fill="#f4f6fb" stroke="#2b2340" stroke-width="3" transform="rotate(-35 102 88)"/>
+      <rect x="40" y="122" width="14" height="20" rx="6" fill="#2b2340"/><rect x="66" y="122" width="14" height="20" rx="6" fill="#2b2340"/>
+      <rect x="36" y="138" width="22" height="9" rx="4" fill="#ff7a2f"/><rect x="62" y="138" width="22" height="9" rx="4" fill="#ff7a2f"/>
+    </svg>
+    <h1>Robi'nin<br>Macerası</h1>
+    <div class="stats" id="stats">⭐ 1 · ⚙️ 0</div>
+  </div>
+  <div class="worlds">
+    <button class="world learn" data-src="macera.html#ogren"><div class="art">🎓👕🪽</div><div class="wt"><b>Eğitim Bahçesi</b><small>Bütün kostümleri bedava dene!</small><br><span class="play">▶ Oyna</span></div></button>
+    <button class="world forest" data-src="macera.html#orman" id="wForest"><div class="art">🌲🍄🔥</div><div class="wt"><b>Büyülü Orman</b><small id="forestSub">Yangınları söndür, hayvanları kurtar</small><br><span class="play" id="forestPlay">▶ Oyna</span></div></button>
+    <button class="world room" data-src="oda.html"><div class="art">🛏️🧸</div><div class="wt"><b>Dev Oda</b><small>Arkadaşlarını kurtar, Kral Canavar'ı yen</small><br><span class="play">▶ Oyna</span></div></button>
+  </div>
+</div>
+<div id="rotate"><div class="ph"></div><div>Telefonu yan çevir 🔄</div><small style="font-size:15px">Robi yatay ekranda daha iyi oynanır!</small></div>
+<div id="loading">Yükleniyor... 🤖</div>
+<iframe id="game" allow="autoplay; fullscreen"></iframe>
+<script>
+const frame = document.getElementById('game'), menu = document.getElementById('menu'), loading = document.getElementById('loading');
+function stats() {
+  try {
+    const s = JSON.parse(localStorage.getItem('robi_orman_v1') || '{}');
+    let l = 1; const xp = s.xp || 0; while (xp >= 30 * l * (l + 1) / 2) l++;
+    document.getElementById('stats').textContent = `⭐ Seviye ${l} · ⚙️ ${s.gears || 0}${s.pet ? ' · ' + (s.pet === 'dog' ? '🐶' : '🐦') : ''}`;
+  } catch (e) {}
+}
+stats();
+function lockState() {
+  let tr = false; try { tr = JSON.parse(localStorage.getItem('robi_orman_v1') || '{}').trained; } catch (e) {}
+  const f = document.getElementById('wForest'); f.classList.toggle('locked', !tr);
+  document.getElementById('forestSub').textContent = tr ? 'Yangınları söndür, hayvanları kurtar' : '🔒 Önce Eğitim Bahçesini bitir';
+  document.getElementById('forestPlay').textContent = tr ? '▶ Oyna' : '🔒 Kilitli';
+  return tr;
+}
+lockState();
+document.querySelectorAll('.world').forEach(b => b.onclick = () => {
+  if (b.id === 'wForest' && !lockState()) { b.animate([{ transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'none' }], { duration: 300 }); return; }
+  loading.style.display = 'flex';
+  try { const el = document.documentElement; const p = el.requestFullscreen ? el.requestFullscreen() : null; if (p) p.then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape')).catch(() => {}); } catch (e) {}
+  frame.onload = () => { loading.style.display = 'none'; frame.style.display = 'block'; menu.style.display = 'none'; try { frame.contentWindow.focus(); } catch (e) {} };
+  frame.src = b.dataset.src;
+});
+addEventListener('message', e => {
+  if (e.data === 'robi-menu') { frame.onload = null; frame.style.display = 'none'; frame.src = 'about:blank'; menu.style.display = 'flex'; stats(); lockState(); }
+});
+</script>
+</body>
+</html>

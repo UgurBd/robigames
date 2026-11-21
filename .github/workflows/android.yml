@@ -1,0 +1,67 @@
+name: Android APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Paketleri kur
+        run: npm install
+
+      - name: Android projesini oluştur
+        run: npx cap add android
+
+      - name: Robi ayarları (yatay ekran, tam ekran, simge)
+        run: |
+          pip install pillow
+          python3 scripts/android_setup.py
+
+      - name: Oyun dosyalarını kopyala
+        run: npx cap sync android
+
+      - name: Sabit imza anahtarı (güncellemeler üstüne kurulabilsin)
+        run: |
+          mkdir -p ~/.android
+          cp keystore/debug.keystore ~/.android/debug.keystore
+
+      - name: APK derle
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: APK'yı adlandır
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk RobininMacerasi.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RobininMacerasi-apk
+          path: RobininMacerasi.apk
+
+      - name: Telefondan indirilebilir sürüm yayınla
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest RobininMacerasi.apk \
+            --title "Robi'nin Macerası — son sürüm" \
+            --notes "Otomatik derlendi: ${{ github.sha }}. Telefonda RobininMacerasi.apk dosyasına dokunup indirin ve kurun." \
+            --latest

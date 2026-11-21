@@ -1,0 +1,6 @@
+{
+  "appId": "com.robigames.robi",
+  "appName": "Robi Macera",
+  "webDir": "www",
+  "android": { "backgroundColor": "#9fd8ff" }
+}
