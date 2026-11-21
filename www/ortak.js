@@ -119,6 +119,13 @@ const Robi = window.RobiOrtak = {
   // fotoğraflar
   photos() { try { return JSON.parse(localStorage.getItem('robi_photos') || '[]'); } catch (e) { return []; } },
   addPhoto(url) { const a = Robi.photos(); a.unshift({ url, date: today() }); while (a.length > 12) a.pop(); try { localStorage.setItem('robi_photos', JSON.stringify(a)); return true; } catch (e) { a.pop(); try { localStorage.setItem('robi_photos', JSON.stringify(a)); } catch (e2) {} return false; } },
+  // Türkçe sesli rehber (Capacitor TTS, yoksa tarayıcı sesi)
+  async say(text, lang = 'tr-TR') {
+    if (Robi.load().voiceGuide === false) return;
+    const t = String(text).replace(/[\p{Extended_Pictographic}️‍⤒⬆️⬇️✕]/gu, '').replace(/\s+/g, ' ').trim(); if (!t) return;
+    try { const cap = window.Capacitor || (window.parent && window.parent.Capacitor); const tts = cap && cap.Plugins && cap.Plugins.TextToSpeech; if (tts) { try { await tts.stop(); } catch (e) {} await tts.speak({ text: t, lang, rate: .95, pitch: 1.15, volume: 1, category: 'ambient' }); return; } } catch (e) {}
+    try { const ss = window.speechSynthesis; if (!ss) return; ss.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang = lang; u.rate = .95; u.pitch = 1.15; const v = ss.getVoices().find(v => v.lang && v.lang.toLowerCase().startsWith(lang.slice(0, 2))); if (v) u.voice = v; ss.speak(u); } catch (e) {}
+  },
   delPhoto(i) { const a = Robi.photos(); a.splice(i, 1); try { localStorage.setItem('robi_photos', JSON.stringify(a)); } catch (e) {} },
 };
 })();

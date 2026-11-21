@@ -100,7 +100,7 @@ body:not(.playing) #hud, body:not(.playing) #btns, body:not(.playing) #topR, bod
 #confetti.anim i{animation:cf linear forwards}
 @keyframes cf{0%{opacity:1;top:-20px}100%{opacity:1;top:105%;margin-left:40px}}
 
-body.photo #hud,body.photo #btns,body.photo #topR,body.photo #stick,body.photo #missions,body.photo #suitBar,body.photo #toast,body.photo #ad,body.photo #altWrap{display:none!important}
+body.photo #hud,body.photo #btns,body.photo #topR,body.photo #stick,body.photo #missions,body.photo #suitBar,body.photo #toast,body.photo #ad,body.photo #altWrap,body.photo #guide,body.photo #gHand{display:none!important}
 #photoUI{position:fixed;left:0;right:0;bottom:10px;z-index:9;display:none;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;padding:0 10px}
 #photoUI .grp{display:flex;gap:6px;background:#fff;border:3.5px solid var(--ink);box-shadow:0 4px 0 var(--ink);border-radius:18px;padding:5px 7px}
 #photoUI button{font-family:inherit;font-weight:800;border:3px solid var(--ink);border-radius:12px;background:#fff7e0;font-size:14px;padding:4px 9px;box-shadow:0 3px 0 var(--ink);cursor:pointer;color:var(--ink)}
@@ -143,6 +143,14 @@ body:not(.playing) #editBtn{display:none!important}
 #tutBox button{font-family:inherit;font-weight:800;border:3px solid var(--ink);border-radius:12px;box-shadow:0 3px 0 var(--ink);padding:3px 10px;cursor:pointer}
 #tutOk{background:#22b573;color:#fff;font-size:16px}
 #tutSkip{background:#fff;font-size:12px;color:var(--ink)}
+#guide{position:fixed;left:10px;top:128px;z-index:9;display:none;align-items:center;gap:8px;max-width:min(430px,44vw);background:#fff;border:3.5px solid var(--ink);box-shadow:0 5px 0 var(--ink);border-radius:18px;padding:5px 8px;font-weight:800;font-size:15px;line-height:1.2;pointer-events:none}
+#guide.pop{animation:pop .4s cubic-bezier(.2,1.6,.4,1)}
+#guide .ava{font-size:30px;animation:bob 1.2s ease-in-out infinite}
+#guideSpk{pointer-events:auto;flex:none;width:44px;height:44px;border-radius:14px;border:3px solid var(--ink);background:#ffd166;box-shadow:0 3px 0 var(--ink);font-size:20px}
+#gHand{position:fixed;z-index:12;font-size:46px;display:none;pointer-events:none;filter:drop-shadow(0 3px 0 rgba(0,0,0,.25));transform:rotate(180deg)}
+.hint{animation:hintPulse .9s ease-in-out infinite!important}
+@keyframes hintPulse{0%,100%{box-shadow:0 0 0 0 #ffd23f,0 4px 0 var(--ink)}50%{box-shadow:0 0 0 10px #ffd23f88,0 4px 0 var(--ink)}}
+body.robiAdOn #missions{top:44px}
 #tutHand{position:fixed;z-index:12;font-size:44px;display:none;pointer-events:none;filter:drop-shadow(0 3px 0 rgba(0,0,0,.25));transform:rotate(180deg)}
 </style>
 </head>
@@ -170,6 +178,7 @@ body:not(.playing) #editBtn{display:none!important}
   <button class="b" id="bJump"><i>⤒</i><span>Zıpla</span></button>
 </div>
 <div id="suitBar"></div>
+<div id="guide"><span class="ava">🤖</span><span id="guideTxt" style="flex:1"></span><button id="guideSpk">🔊</button></div><div id="gHand">👆</div>
 <div id="bossBar">🐉 Ateş Ejderi <span id="bossHp">❤️❤️❤️</span><span class="shb"><i id="bossSh"></i></span>🔥</div>
 <div id="editUI"></div><button id="editBtn">✏️ Düzenle</button>
 <div id="altWrap"><div id="alt"><div id="altFill"></div></div><div id="altTxt"></div></div>
@@ -1730,7 +1739,7 @@ function hurt(from) {
   if (P.inv > 0 || P.spin > 0 || P.dash > 0 || P.pound || moment) return;
   P.hp--; P.inv = 1.4; SFX.hurt(); hud(); AN.ev('hasar:' + WID);
   const d = new THREE.Vector3().subVectors(P.pos, from); d.y = 0; d.normalize(); P.vel.x = d.x * 10; P.vel.z = d.z * 10; P.vel.y = 6;
-  if (P.hp <= 0) { AN.ev('pil_bitti:' + WID); toast('🔋 Robi\'nin pili bitti! Şarj olup başlangıca dönüyor...', 3); P.pos.copy(START); P.vel.set(0, 0, 0); P.hp = 3; P.inv = 2; hud(); }
+  if (P.hp <= 0) { AN.ev('pil_bitti:' + WID); SAY('Ah! Robinin pili bitti. Şarj olup başa dönüyor. Canavarlardan uzak dur!'); toast('🔋 Robi\'nin pili bitti! Şarj olup başlangıca dönüyor...', 3); P.pos.copy(START); P.vel.set(0, 0, 0); P.hp = 3; P.inv = 2; hud(); }
 }
 function killMonster(m) {
   if (!m.alive) return;
@@ -1774,7 +1783,7 @@ function checkMissions() {
   for (const [k, m] of Object.entries(MISSIONS)) if (!m.done && m.check()) {
     m.done = true; changed = true;
     if (LEARN) { setTimeout(() => powerMoment(`${m.e} ${m.label.toUpperCase()} TAMAM!`, 'Harika öğrendin!'), 600); }
-    else if (k !== 'suits') toast(`✅ ${m.e} Görev tamam!`, 3);
+    else if (k !== 'suits') { toast(`✅ ${m.e} Görev tamam!`, 3); SAY('Aferin! Görev tamam!'); G.key = null; G.nextCheck = 3; }
   }
   hud();
   if (changed && Object.values(MISSIONS).filter(m => !m.count || k2(m)).every(m => m.done)) finishWorld();
@@ -1863,7 +1872,7 @@ function tutNext() {
   tut.i++; tut.stepT = 0; tut.jumped = false; tut.powerT = 0;
   if (tut.i >= TUT.length) return tutEnd(true);
   const st = TUT[tut.i];
-  $('tutSay').textContent = st.say; $('tutStep').textContent = `${tut.i + 1}/${TUT.length}`;
+  $('tutSay').textContent = st.say; SAY(st.say); $('tutStep').textContent = `${tut.i + 1}/${TUT.length}`;
   $('tutOk').style.display = st.last ? 'inline-block' : 'none';
   $('tutBox').classList.remove('pop'); void $('tutBox').offsetWidth; $('tutBox').classList.add('pop');
   tone(880, .08, 'triangle', .06); setTimeout(() => tone(1175, .1, 'triangle', .06), 80);
@@ -1881,6 +1890,83 @@ function tutUpdate(dt) {
   else hand.style.display = 'none';
   if (!st.last && tut.stepT > 1 && st.done(tut)) { sparkle(P.pos, '#fff06a', 14); tutNext(); }
 }
+// =============== SESLİ REHBER (okuma bilmeyen çocuklar için) ===============
+const GUIDE_ON = !BUILD && !BAHCE;
+const SAY = t => { try { RO.say && RO.say(t); } catch (e) {} };
+const SUIT_SAY = { blue: 'mavi su kostümü', green: 'yeşil avcı kostümü', red: 'kırmızı ateş kostümü', orange: 'turuncu uçuş kostümü' };
+const ITEM_SAY = { shell: ['deniz kabuklarını', 'Parlayan deniz kabuğuna git, üstünden geç, topla!'], potion: ['sihirli iksirleri', 'Parlayan iksir şişesine git ve topla!'], crystal: ['mavi kristalleri', 'Parlayan mavi kristale git ve topla!'], flag: ['zirvedeki bayrakları', 'Kayalara zıplayarak tırman, bayrağa ulaş! Zıpla düğmesine iki kez bas.'], shard: ['parlayan elmas parçalarını', 'Elmas parçasına git ve topla!'], rocket: ['yakıt tüplerini', 'Yakıt tüpüne git ve topla!'] };
+// 3B ok: Robi'nin ayağında hedefi gösteren sarı ok + hedefin üstünde zıplayan işaret
+const gArrow = new THREE.Group(); { const sh = new THREE.Shape(); [[0, 1.1], [.62, .3], [.24, .3], [.24, -.6], [-.24, -.6], [-.24, .3], [-.62, .3]].forEach((p, i) => i ? sh.lineTo(p[0], p[1]) : sh.moveTo(p[0], p[1])); const m = new THREE.Mesh(new THREE.ShapeGeometry(sh), new THREE.MeshBasicMaterial({ color: '#ffd23f', transparent: true, opacity: .92, depthWrite: false, side: THREE.DoubleSide })); m.rotation.x = -Math.PI / 2; m.position.z = -1.9; const o = new THREE.Mesh(new THREE.ShapeGeometry(sh), new THREE.MeshBasicMaterial({ color: '#2b2340', transparent: true, opacity: .6, depthWrite: false, side: THREE.DoubleSide })); o.rotation.x = -Math.PI / 2; o.position.set(0, -.01, -1.9); o.scale.setScalar(1.18); gArrow.add(o, m); } gArrow.visible = false; scene.add(gArrow);
+const gBeacon = new THREE.Group(); { const c = new THREE.Mesh(new THREE.ConeGeometry(.55, 1.1, 16), new THREE.MeshBasicMaterial({ color: '#ffd23f' })); c.rotation.x = Math.PI; c.name = 'cone'; const beam = new THREE.Mesh(new THREE.CylinderGeometry(.35, .35, 40, 12, 1, true), new THREE.MeshBasicMaterial({ color: '#fff3a0', transparent: true, opacity: .22, blending: THREE.AdditiveBlending, depthWrite: false })); beam.position.y = 20; gBeacon.add(c, beam); } gBeacon.visible = false; scene.add(gBeacon);
+const nearestOf = list => { let b = null, bd = 1e9; for (const o of list) { const d = Math.hypot(o.pos.x - P.pos.x, o.pos.z - P.pos.z); if (d < bd) { bd = d; b = o; } } return b; };
+function needSuit(power, suit) {
+  if (powersList().includes(power)) return currentPower() === power ? null : { key: 'swap_' + power, text: 'Güç değiştir düğmesine bas!', btn: 'bSwap' };
+  const nm = SUIT_SAY[suit];
+  if (ownsSuit(suit)) return { key: 'wear_' + suit, text: `Aşağıdaki ${nm} düğmesine dokun, kostümü giy!`, sb: suit };
+  const ch = nearestOf(suitChests.filter(s => s.alive && s.suit === suit));
+  if (ch) return { key: 'chest_' + suit, text: `Önce ${nm}nü bulmalısın! Sarı ok sandığı gösteriyor. Sandığa koş!`, target: ch.pos };
+  return { key: 'shop_' + suit, text: `Üstteki mağaza düğmesine bas, ${nm}nü al!`, btn: 'shopBtn' };
+}
+function guideStep() {
+  if (TOPLA) {
+    const floor = toys.filter(t => t.state === 'floor');
+    if (carry.length && (carry.length >= 5 || !floor.length)) return { key: 'box', text: 'Oyuncakları büyük oyuncak kutusuna götür!', target: toyBox.pos, near: 'Kutunun yanına gel, oyuncaklar içine girsin!' };
+    const t = nearestOf(floor); return t ? { key: 'toy', text: 'Yerdeki oyuncağa git, üstünden geç, alırsın!', target: t.pos } : null;
+  }
+  for (const [k, m] of Object.entries(MISSIONS)) {
+    if (m.done || m.bonus) continue;
+    if (LEARN) {
+      if (k === 'fire') { const t = nearestOf(monsters.filter(m => m.dummy && m.alive).concat(brambles.filter(b => b.alive))); if (!t) continue; return needSuit('fire', 'red') || { key: 'l_fire', text: 'Kırmızı ateş kostümüyle kuklaları ve dikenleri yak! Sarı oku takip et.', target: t.pos, near: 'Ateş düğmesine basılı tut!', btn: 'bPower' }; }
+      if (k === 'water') { const f = nearestOf(fires.filter(f => f.alive)); if (!f) continue; return needSuit('water', 'blue') || { key: 'l_water', text: 'Mavi su kostümüyle ateşleri söndür! Sarı oku takip et.', target: f.pos, near: 'Su düğmesine basılı tut!', btn: 'bPower' }; }
+      if (k === 'fly') { const r = nearestOf(rings.filter(r => !r.done).concat(stars.filter(s => s.alive))); if (!r) continue; if (SV.suit !== 'orange' && SV.suit !== 'dragon') return { key: 'l_wear_or', text: 'Aşağıdaki turuncu uçuş kostümüne dokun!', sb: 'orange' }; if (!P.flying) return { key: 'l_fly', text: 'Uç düğmesine bas, havalan!', btn: 'bFly' }; return { key: 'l_ring', text: 'Uçarak sarı halkaların içinden geç! Yukarı ve aşağı düğmeleriyle yükseklik seç.', target: r.pos }; }
+      if (k === 'net') { const a = nearestOf(animals.filter(a => a.alive)); if (!a) continue; return needSuit('net', 'green') || { key: 'l_net', text: 'Yeşil avcı kostümüyle hayvanları yakala!', target: a.pos, near: 'Ağ düğmesine bas!', btn: 'bPower' }; }
+      continue;
+    }
+    if (k === 'fire') { const f = nearestOf(fires.filter(f => f.alive)); if (!f) continue; return needSuit('water', 'blue') || { key: 'fire', text: 'Orman yanıyor! Sarı oku takip et, ateşe git!', target: f.pos, near: 'Mavi su düğmesine basılı tut, ateşi söndür!', btn: 'bPower' }; }
+    if (k === 'net') { const a = nearestOf(animals.filter(a => a.alive)); if (!a) continue; return needSuit('net', 'green') || { key: 'net', text: 'Kaçan hayvanı bul! Sarı ok yolu gösteriyor.', target: a.pos, near: 'Ağ düğmesine bas, hayvanı yakala!', btn: 'bPower' }; }
+    if (k === 'ghost') { const g = nearestOf(monsters.filter(m => m.ghost && m.alive)); if (!g) continue; return { key: 'ghost', text: 'Uçan hayaletleri yakala! Sarı oku takip et.', target: g.pos, near: 'Hayalete yaklaş, Dön düğmesine bas!', btn: 'bSpin' }; }
+    if (ITEM_SAY[k]) { const it = nearestOf(itemsOf(k).filter(i => i.alive)); if (!it) continue; return { key: 'item_' + k, text: `Görevin: ${ITEM_SAY[k][0]} topla! ${ITEM_SAY[k][1]}`, target: it.pos, near: k === 'flag' ? 'Zıpla! Havadayken bir daha bas!' : null, btn: k === 'flag' ? 'bJump' : null }; }
+  }
+  return null;
+}
+let G = { key: null, t: 0, saidT: -99, lastD: 1e9, stuckT: 0, near: false, nextCheck: 0 };
+function guideShow(text, btn, sb) {
+  const b = $('guide'); $('guideTxt').textContent = text; b.style.display = 'flex'; b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
+  G.btn = btn || null; G.sb = sb || null;
+}
+function guideSay(text, force) { if (!force && elapsed - G.saidT < 3.5) return; G.saidT = elapsed; SAY(text); }
+function guideUpdate(dt) {
+  if (!GUIDE_ON || !started || tut) { gArrow.visible = gBeacon.visible = false; if (G.key || G.step) { G.key = null; G.step = null; $('guide').style.display = 'none'; $('gHand').style.display = 'none'; } return; }
+  const busy = paused || moment || photo || jelly || won;
+  G.t += dt; G.nextCheck -= dt;
+  if (!busy && G.nextCheck <= 0) {
+    G.nextCheck = .5; const s = guideStep(); G.step = s;
+    if (!s) { if (G.key) { G.key = null; $('guide').style.display = 'none'; } }
+    else if (s.key !== G.key) { G.key = s.key; G.near = false; G.stuckT = 0; G.lastD = 1e9; guideShow(s.text, s.target ? null : s.btn, s.sb); guideSay(s.text, true); }
+    else if (s.target) {
+      const d = Math.hypot(s.target.x - P.pos.x, s.target.z - P.pos.z);
+      if (s.near && d < 7 && !G.near) { G.near = true; guideShow(s.near, s.btn); guideSay(s.near, true); }
+      else if (d > 10 && G.near) { G.near = false; guideShow(s.text, null, s.sb); }
+      if (d < G.lastD - 2) { G.lastD = d; G.stuckT = 0; } else G.stuckT += .5;
+    } else G.stuckT += .5;
+    if (s && G.stuckT > 18) { G.stuckT = 0; G.lastD = 1e9; const t = G.near ? s.near : s.text; guideShow(t, G.near ? s.btn : s.target ? null : s.btn, s.sb); guideSay(t, true); }
+  }
+  const s = G.step;
+  // 3B ok ve işaret
+  if (!busy && s && s.target) {
+    const dx = s.target.x - P.pos.x, dz = s.target.z - P.pos.z, d = Math.hypot(dx, dz);
+    gArrow.visible = d > 3.5; gArrow.position.set(P.pos.x, (P.onGround ? P.pos.y : Math.max(0, P.pos.y - 3)) + .12, P.pos.z); gArrow.rotation.y = Math.atan2(-dx, -dz);
+    const pul = 1 + Math.sin(elapsed * 7) * .12; gArrow.children.forEach(c => c.position.z = -1.9 - Math.sin(elapsed * 7) * .3); gArrow.scale.setScalar(pul);
+    gBeacon.visible = true; gBeacon.position.set(s.target.x, s.target.y + 3.2 + Math.sin(elapsed * 4) * .4, s.target.z); gBeacon.rotation.y += dt * 2;
+  } else { gArrow.visible = false; gBeacon.visible = false; }
+  // ekrandaki el işareti (basılacak düğme ya da kostüm)
+  const hand = $('gHand'); let el = null;
+  if (!busy && s) { if (G.sb) el = document.querySelector(`#suitBar .sb[data-k="${G.sb}"]`); else if (G.btn) el = $(G.btn); }
+  if (el && el.getClientRects().length && getComputedStyle(el).display !== 'none') { const r = el.getBoundingClientRect(); hand.style.display = 'block'; hand.style.left = (r.left + r.width / 2 - 22) + 'px'; hand.style.top = (r.top - 54 + Math.sin(elapsed * 6) * 8) + 'px'; el.classList.add('hint'); if (G.hintEl && G.hintEl !== el) G.hintEl.classList.remove('hint'); G.hintEl = el; }
+  else { hand.style.display = 'none'; if (G.hintEl) { G.hintEl.classList.remove('hint'); G.hintEl = null; } }
+  $('guide').style.visibility = busy ? 'hidden' : 'visible';
+}
+$('guideSpk').addEventListener('pointerdown', e => { e.stopPropagation(); e.preventDefault(); const s = G.step; if (s) SAY(G.near ? s.near : s.text); else SAY('Harika gidiyorsun!'); });
 // =============== SÜPER GÜÇ ANI (sinematik) ===============
 let moment = null;
 const boltGroup = new THREE.Group(); scene.add(boltGroup);
@@ -2002,7 +2088,7 @@ function update(dt) {
     if (s.pos.distanceTo(P.pos) < 1.8) {
       s.alive = false; s.lid.rotation.x = -1.2; s.lid.position.set(0, 1.4, -.5);
       setTimeout(() => scene.remove(s.g), 2500);
-      if (!SV.suits[s.suit]) { SV.suits[s.suit] = true; sticker('suit_' + s.suit); SV.suit = s.suit; powerSel = 0; save(); applyLook(); refreshPowerUI(); buildSuitBar(); neonBurst(SUITS[s.suit].power); powerMoment(`${SUITS[s.suit].e} YENİ KOSTÜM!`, `${SUITS[s.suit].name}: ${SUITS[s.suit].desc}`); checkMissions(); }
+      if (!SV.suits[s.suit]) { SV.suits[s.suit] = true; sticker('suit_' + s.suit); SV.suit = s.suit; powerSel = 0; save(); applyLook(); refreshPowerUI(); buildSuitBar(); neonBurst(SUITS[s.suit].power); powerMoment(`${SUITS[s.suit].e} YENİ KOSTÜM!`, `${SUITS[s.suit].name}: ${SUITS[s.suit].desc}`); SAY(`Yaşasın! Yeni kostüm: ${SUITS[s.suit].name}. ${SUITS[s.suit].desc}`); checkMissions(); }
       else { addGears(15); toast('🎁 Sandıktan 15 dişli çıktı!'); }
     }
   }
@@ -2094,7 +2180,7 @@ function update(dt) {
   }
   if (combo.t > 0) combo.t -= dt;
   if (BUILD && !won) parkurT += dt;
-  updateStickerPop(dt); tutUpdate(dt); updateToys(dt); updateVehicles(dt); updateDragon(dt); updateItems(dt, V(P.pos.x, P.pos.y + .9, P.pos.z));
+  updateStickerPop(dt); tutUpdate(dt); guideUpdate(dt); updateToys(dt); updateVehicles(dt); updateDragon(dt); updateItems(dt, V(P.pos.x, P.pos.y + .9, P.pos.z));
   parentT += dt; if (parentT >= 5) { parentT = 0; const left = RO.tick(5); if (left <= 0) sleepTime(); else if (left <= 60 && !warned) { warned = true; toast('⏰ Robi yakında uyuyacak: 1 dakika kaldı!', 4); } }
   updateNeon(dt);
   if (aimActive() && currentPower()) { aimRing.visible = true; aimRing.position.set(aim.point.x, aim.point.y + .08, aim.point.z); aimRing.material.color.set(POWER[currentPower()].color); const s = 1 + Math.sin(elapsed * 10) * .1; aimRing.scale.set(s, s, s); } else aimRing.visible = false;
@@ -2198,6 +2284,7 @@ $('introText').innerHTML = W_INTRO[WID] ? W_INTRO[WID][1] : BUILD ? '<p>Kendi pa
   ? '<p>Burada bütün kostümleri <b>bedava</b> deneyebilirsin! 4 alanı tamamla, ormana hazır ol.</p><ul><li>🔥 <b>Kırmızı</b>: lav akıt, korkulukları yak</li><li>💧 <b>Mavi</b>: su fışkırt, ateşleri söndür</li><li>🪽 <b>Turuncu</b>: uç, halkalardan geç</li><li>🕸️ <b>Yeşil</b>: ağ at, tavşanları dondur ve topla</li></ul>'
   : '<p>Ormanda yangın var, hayvanlar kaçışıyor! Kostümleri sandıklarda bul ya da dişliyle al.</p><ul><li>🔥 6 yangını söndür (💧 mavi kostüm)</li><li>🐾 8 hayvanı ağla dondur ve topla (🕸️ yeşil)</li><li>👕 4 kostüm sandığını bul (biri pasta evin tepesinde!)</li><li>⚡ Güç topu alınca her kostümde o gücü kullan</li></ul>';
 $('lvlIntro').textContent = `⭐ Seviye ${LVL} · ⚙️ ${SV.gears}`;
+setTimeout(() => { if (!started) SAY((W_INTRO[WID] ? W_INTRO[WID][0] : LEARN ? 'Eğitim Bahçesi' : BUILD ? 'Parkur Atölyesi' : BAHCE ? 'Koruma Bahçesi' : 'Büyülü Orman') + '! Başlamak için yeşil Oyna düğmesine bas.'); }, 700);
 $('start').onclick = () => {
   if (RO.timeLeft() <= 0) { $('intro').style.display = 'none'; started = true; sleepTime(); return; }
   ac(); musicStart();

@@ -22,7 +22,7 @@ function session() {
   mark(); return sess;
 }
 function setScreen(name) {
-  if (!on()) return; if (name === null) { screen = null; dirty = true; flush(); return; } if (!sess) session();
+  if (!on()) return; if (name === null) { if (screen && !scrDone && screen !== 'menu') { const p = P(); p.quits[screen] = (p.quits[screen] || 0) + 1; } screen = null; dirty = true; flush(); return; } if (!sess) session();
   if (screen && screen !== name && !scrDone) { const p = P(); p.quits[screen] = (p.quits[screen] || 0) + 1; }
   screen = name; scrDone = false; if (sess && sess.screens[sess.screens.length - 1] !== name) { sess.screens.push(name); if (sess.screens.length > 40) sess.screens.shift(); } mark();
 }
@@ -54,7 +54,7 @@ function paint() { const [e, t, c] = CREAT[ban.i]; ban.el.style.background = c; 
 function nextCreative() { ban.i = (ban.i + 1) % CREAT.length; paint(); if (on()) { P().ads.bImp++; mark(); } }
 function bannerShow(v) {
   v = !!v && cfg().ads; if (!ban && !v) return; banner(); if (ban.vis === v) return;
-  ban.vis = v; ban.el.style.display = v ? 'flex' : 'none'; if (v && on()) { P().ads.bImp++; ban.t = 0; mark(); }
+  ban.vis = v; ban.el.style.display = v ? 'flex' : 'none'; document.body.classList.toggle('robiAdOn', v); if (v && on()) { P().ads.bImp++; ban.t = 0; mark(); }
 }
 // ---------- reklam test: level arası tam ekran (en geç 5 sn'de kapatılabilir, 3 dk'da en fazla 1) ----------
 let lastInter = +(sessionStorage.getItem('robi_li') || 0);

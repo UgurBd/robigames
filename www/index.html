@@ -182,8 +182,9 @@ function renderWorlds() {
 }
 function launch(w, b) {
   const s = RO.load();
-  if (!isOpen(w, s)) { b.animate([{ transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'none' }], { duration: 300 }); tone(160, .2, 'sawtooth'); return; }
+  if (!isOpen(w, s)) { const prev = WORLDS.find(x => x.id === w.need); RO.say && RO.say(`${w.name} kilitli. Önce ${prev ? prev.name : 'önceki dünyayı'} bitir!`); b.animate([{ transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'none' }], { duration: 300 }); tone(160, .2, 'sawtooth'); return; }
   if (RO.timeLeft() <= 0) { openS('sSleep'); return; }
+  RO.say && RO.say(w.name + '! Hadi gidelim!');
   loading.style.display = 'flex';
   try { const el = document.documentElement; const p = el.requestFullscreen ? el.requestFullscreen() : null; if (p) p.then(() => screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape')).catch(() => {}); } catch (e) {}
   frame.onload = () => { loading.style.display = 'none'; frame.style.display = 'block'; menu.style.display = 'none'; try { frame.contentWindow.focus(); } catch (e) {} };
@@ -200,6 +201,7 @@ function refresh() {
 const AN = window.RobiAnaliz || { screen() {}, resync() {}, interstitial(f) { f(); }, cfg: () => ({}), profiles: () => [], report: () => null };
 AN.screen('menu');
 refresh();
+setTimeout(() => { const s = RO.load(); RO.say && RO.say(!(s.trained || (s.cleared || {}).ogren) ? 'Merhaba! Ben Robi! Önce bir numaralı Eğitim Bahçesine dokun, sana her şeyi öğreteyim!' : 'Merhaba! Hangi dünyaya gitmek istersin? Bir resme dokun!'); }, 900);
 function openS(id) { $(id).style.display = 'flex'; tone(660, .08); }
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => { b.closest('.screen').style.display = 'none'; refresh(); });
 
@@ -259,6 +261,7 @@ function renderParent() {
     <div class="row"><div><b>⏰ Günlük oyun süresi</b><small>Süre bitince Robi uyur, oyun durur</small></div><select id="lim">${[0, 15, 20, 30, 45, 60, 90].map(m => `<option value="${m}" ${p.limit === m ? 'selected' : ''}>${m ? m + ' dk' : 'Sınırsız'}</option>`).join('')}</select></div>
     <div class="row"><div><b>📊 Bugün oynanan</b><small>${p.limit ? `Kalan: ${Math.max(0, Math.ceil(left / 60))} dk` : 'Sınır yok'}</small></div><b>${used} dk</b></div>
     <div class="row"><div><b>➕ Bugüne ek süre</b><small>Ödül olarak 10 dakika ekle</small></div><button class="btn sec" id="bonus">+10 dk</button></div>
+    <div class="row"><div><b>🗣️ Sesli rehber</b><small>Robi görevleri Türkçe sesli anlatır, ok ile yolu gösterir</small></div><button class="btn sec" id="vg">${s.voiceGuide === false ? '🔇 Kapalı' : '🗣️ Açık'}</button></div>
     <div class="row"><div><b>🎵 Müzik</b><small>Oyunlardaki arka plan müziği</small></div><button class="btn sec" id="mus">${s.muted ? '🔇 Kapalı' : '🎵 Açık'}</button></div>
     <div class="row"><div><b>🍬 Jelibon Odası: eşya sayısı</b><small>Çocuk bu kadar oyuncağı toplayınca jelibon hakkı kazanır</small><input type="range" id="roomN" min="1" max="100" value="${p.roomItems || 10}" style="width:100%;accent-color:#ff5ad8"></div><b id="roomV" style="font-size:22px;min-width:44px;text-align:right">${p.roomItems || 10}</b></div>
     <div class="row"><div><b>🍬 Kazanılan jelibon hakları</b><small>Bugün: ${p.jellyToday || 0} · Toplam: ${p.jellyTotal || 0}</small></div><b>🍬</b></div>
@@ -267,6 +270,7 @@ function renderParent() {
     <div class="row" style="border:0"><div><b>🛒 Satın almalar</b><small>Oyunda sadece oyun içi dişli harcanır, gerçek para yoktur.</small></div><b>✅</b></div>`;
   $('lim').onchange = e => { RO.setParent({ limit: +e.target.value }); renderParent(); };
   $('bonus').onclick = () => { RO.setParent({ bonus: (RO.parent().bonus || 0) + 10 }); renderParent(); };
+  $('vg').onclick = () => { const s2 = RO.load(); s2.voiceGuide = s2.voiceGuide === false; RO.store(s2); renderParent(); };
   $('mus').onclick = () => { const s2 = RO.load(); s2.muted = !s2.muted; RO.store(s2); renderParent(); };
   $('roomN').oninput = e => { $('roomV').textContent = e.target.value; }; $('roomN').onchange = e => RO.setParent({ roomItems: +e.target.value });
   $('anBtn').onclick = renderAnaliz;
