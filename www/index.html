@@ -22,7 +22,7 @@ h1{margin:2px 0 0;font-size:clamp(24px,5.5vh,38px);line-height:1;color:#ffd166;-
 .tool.has .dot{display:block;animation:pulse 1s infinite}
 @keyframes pulse{50%{transform:scale(1.25)}}
 .tool.parent{background:#e9e5f2;width:40px;height:40px;font-size:18px;border-radius:12px;align-self:center}
-.worlds{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:6px 4px 12px;max-width:calc(100vw - 170px);align-items:stretch}
+.worlds{display:flex;gap:10px;overflow-x:auto;touch-action:pan-y;overscroll-behavior-x:contain;cursor:grab;padding:6px 4px 12px;max-width:calc(100vw - 170px);align-items:stretch}
 .worlds::-webkit-scrollbar{height:8px}.worlds::-webkit-scrollbar-thumb{background:#2b2340;border-radius:4px}
 .world{flex:none;width:150px;scroll-snap-align:start;border:3.5px solid var(--ink);border-radius:18px;padding:0;overflow:hidden;background:#fff;box-shadow:0 5px 0 var(--ink);font-family:inherit;text-align:left;cursor:pointer;color:var(--ink);display:flex;flex-direction:column;position:relative}
 .world .num{position:absolute;top:6px;left:6px;background:#2b2340;color:#fff;border-radius:8px;font-size:12px;font-weight:800;padding:0 7px;z-index:1}
@@ -190,8 +190,25 @@ function renderWorlds() {
   const s = RO.load(), c = s.cleared || {};
   if (s.trained) c.ogren = true;
   $('worlds').innerHTML = WORLDS.map(w => { const open = isOpen(w, s), done = c[w.id]; const prev = WORLDS.find(x => x.id === w.need); return `<button class="world ${w.cls} ${open ? '' : 'locked'}" data-id="${w.id}">${w.step ? `<span class="num">${w.step}</span>` : ''}${done ? '<span class="ok">✅</span>' : ''}<div class="art">${w.art}</div><div class="wt"><b>${w.name}</b><small>${open ? w.sub : '🔒 Önce: ' + prev.name}</small><span class="play">${open ? '▶ Oyna' : '🔒 Kilitli'}</span></div></button>`; }).join('');
-  $('worlds').querySelectorAll('.world').forEach(b => b.onclick = () => launch(WORLDS.find(w => w.id === b.dataset.id), b));
+  $('worlds').querySelectorAll('.world').forEach(b => b.onclick = () => { if (WDRAG.moved) return; launch(WORLDS.find(w => w.id === b.dataset.id), b); });
 }
+// Oyun kartlarını parmakla sağa-sola kaydırma (her cihazda aynı çalışsın diye kendi kaydırmamız + atalet)
+const WDRAG = { on: false, moved: false, x: 0, sl: 0, v: 0, lx: 0, lt: 0, raf: 0 };
+(function () {
+  const el = $('worlds');
+  el.addEventListener('pointerdown', e => { cancelAnimationFrame(WDRAG.raf); Object.assign(WDRAG, { on: true, moved: false, x: e.clientX, sl: el.scrollLeft, v: 0, lx: e.clientX, lt: performance.now(), id: e.pointerId }); });
+  addEventListener('pointermove', e => {
+    if (!WDRAG.on || e.pointerId !== WDRAG.id) return;
+    const dx = e.clientX - WDRAG.x;
+    if (!WDRAG.moved && Math.abs(dx) > 8) { WDRAG.moved = true; try { el.setPointerCapture(e.pointerId); } catch (x) {} }
+    if (WDRAG.moved) { el.scrollLeft = WDRAG.sl - dx; const t = performance.now(), dt = Math.max(1, t - WDRAG.lt); WDRAG.v = WDRAG.v * .6 + ((WDRAG.lx - e.clientX) / dt) * .4; WDRAG.lx = e.clientX; WDRAG.lt = t; }
+  });
+  const up = e => {
+    if (!WDRAG.on || (e && e.pointerId !== WDRAG.id)) return; WDRAG.on = false;
+    if (WDRAG.moved) { let v = WDRAG.v * 16; const glide = () => { el.scrollLeft += v; v *= .94; if (Math.abs(v) > .5) WDRAG.raf = requestAnimationFrame(glide); }; glide(); setTimeout(() => { WDRAG.moved = false; }, 60); }
+  };
+  addEventListener('pointerup', up); addEventListener('pointercancel', up);
+})();
 function launch(w, b) {
   const s = RO.load();
   if (!isOpen(w, s)) { const prev = WORLDS.find(x => x.id === w.need); RO.say && RO.say(`${w.name} kilitli. Önce ${prev ? prev.name : 'önceki dünyayı'} bitir!`); b.animate([{ transform: 'translateX(-6px)' }, { transform: 'translateX(6px)' }, { transform: 'none' }], { duration: 300 }); tone(160, .2, 'sawtooth'); return; }
