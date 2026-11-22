@@ -183,6 +183,7 @@ body.iAmEbe::after{content:'';position:fixed;inset:0;pointer-events:none;z-index
   .screen .box .go{padding-top:7px;padding-bottom:7px;font-size:16px}
   .screen .box h1{font-size:24px;margin:2px 0}
 }
+.jss{font:800 15px inherit;border:3px solid var(--ink);border-radius:12px;background:#fff;margin:2px;padding:2px 8px}.jss.on{background:#ffd166}
 #tutHand{position:fixed;z-index:12;font-size:44px;display:none;pointer-events:none;filter:drop-shadow(0 3px 0 rgba(0,0,0,.25));transform:rotate(180deg)}
 </style>
 </head>
@@ -279,12 +280,12 @@ body.iAmEbe::after{content:'';position:fixed;inset:0;pointer-events:none;z-index
 const LEARN = location.hash === '#ogren';
 const BAHCE = location.hash === '#bahce';
 const BUILD = location.hash === '#tasarla' || /^#net-(arena|ebe|parkur)-/.test(location.hash);
-const NETH = (location.hash || '').match(/^#net-(orman|arena|ebe|parkur)-(\d{5})(?:-([SML])(\d))?(-a)?$/), NETMODE = NETH ? NETH[1] : null, NETSIZE = NETH && NETH[3] || 'S', NETBOTS = NETH ? +(NETH[4] || 0) : 0;
-const WID = NETMODE ? (NETMODE === 'orman' ? 'orman' : 'tasarla') : (location.hash || '#orman').slice(1);
-const NETFX = { stuck: 0, wet: 0, burn: 0, big: 0, inv: 0 };
+const NETH = (location.hash || '').match(/^#net-(orman|arena|ebe|parkur|jeli)-(\d{5}|solo)(?:-([SML])(\d))?(-a)?$/), NETMODE = NETH ? NETH[1] : null, NETSIZE = NETH && NETH[3] || 'S', NETBOTS = NETH ? +(NETH[4] || 0) : 0;
+const WID = NETMODE ? (NETMODE === 'orman' ? 'orman' : NETMODE === 'jeli' ? 'jeli' : 'tasarla') : (location.hash || '#orman').slice(1);
+const NETFX = { stuck: 0, wet: 0, burn: 0, big: 0, inv: 0, bub: 0, melt: 0, pool: 0 };
 const AN = window.RobiAnaliz || { screen() {}, done() {}, ev() {}, btn() {}, bannerShow() {}, interstitial(f) { f && f(); } };
 AN.screen(NETMODE ? 'cok:' + NETMODE : 'macera:' + WID);
-const TOPLA = WID === 'toplama';
+const TOPLA = WID === 'toplama', JELI = WID === 'jeli';
 const DENIZ = WID === 'deniz', OKUL = WID === 'okul', UCURUM = WID === 'ucurum', UZAY = WID === 'uzay';
 const VOID = UCURUM || UZAY, GMUL = UZAY ? .42 : 1;
 const WNAME = { ogren: 'Eğitim Bahçesi', orman: 'Büyülü Orman', bahce: 'Koruma Bahçesi', tasarla: 'Parkur Atölyesi', deniz: 'Deniz Kenarı', okul: 'Sihirli Okul', ucurum: 'Uçurum', uzay: 'Uzay' };
@@ -409,7 +410,7 @@ const canvas = $('c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(TOPLA ? '#ffe9d6' : LEARN ? '#a8e0ff' : BAHCE ? '#ffe3f1' : BUILD ? '#bde0ff' : DENIZ ? '#8fdcff' : OKUL ? '#cbb6ff' : UCURUM ? '#a9d6ff' : UZAY ? '#0b0b2e' : '#9fd8ff');
+scene.background = new THREE.Color(JELI ? '#ffd9ef' : TOPLA ? '#ffe9d6' : LEARN ? '#a8e0ff' : BAHCE ? '#ffe3f1' : BUILD ? '#bde0ff' : DENIZ ? '#8fdcff' : OKUL ? '#cbb6ff' : UCURUM ? '#a9d6ff' : UZAY ? '#0b0b2e' : '#9fd8ff');
 scene.fog = new THREE.Fog(scene.background, UZAY ? 120 : UCURUM ? 70 : 55, UZAY ? 300 : UCURUM ? 170 : 130);
 const camera = new THREE.PerspectiveCamera(60, 1, .1, UZAY ? 600 : 300);
 scene.add(new THREE.HemisphereLight('#ffffff', '#6aa84f', .85));
@@ -422,7 +423,7 @@ const mat = c => mats[c] || (mats[c] = new THREE.MeshLambertMaterial({ color: c 
 const emissive = c => new THREE.MeshBasicMaterial({ color: c });
 let seed = 7;
 const rnd = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
-const W = LEARN ? 34 : BAHCE ? 26 : BUILD ? (NETSIZE === 'L' ? 38 : NETSIZE === 'M' ? 26 : 16) : TOPLA ? 14 : DENIZ ? 40 : OKUL ? 34 : UCURUM ? 40 : UZAY ? 44 : 68;
+const W = JELI ? (NETSIZE === 'L' ? 40 : NETSIZE === 'M' ? 30 : 20) : LEARN ? 34 : BAHCE ? 26 : BUILD ? (NETSIZE === 'L' ? 38 : NETSIZE === 'M' ? 26 : 16) : TOPLA ? 14 : DENIZ ? 40 : OKUL ? 34 : UCURUM ? 40 : UZAY ? 44 : 68;
 const colliders = [];
 function box(x0, y0, z0, x1, y1, z1, color, opt = {}) {
   let mesh = null;
@@ -926,9 +927,45 @@ function buildBuilder() {
   rebuildParkur();
   MISSIONS = { star: { e: '⭐', label: 'Bitiş yıldızı', done: false, check: () => stars.length > 0 && stars.every(s => !s.alive) } };
 }
+// =============== JELİBON ARENASI ===============
+const JLC = ['#ff4f8b', '#ffb020', '#22c55e', '#2e8bff', '#a259ff', '#ff7ad9', '#2bd4c4', '#ffe14d'];
+const JLN = { '#ff4f8b': 'kırmızı', '#ffb020': 'turuncu', '#22c55e': 'yeşil', '#2e8bff': 'mavi', '#a259ff': 'mor', '#ff7ad9': 'pembe', '#2bd4c4': 'turkuaz', '#ffe14d': 'sarı' };
+const glsM = {}; const jglass = (c, o = .78) => glsM[c + o] || (glsM[c + o] = new THREE.MeshPhysicalMaterial({ color: c, transparent: true, opacity: o, roughness: .08, metalness: 0, clearcoat: 1, clearcoatRoughness: .05, emissive: c, emissiveIntensity: .18 }));
+function jBean(c, s = 1) { const g = new THREE.Group(); const m = new THREE.Mesh(new THREE.CapsuleGeometry(.32 * s, .5 * s, 8, 14), jglass(c)); m.rotation.z = Math.PI / 2; g.add(m); const hl = new THREE.Mesh(new THREE.SphereGeometry(.09 * s, 8, 6), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: .85 })); hl.position.set(-.18 * s, .18 * s, .22 * s); g.add(hl); return g; }
+let jPool = null; const jBeans = [], jCones = [];
+function buildJeli() {
+  START = new THREE.Vector3(0, 0, 10);
+  const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'); x.fillStyle = '#ffe6f3'; x.fillRect(0, 0, 128, 128); [['#ffc2e2', 24, 24], ['#c9f0ff', 88, 40], ['#fff0b3', 40, 92], ['#d9ccff', 100, 100]].forEach(([cc, a, b]) => { x.fillStyle = cc; x.beginPath(); x.arc(a, b, 14, 0, 7); x.fill(); });
+  const tex = new THREE.CanvasTexture(c); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(W / 3, W / 3);
+  const gr = new THREE.Mesh(new THREE.PlaneGeometry(W * 2 + 20, W * 2 + 20), new THREE.MeshLambertMaterial({ map: tex })); gr.rotation.x = -Math.PI / 2; gr.position.y = .01; scene.add(gr);
+  // şeker sınır çubukları
+  for (let i = -W; i <= W; i += 3) [[i, -W], [i, W], [-W, i], [W, i]].forEach(([a, b], k) => { const p = add(new THREE.CylinderGeometry(.25, .25, 1.6, 10), null, a, .8, b, jglass(JLC[(Math.abs(i) + k) % 8], .9)); });
+  // jelibon havuzu
+  jPool = add(new THREE.CylinderGeometry(6, 6.2, .5, 40), null, 0, .25, -6, jglass('#ff7ad9', .6)); add(new THREE.TorusGeometry(6.1, .35, 10, 40), null, 0, .5, -6, jglass('#ffffff', .9)).rotation.x = Math.PI / 2;
+  for (let i = 0; i < 14; i++) { const b = jBean(JLC[i % 8], .7); b.position.set(Math.cos(i) * 4.5 * Math.random(), .55, -6 + Math.sin(i * 2) * 4 * Math.random()); b.rotation.y = i; scene.add(b); }
+  // jöle tepeler (engeller) ve lolipop / şeker ağaçları
+  let sd = 77; const rr = () => { sd = (sd * 1103515245 + 12345) % 2147483648; return sd / 2147483648; };
+  const nH = NETSIZE === 'L' ? 22 : NETSIZE === 'M' ? 14 : 8;
+  for (let i = 0; i < nH; i++) {
+    let px, pz, t = 0; do { px = (rr() * 2 - 1) * (W - 4); pz = (rr() * 2 - 1) * (W - 4); t++; } while ((Math.hypot(px, pz + 6) < 9 || Math.hypot(px, pz - 10) < 5) && t < 30);
+    const r = 1.4 + rr() * 1.6, col = JLC[i % 8]; const d = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 14, 0, Math.PI * 2, 0, Math.PI / 2), jglass(col, .82)); d.position.set(px, 0, pz); d.scale.y = 1.2; scene.add(d);
+    colliders.push({ x0: px - r * .7, y0: 0, z0: pz - r * .7, x1: px + r * .7, y1: r * 1.1, z1: pz + r * .7 });
+    if (i % 2) { const lx = px + r + 2, lz = pz; const st = add(new THREE.CylinderGeometry(.12, .12, 3, 8), '#ffffff', lx, 1.5, lz); const lp = add(new THREE.CylinderGeometry(1, 1, .25, 24), null, lx, 3.2, lz, jglass(JLC[(i + 3) % 8], .9)); lp.rotation.x = Math.PI / 2; }
+  }
+  // dev dekor jelibonlar
+  for (let i = 0; i < 6; i++) { const b = jBean(JLC[(i * 3) % 8], 3); const a = i / 6 * Math.PI * 2; b.position.set(Math.cos(a) * (W + 6), 2, Math.sin(a) * (W + 6)); b.rotation.set(.3, a, .5); scene.add(b); }
+  // renk görevi için havada süzülen jelibonlar
+  for (let i = 0; i < 16; i++) { const a = rr() * 6.28, r = 4 + rr() * (W - 7); const col = JLC[i % 8]; const b = jBean(col, 1.1); const p = V(Math.cos(a) * r, 1.6 + rr() * 2, Math.sin(a) * r); b.position.copy(p); scene.add(b); jBeans.push({ g: b, col, p, alive: true, t: rr() * 6, back: 0 }); }
+  // dondurma tabancası kutuları
+  [[-W + 6, -W + 6], [W - 6, W - 6], [W - 6, -W + 6], [-W + 6, W - 6]].forEach(([a, b]) => { const g = new THREE.Group(); const cone = new THREE.Mesh(new THREE.ConeGeometry(.35, .9, 12), mat('#e0a95a')); cone.rotation.x = Math.PI; g.add(cone); const s1 = new THREE.Mesh(new THREE.SphereGeometry(.4, 14, 10), jglass('#ffd1e8', .95)); s1.position.y = .6; g.add(s1); const s2 = new THREE.Mesh(new THREE.SphereGeometry(.33, 14, 10), jglass('#c9f0ff', .95)); s2.position.y = 1; g.add(s2); g.position.set(a, 1.4, b); scene.add(g); const ped = add(new THREE.CylinderGeometry(.9, 1, .5, 20), null, a, .25, b, jglass('#ffffff', .85)); jCones.push({ g, p: V(a, 1.4, b), alive: true, t: 0 }); });
+  // araçlar
+  const vk = NETSIZE === 'L' ? ['car', 'moto', 'horse', 'skate', 'carpet', 'tractor'] : NETSIZE === 'M' ? ['car', 'moto', 'horse', 'skate'] : ['moto', 'skate'];
+  vk.forEach((k, i) => { const a = i / vk.length * Math.PI * 2 + .7, r = Math.min(W - 5, 14); vehicle(k, Math.cos(a) * r, Math.sin(a) * r, 0, -a); });
+  MISSIONS = {};
+}
 // birlikte oyun alanı: oda koduna göre herkeste aynı ek engeller ve araçlar
 function netArena() {
-  let sd = +NETH[2]; const rr = () => { sd = (sd * 1103515245 + 12345) % 2147483648; return sd / 2147483648; };
+  let sd = +NETH[2] || 12345; const rr = () => { sd = (sd * 1103515245 + 12345) % 2147483648; return sd / 2147483648; };
   const inner = 15, half = W - 3, BCOL = ['#ff7a2f', '#2e8bff', '#22b573', '#a259ff', '#ffd166'];
   const n = NETSIZE === 'L' ? 34 : NETSIZE === 'M' ? 16 : 0;
   for (let i = 0; i < n; i++) {
@@ -1296,7 +1333,7 @@ function buildForest() {
     suits: { e: '👕', label: 'Kostüm', count: true, bonus: true, done: false, check: () => ['red', 'blue', 'orange', 'green'].every(k => SV.suits[k]), n: () => `${['red', 'blue', 'orange', 'green'].filter(k => SV.suits[k]).length}/4` },
   };
 }
-TOPLA ? buildToplama() : BUILD ? buildBuilder() : BAHCE ? buildBahce() : LEARN ? buildLearn() : DENIZ ? buildDeniz() : OKUL ? buildOkul() : UCURUM ? buildUcurum() : UZAY ? buildUzay() : buildForest();
+JELI ? buildJeli() : TOPLA ? buildToplama() : BUILD ? buildBuilder() : BAHCE ? buildBahce() : LEARN ? buildLearn() : DENIZ ? buildDeniz() : OKUL ? buildOkul() : UCURUM ? buildUcurum() : UZAY ? buildUzay() : buildForest();
 if (NETMODE === 'arena' || NETMODE === 'ebe') MISSIONS = {};
 
 // =============== ROBİ ===============
@@ -1649,13 +1686,13 @@ let flapT = 0;
 function movePlayer(dt) {
   let ix = joy.x, iz = joy.y;
   if (keys.KeyA || keys.ArrowLeft) ix = -1; if (keys.KeyD || keys.ArrowRight) ix = 1; if (keys.KeyW || keys.ArrowUp) iz = -1; if (keys.KeyS || keys.ArrowDown) iz = 1;
-  if (NETFX.stuck > 0) { ix = 0; iz = 0; input.jump = false; }
+  if (NETFX.stuck > 0 || NETFX.bub > 0 || NETFX.melt > 0) { ix = 0; iz = 0; input.jump = false; }
   if (NETFX.burn > 0) { ix = Math.sin(elapsed * 2.3) * .9; iz = Math.cos(elapsed * 1.7) * .9; if (P.onGround && Math.random() < .06) input.jump = true; }
   const il = Math.hypot(ix, iz); if (il > 1) { ix /= il; iz /= il; }
   const s = Math.sin(camYaw), c = Math.cos(camYaw), wx = ix * c + iz * s, wz = -ix * s + iz * c;
   const flying = canFly();
   const RV = riding ? VEH[riding.kind] : null;
-  const SPEED = (RV ? RV.speed : 7.5) * speedMul() * (flying && !P.onGround && !RV ? 1.25 : 1) * (NETFX.wet > 0 ? .55 : 1) * (NETFX.burn > 0 ? 1.4 : 1);
+  const SPEED = (RV ? RV.speed : 7.5) * speedMul() * (flying && !P.onGround && !RV ? 1.25 : 1) * (NETFX.wet > 0 ? .55 : 1) * (NETFX.burn > 0 ? 1.4 : 1) * (NETFX.pool ? .6 : 1);
   const acc = RV ? RV.acc : P.onGround ? 14 : (flying ? 9 : 6);
   P.vel.x += (wx * SPEED - P.vel.x) * Math.min(1, acc * dt); P.vel.z += (wz * SPEED - P.vel.z) * Math.min(1, acc * dt);
   if (Math.hypot(wx, wz) > .1 && !(input.powerHeld && currentPower())) { const tgt = Math.atan2(wx, wz); let d = tgt - P.yaw; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; P.yaw += d * Math.min(1, 12 * dt); }
@@ -1723,7 +1760,7 @@ function poundImpact() {
 // =============== GÜÇLER: ATEŞ AKIŞI, SU, AĞ ===============
 const nets = [], joyBalls = [];
 const netTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); g.strokeStyle = '#ffffff'; g.lineWidth = 3; for (let i = 0; i <= 64; i += 10) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i, 64); g.stroke(); g.beginPath(); g.moveTo(0, i); g.lineTo(64, i); g.stroke(); } return new THREE.CanvasTexture(c); })();
-function netTargets() { if (!NET || NETMODE === 'orman') return []; return Object.values(NET.players).map(r => ({ pos: r.pos, alive: true })); }
+function netTargets() { if (!NET || NETMODE === 'orman') return []; return Object.values(NET.players).map(r => ({ pos: r.pos, alive: true })).concat((NET.bots || []).filter(b => !(b.dead > 0) && !b.deadV).map(b => ({ pos: b.pos, alive: true }))); }
 function aimTarget(list, range) {
   let best = null, bd = 1e9; const fx_ = Math.sin(P.yaw), fz = Math.cos(P.yaw);
   for (const t of list) { if (!t.alive || t.frozen === true) continue; const dx = t.pos.x - P.pos.x, dz = t.pos.z - P.pos.z, d = Math.hypot(dx, dz); if (d > range || d < .1) continue; const dot = (dx * fx_ + dz * fz) / d; if (dot < .5) continue; const sc = d * (2 - dot); if (sc < bd) { bd = sc; best = t; } }
@@ -2095,7 +2132,7 @@ if (NETMODE) (function () {
   const RN = window.RobiNet || { AV: ['🐶', '🐱', '🐰', '🦊', '🐼', '🐸'], COL: ['#ff5a5a', '#2e8bff', '#22b573', '#ffb020', '#a259ff', '#ff5ad8'], MODES: {} };
   const code = NETH[2], SERVER = window.ROBI_SERVER || 'https://robi-oda.robigames.workers.dev';
   const N = NET = { code, mode: NETMODE, ws: null, me: -1, players: {}, score: {}, wins: {}, ebe: -1, ebeT: 0, sendT: 0, ok: false, retry: 0, roundT: 0, finish: [], hitCd: 0, dead: 0, ended: false };
-  const WIN = 5, PVP = NETMODE === 'arena' || NETMODE === 'ebe';
+  const WIN = NETMODE === 'jeli' ? 7 : 5, PVP = NETMODE === 'arena' || NETMODE === 'ebe' || NETMODE === 'jeli';
   const coop = NETMODE === 'orman'; window.__net = N; N.fx = NETFX;
   N.look = () => netSend({ t: 'look', suit: SV.suit, ch: SV.char || 'robi' });
   // ---------- uzak oyuncu modeli ----------
@@ -2136,9 +2173,10 @@ if (NETMODE) (function () {
       N.me = m.me.slot; N.ok = true; N.admitted = true; N.info[N.me] = { av: m.me.av, name: m.me.name, pid: m.me.pid }; if ($('netWait')) $('netWait').remove(); Object.keys(N.players).forEach(dropRemote);
       for (const p of m.peers) N.players[p.slot] = makeRemote(p);
       P.pos.set(START.x + (N.me - 2.5) * 1.5, START.y, START.z);
-      if (!coop) { if (m.layout) { layout = m.layout; rebuildParkur(); } else if (isHost()) netSend({ t: 'layout', layout }); }
+      if (BUILD) { if (m.layout) { layout = m.layout; rebuildParkur(); } else if (isHost()) netSend({ t: 'layout', layout }); }
       if (NETMODE === 'ebe' && isHost() && N.ebe < 0) setEbe(N.me, true);
-      if (PVP) { for (const k of ['fire', 'water', 'net', 'joy']) orbActive[k] = 1e9; spawnBalls(); refreshPowerUI(); }
+      if (PVP && NETMODE !== 'jeli') { for (const k of ['fire', 'water', 'net', 'joy']) orbActive[k] = 1e9; spawnBalls(); refreshPowerUI(); }
+      if (NETMODE === 'jeli') { $('bThrow').style.display = 'flex'; thrBtn(); }
       SFX.join(); joinFx(P.pos, RN.COL[N.me]); refreshLabels();
       hudNet(); toast(`🔑 Oda ${code} · ${avOf(N.me)} ${nameOf(N.me)}`, 3); SAY(`Odaya girdin! Hoş geldin ${nameOf(N.me)}!`);
     }
@@ -2173,11 +2211,12 @@ if (NETMODE) (function () {
     else if (m.t === 'shot' && m.by) remoteShot(m.by, m);
     else if (m.t === 'shot' && r) remoteShot(s, m);
     else if (m.t === 'bots') botRecv(m.b);
+    else if (m.t === 'pickC') takeCone(m.i, false);
     else if (m.t === 'hit') { N.score[m.by] = (N.score[m.by] || 0) + 1; const hr = N.players[m.v] || bots.find(b => b.id === m.v); if (hr) hitFx(hr.g.position, m.k); if (m.by === N.me) { SFX.giggle(); toast(`🎯 İsabet! ${N.score[N.me]}/${WIN}`, 1.4); } hudNet(); refreshLabels(); checkWin(); }
     else if (m.t === 'poof' && r) { SFX.poof(); hitFx(r.pos, 'poof'); }
     else if (m.t === 'pick') takeBall(m.i, false);
     else if (m.t === 'ebe') setEbe(m.s);
-    else if (m.t === 'layout' && !coop) { layout = m.layout; rebuildParkur(); P.pos.set(START.x + (N.me - 2.5) * 1.5, START.y, START.z); won = false; parkurT = 0; N.finish = []; toast('🧱 Yeni parkur geldi!', 2.5); SAY('Yeni parkur hazır!'); }
+    else if (m.t === 'layout' && BUILD) { layout = m.layout; rebuildParkur(); P.pos.set(START.x + (N.me - 2.5) * 1.5, START.y, START.z); won = false; parkurT = 0; N.finish = []; toast('🧱 Yeni parkur geldi!', 2.5); SAY('Yeni parkur hazır!'); }
     else if (m.t === 'restart') restartRound();
     else if (m.t === 'fin' && m.bot) { N.finish.push(m.bot); hudNet(); }
     else if (m.t === 'fin') { N.finish.push(s); toast(`🏁 ${avOf(s)} bitirdi! ${N.finish.length}.`, 2.5); hudNet(); }
@@ -2186,8 +2225,9 @@ if (NETMODE) (function () {
   const rshots = [];
   N.shot = (k, o, v) => netSend({ t: 'shot', k, o: [o.x, o.y, o.z].map(n => +n.toFixed(2)), v: [v.x, v.y, v.z].map(n => +n.toFixed(2)) });
   function remoteShot(s, m) {
+    N.rsN = (N.rsN || 0) + 1;
     const o = V(...m.o), v = V(...m.v);
-    const mesh = m.k === 'ball' ? new THREE.Mesh(new THREE.SphereGeometry(.3, 12, 8), new THREE.MeshLambertMaterial({ color: '#ffd166', emissive: '#ff8a00', emissiveIntensity: .3 })) : m.k === 'net' ? new THREE.Mesh(new THREE.SphereGeometry(.6, 10, 8), new THREE.MeshBasicMaterial({ map: netTex, transparent: true, side: THREE.DoubleSide, depthWrite: false })) : new THREE.Mesh(new THREE.SphereGeometry(.22, 10, 8), new THREE.MeshLambertMaterial({ color: '#ff5ad8', emissive: '#ff5ad8', emissiveIntensity: .4 }));
+    const mesh = (m.k === 'jelly' || m.k === 'ice') ? N.projMesh(m.k) : m.k === 'ball' ? new THREE.Mesh(new THREE.SphereGeometry(.3, 12, 8), new THREE.MeshLambertMaterial({ color: '#ffd166', emissive: '#ff8a00', emissiveIntensity: .3 })) : m.k === 'net' ? new THREE.Mesh(new THREE.SphereGeometry(.6, 10, 8), new THREE.MeshBasicMaterial({ map: netTex, transparent: true, side: THREE.DoubleSide, depthWrite: false })) : new THREE.Mesh(new THREE.SphereGeometry(.22, 10, 8), new THREE.MeshLambertMaterial({ color: '#ff5ad8', emissive: '#ff5ad8', emissiveIntensity: .4 }));
     mesh.position.copy(o); scene.add(mesh); rshots.push({ s, k: m.k, mesh, v, life: 2.2 });
   }
   function canBeHit() { return !coop && NETMODE !== 'parkur' && NETFX.inv <= 0 && N.dead <= 0 && !moment && !N.ended; }
@@ -2198,9 +2238,12 @@ if (NETMODE) (function () {
     if (k === 'fire') { NETFX.burn = 2.2; toast('🔥 Popon tutuştu! Koş koş!', 1.8); }
     if (k === 'joy') { NETFX.big = 2.5; toast('🎈 Kocaman oldun!', 1.8); }
     if (k === 'ball') { NETFX.stuck = .6; P.vel.y = 7; SFX.bonk(); toast('🎾 Top çarptı! Bonk!', 1.4); }
+    if (k === 'jelly') { NETFX.bub = 3; NETFX.inv = 4.2; toast('🍬 Jelibonun içinde uçuyorsun! 3 saniye...', 2); SAY('Jelibona yakalandın!'); }
+    if (k === 'ice') { NETFX.melt = 3; NETFX.inv = 4.5; toast('🍦 Dondurma gibi eridin! 3 saniye...', 2); SAY('Eridin! Hemen geri geliyorsun!'); }
     SFX.hurt(); hitFx(P.pos, k); N.score[by] = (N.score[by] || 0) + 1;
     netSend({ t: 'hit', by, v: N.me, k }); hudNet(); refreshLabels();
     if (NETMODE === 'arena') { P.hp = Math.max(0, P.hp - 1); hud(); if (P.hp <= 0) poof(); }
+    if (NETMODE === 'jeli') { SFX.giggle(); }
     checkWin();
     if (NETMODE === 'ebe' && by === N.ebe && k === 'net') setEbe(N.me, true);
   }
@@ -2209,9 +2252,9 @@ if (NETMODE) (function () {
     N.dead = 1.1; SFX.poof(); hitFx(P.pos, 'poof'); robi.visible = false; netSend({ t: 'poof' }); toast('💫 Puf! Hemen geri geliyorsun...', 1.2);
     setTimeout(() => { const a = Math.random() * 6.28; P.pos.set(Math.cos(a) * 8, 2, Math.sin(a) * 8); P.vel.set(0, 0, 0); P.hp = 3; hud(); robi.visible = true; NETFX.inv = 2; SFX.revive(); joinFx(P.pos, RN.COL[N.me]); }, 1100);
   }
-  function checkWin() { if (NETMODE !== 'arena' || N.ended) return; const w = Object.entries(N.score).find(([k, v]) => k[0] !== 'e' && v >= WIN); if (w) { const id = isNaN(w[0]) ? w[0] : +w[0]; N.wins[id] = (N.wins[id] || 0) + 1; endRound(id); } }
+  function checkWin() { if ((NETMODE !== 'arena' && NETMODE !== 'jeli') || N.ended) return; const w = Object.entries(N.score).find(([k, v]) => k[0] !== 'e' && v >= WIN); if (w) { const id = isNaN(w[0]) ? w[0] : +w[0]; N.wins[id] = (N.wins[id] || 0) + 1; endRound(id); } }
   function hitFx(p, k) {
-    const col = { net: '#b9ffb0', water: '#7fd0ff', fire: '#ff8a00', joy: '#ff5ad8', ball: '#ffd166', poof: '#ffffff' }[k] || '#fff';
+    const col = { net: '#b9ffb0', water: '#7fd0ff', fire: '#ff8a00', joy: '#ff5ad8', ball: '#ffd166', poof: '#ffffff', jelly: '#ff7ad9', ice: '#c9f0ff' }[k] || '#fff';
     for (let i = 0; i < 18; i++) fx({ pos: V(p.x, p.y + 1, p.z), vel: V((Math.random() - .5) * 5, 2 + Math.random() * 4, (Math.random() - .5) * 5), life: .8, size: .35, size2: 0, color: col, add: true });
   }
   // ---------- yerden alınıp atılan toplar ----------
@@ -2222,21 +2265,85 @@ if (NETMODE) (function () {
     $('bThrow').style.display = 'flex';
   }
   function takeBall(i, mine) { const b = balls[i]; if (!b || !b.alive) return; b.alive = false; b.m.visible = false; b.t = 7; if (mine) { carry++; SFX.gear(); toast(`🎾 Top aldın! (${carry}) Sağdaki At düğmesine bas`, 1.6); netSend({ t: 'pick', i }); thrBtn(); } }
-  function thrBtn() { $('bThrow').querySelector('span').textContent = carry ? `At (${carry})` : 'At'; $('bThrow').classList.toggle('dim', !carry); }
+  function thrBtn() { if (NETMODE === 'jeli') { $('bThrow').querySelector('i').textContent = N.ammoIce > 0 ? '🍦' : '🍬'; $('bThrow').querySelector('span').textContent = N.ammoIce > 0 ? `Dondurma ${N.ammoIce}` : 'Jelibon'; $('bThrow').classList.remove('dim'); return; } $('bThrow').querySelector('span').textContent = carry ? `At (${carry})` : 'At'; $('bThrow').classList.toggle('dim', !carry); }
   N.throwBall = () => {
-    if (!carry || N.dead > 0) { if (!carry) toast('🎾 Önce yerdeki renkli toplardan al!', 1.6); return; }
-    carry--; thrBtn();
+    if (NETFX.bub > 0 || NETFX.melt > 0) return;
+    const JK = NETMODE === 'jeli' ? (N.ammoIce > 0 ? 'ice' : 'jelly') : 'ball';
+    if (JK !== 'ball') { if (N.lastShot && elapsed - N.lastShot < .35) return; N.lastShot = elapsed; if (JK === 'ice') N.ammoIce--; thrBtn(); }
+    else { if (!carry || N.dead > 0) { if (!carry) toast('🎾 Önce yerdeki renkli toplardan al!', 1.6); return; }
+    carry--; thrBtn(); }
     let tgt = aimActive() ? { pos: aim.point } : null; if (!tgt) { let bd = 24; for (const t of netTargets()) { const d = Math.hypot(t.pos.x - P.pos.x, t.pos.z - P.pos.z); if (d < bd) { bd = d; tgt = t; } } } if (tgt) P.yaw = Math.atan2(tgt.pos.x - P.pos.x, tgt.pos.z - P.pos.z);
     const dir = V(Math.sin(P.yaw), 0, Math.cos(P.yaw)), o = V(P.pos.x + dir.x * .6, P.pos.y + 1.3, P.pos.z + dir.z * .6); let v = dir.clone().multiplyScalar(18); v.y = 3.5;
     if (tgt) { const d = Math.hypot(tgt.pos.x - o.x, tgt.pos.z - o.z), tt = Math.max(.15, d / 18); v.y = Math.min(12, (tgt.pos.y + .8 - o.y + .5 * 15 * tt * tt) / tt); }
-    const m = new THREE.Mesh(new THREE.SphereGeometry(.3, 12, 8), new THREE.MeshLambertMaterial({ color: '#ffd166', emissive: '#ff8a00', emissiveIntensity: .3 })); m.position.copy(o); scene.add(m);
-    myBalls.push({ m, v, life: 2 }); N.shot('ball', o, v); SFX.dash();
+    const m = projMesh(JK); m.position.copy(o);
+    myBalls.push({ m, v, life: 2, k: JK }); N.shot(JK, o, v); SFX.dash();
   };
   function updateBalls(dt) {
     for (let i = 0; i < balls.length; i++) { const b = balls[i]; if (b.alive) { b.m.position.y = b.p.y + Math.sin(elapsed * 3 + i) * .15; b.m.rotation.y += dt * 2; if (carry < 3 && N.dead <= 0 && Math.hypot(P.pos.x - b.p.x, P.pos.z - b.p.z) < 1.2 && Math.abs(P.pos.y - b.p.y) < 2) takeBall(i, true); } else if ((b.t -= dt) <= 0) { b.alive = true; b.m.visible = true; sparkle(b.p, '#fff6a0', 6); } }
-    for (let i = myBalls.length - 1; i >= 0; i--) { const s = myBalls[i]; s.life -= dt; s.v.y -= 15 * dt; s.m.position.addScaledVector(s.v, dt); if (s.life <= 0 || s.m.position.y < -1 || botHitCheck(s.m.position, 'ball', N.me)) { scene.remove(s.m); myBalls.splice(i, 1); } }
+    for (let i = myBalls.length - 1; i >= 0; i--) { const s = myBalls[i]; s.life -= dt; s.v.y -= 15 * dt; s.m.position.addScaledVector(s.v, dt); if (s.life <= 0 || s.m.position.y < -1 || botHitCheck(s.m.position, s.k || 'ball', N.me) || (N.beanHit && N.beanHit(s.m.position))) { scene.remove(s.m); myBalls.splice(i, 1); } }
   }
   btn('bThrow', () => N.throwBall()); N.dbgCarry = n => { carry = n; thrBtn(); }; N.dbg = () => ({ carry, b: balls.map(b => [b.alive, +b.p.x.toFixed(1), +b.p.y.toFixed(1), +b.p.z.toFixed(1)]) });
+  // ---------- JELİBON ARENASI: tabanca, dondurma, havuz, renk görevi, köpek ----------
+  N.ammoIce = 0; N.colorScore = 0; N.dogT = 0; const JL = NETMODE === 'jeli';
+  function projMesh(k) {
+    if (k === 'jelly') { const b = jBean(JLC[Math.floor(Math.random() * 8)], .55); b.rotation.y = Math.random() * 6; scene.add(b); return b; }
+    if (k === 'ice') { const g = new THREE.Group(); g.add(new THREE.Mesh(new THREE.SphereGeometry(.32, 14, 10), jglass(['#ffd1e8', '#c9f0ff', '#fff0b3'][Math.floor(Math.random() * 3)], .95))); scene.add(g); return g; }
+    const m = new THREE.Mesh(new THREE.SphereGeometry(.3, 12, 8), new THREE.MeshLambertMaterial({ color: '#ffd166', emissive: '#ff8a00', emissiveIntensity: .3 })); scene.add(m); return m;
+  }
+  N.projMesh = projMesh;
+  const bubM = () => { const s = new THREE.Mesh(new THREE.SphereGeometry(1.15, 20, 14), jglass(JLC[Math.floor(Math.random() * 8)], .45)); scene.add(s); return s; };
+  const puddle = () => { const p = new THREE.Mesh(new THREE.CircleGeometry(1.1, 24), jglass('#ffd1e8', .9)); p.rotation.x = -Math.PI / 2; scene.add(p); return p; };
+  let jTask = null, jTaskT = 0, jBrk = 0, jEnd = 0;
+  function newTask() { const cols = [...new Set(jBeans.map(b => b.col))]; jTask = cols[Math.floor(Math.random() * cols.length)]; jTaskT = 25; const el = $('jTask'); if (el) { el.innerHTML = `Sadece <b style="color:${jTask};-webkit-text-stroke:1px #2b2340">${JLN[jTask].toUpperCase()}</b> jelibonları patlat! ⭐ ${N.colorScore}`; el.animate([{ transform: 'translateX(-50%) scale(1.3)' }, { transform: 'translateX(-50%) scale(1)' }], { duration: 400 }); } SAY(`Sadece ${JLN[jTask]} jelibonları patlat!`); }
+  function popBean(b) {
+    b.alive = false; b.g.visible = false; b.back = 8; SFX.ring();
+    for (let i = 0; i < 16; i++) fx({ pos: b.p.clone(), vel: V((Math.random() - .5) * 6, Math.random() * 5, (Math.random() - .5) * 6), life: .7, size: .3, size2: 0, color: b.col, add: true, grav: 8 });
+    if (b.col === jTask) { N.colorScore++; toast(`⭐ Süper! ${JLN[b.col]}! (${N.colorScore})`, 1.2); if (N.colorScore % 5 === 0) { SAY(`Harika! ${N.colorScore} yıldız!`); neonBurst('joy', 4); } }
+    else { toast(`Bu ${JLN[b.col]} idi. ${JLN[jTask]} olanları bul!`, 1.6); }
+    newTaskText();
+  }
+  function newTaskText() { const el = $('jTask'); if (el && jTask) el.innerHTML = `Sadece <b style="color:${jTask};-webkit-text-stroke:1px #2b2340">${JLN[jTask].toUpperCase()}</b> jelibonları patlat! ⭐ ${N.colorScore}`; }
+  N.beanHit = p => { if (!JL) return false; for (const b of jBeans) if (b.alive && b.p.distanceTo(p) < 1) { popBean(b); return true; } return false; };
+  // anne molası (süre) ve hareket molası
+  function moveBreak() {
+    const acts = [['🤸', '5 kere zıpla!', 'Beş kere zıpla! Hadi!'], ['🙆', 'Kollarını jelibon gibi salla!', 'Kollarını jelibon gibi salla!'], ['🐸', 'Kurbağa gibi 3 kere çömel kalk!', 'Kurbağa gibi üç kere çömel kalk!'], ['🌀', 'Yerinde bir tur dön!', 'Yerinde bir tur dön!']], a = acts[Math.floor(Math.random() * acts.length)];
+    const w = document.createElement('div'); w.className = 'netPop'; w.innerHTML = `<div style="font-size:90px;animation:bob .6s ease-in-out infinite">${a[0]}</div><h2 style="font-size:30px">${a[1]}</h2><div id="brkC" style="font-size:44px">10</div>`; document.body.appendChild(w);
+    NETFX.inv = 12; SAY('Hareket molası! ' + a[2]); SFX.join(); let c = 10; const iv = setInterval(() => { c--; const e = $('brkC'); if (e) e.textContent = c; if (c <= 0) { clearInterval(iv); w.remove(); SFX.giggle(); SAY('Aferin! Oyuna devam!'); } }, 1000);
+  }
+  function calmEnd() { const w = document.createElement('div'); w.className = 'netPop'; w.innerHTML = '<div style="font-size:80px">🍬🌙</div><h2>Jelibonları topluyoruz...</h2><p>Bugün çok güzel oynadın! ⭐ ' + N.colorScore + '</p>'; document.body.appendChild(w); paused = true; SAY('Jelibonları topluyoruz. Bugün çok güzel oynadın! Şimdi dinlenme zamanı.'); setTimeout(() => $('pMenu').onclick(), 9000); }
+  N.setSession = min => { jEnd = min ? elapsed + min * 60 : 0; jBrk = elapsed + 180; };
+  if (JL) {
+    const t = document.createElement('div'); t.id = 'jTask'; t.style.cssText = 'position:fixed;top:44px;left:50%;transform:translateX(-50%);z-index:6;background:rgba(255,255,255,.85);backdrop-filter:blur(8px);border:3px solid #2b2340;border-radius:16px;padding:2px 14px;font-weight:800;font-size:16px;box-shadow:0 3px 0 #2b2340;pointer-events:none'; document.body.appendChild(t);
+    // jöle köpek arkadaş
+    petObj = makePet('dog'); pet.kind = 'dog'; pet.pos.copy(START).add(V(1.5, 0, 1.5)); petObj.traverse(o => { if (o.isMesh) o.material = jglass(o === petObj.children[0] ? '#ff9ad5' : '#ffc2e2', .85); });
+  }
+  function jeliTick(dt) {
+    if (!JL) return;
+    if (!jTask && started) newTask(); jTaskT -= dt; if (jTaskT <= 0 && started) newTask();
+    for (const b of jBeans) { b.t += dt; if (b.alive) { b.g.position.y = b.p.y + Math.sin(b.t * 2) * .25; b.g.rotation.y += dt; if (N.dead <= 0 && Math.hypot(P.pos.x - b.p.x, P.pos.z - b.p.z) < 1.1 && Math.abs(P.pos.y + 1 - b.p.y) < 1.6) popBean(b); } else if ((b.back -= dt) <= 0) { b.alive = true; b.g.visible = true; } }
+    for (let i = 0; i < jCones.length; i++) { const c = jCones[i]; if (c.alive) { c.g.rotation.y += dt * 1.5; c.g.position.y = c.p.y + Math.sin(elapsed * 2 + i) * .15; if (Math.hypot(P.pos.x - c.p.x, P.pos.z - c.p.z) < 1.4) { takeCone(i, true); } } else if ((c.t -= dt) <= 0) { c.alive = true; c.g.visible = true; } }
+    // havuz: yavaşlat ve zıplat
+    const inPool = jPool && Math.hypot(P.pos.x - jPool.position.x, P.pos.z - jPool.position.z) < 6 && P.pos.y < 1.5;
+    NETFX.pool = inPool ? 1 : 0; if (inPool && P.onGround && NETFX.bub <= 0) { P.vel.y = 9; SFX.bonk(); for (let i = 0; i < 6; i++) fx({ pos: V(P.pos.x, .5, P.pos.z), vel: V((Math.random() - .5) * 4, 3, (Math.random() - .5) * 4), life: .5, size: .3, size2: 0, color: '#ff7ad9', add: true }); }
+    jPool && (jPool.scale.y = 1 + Math.sin(elapsed * 4) * .15);
+    // kabarcık (jelibon isabeti) ve erime (dondurma isabeti)
+    if (NETFX.bub > 0) { if (!N.myBub) N.myBub = bubM(); const gy = groundAt(P.pos.x, P.pos.z, P.pos.y); P.vel.set(0, (gy + 2.6 - P.pos.y) * 3, 0); P.onGround = false; N.myBub.position.set(P.pos.x, P.pos.y + .9, P.pos.z); N.myBub.rotation.y += dt; }
+    else if (N.myBub) { scene.remove(N.myBub); N.myBub = null; SFX.poof(); hitFx(P.pos, 'jelly'); NETFX.inv = 1.2; }
+    if (NETFX.melt > 0) { if (!N.myPud) N.myPud = puddle(); N.myPud.position.set(P.pos.x, P.pos.y + .04, P.pos.z); robi.scale.set(1.6, Math.max(.12, NETFX.melt / 3 * .3), 1.6); }
+    else if (N.myPud) { scene.remove(N.myPud); N.myPud = null; robi.scale.setScalar(1); SFX.revive(); joinFx(P.pos, '#ffd1e8'); NETFX.inv = 1.5; }
+    if (N.dogT > 0) { N.dogT -= dt; if (!N.dogBub) N.dogBub = bubM(); N.dogBub.scale.setScalar(.7); N.dogBub.position.set(pet.pos.x, pet.pos.y + .6, pet.pos.z); } else if (N.dogBub) { scene.remove(N.dogBub); N.dogBub = null; }
+    // mola ve süre
+    if (started && !paused) { if (jBrk && elapsed > jBrk) { jBrk = elapsed + 180; moveBreak(); } if (jEnd && elapsed > jEnd) { jEnd = 0; calmEnd(); } }
+  }
+  function takeCone(i, mine) { const c = jCones[i]; if (!c || !c.alive) return; c.alive = false; c.g.visible = false; c.t = 15; if (mine) { N.ammoIce = 8; thrBtn(); SFX.join(); toast('🍦 Dondurma tabancası! 8 atış: vurduğun eriyecek!', 2.5); SAY('Dondurma tabancası aldın!'); netSend({ t: 'pickC', i }); } }
+  N.takeCone = takeCone;
+  function remoteJeli(r) {
+    if (!JL) return;
+    if (r.st.bu) { if (!r.bub) r.bub = bubM(); r.bub.position.set(r.pos.x, r.pos.y + .9, r.pos.z); } else if (r.bub) { scene.remove(r.bub); r.bub = null; }
+    if (r.st.ml) { if (!r.pud) r.pud = puddle(); r.pud.position.set(r.pos.x, r.pos.y + .04, r.pos.z); r.g.scale.set(1.6, .15, 1.6); } else if (r.pud) { scene.remove(r.pud); r.pud = null; r.g.scale.setScalar(1); }
+    if (!r.dog) { r.dog = makePet('dog'); r.dog.traverse(o => { if (o.isMesh) o.material = jglass('#c9f0ff', .85); }); r.dogP = r.pos.clone(); }
+    const bx = r.pos.x - Math.sin(r.yaw) * 1.8, bz = r.pos.z - Math.cos(r.yaw) * 1.8; r.dogP.x += (bx - r.dogP.x) * .08; r.dogP.z += (bz - r.dogP.z) * .08; r.dogP.y = groundAt(r.dogP.x, r.dogP.z, r.pos.y + 1); r.dog.position.copy(r.dogP); r.dog.rotation.y = Math.atan2(r.pos.x - r.dogP.x, r.pos.z - r.dogP.z);
+  }
   // ---------- araç senkronu ve arka koltuk ----------
   N.passenger = null;
   const BACK = { car: -.65, moto: -.55, horse: -.6, tractor: -.5, skate: -.35, carpet: -.6 };
@@ -2286,9 +2393,9 @@ if (NETMODE) (function () {
       else if (NETMODE === 'ebe') {
         if (N.ebe === b.id) { const t = nearest(bodies(), b.pos, b.id); if (t) { dir = V(t.o.pos.x - b.pos.x, 0, t.o.pos.z - b.pos.z); spd = 5.6; if (t.d < 1.2 && N.ebeImm <= 0) setEbe(t.o.id, true); } }
         else { const e = N.ebe === N.me ? P.pos : (typeof N.ebe === 'string' ? (bots.find(x => x.id === N.ebe) || {}).pos : N.players[N.ebe] && N.players[N.ebe].pos); if (e && Math.hypot(e.x - b.pos.x, e.z - b.pos.z) < 12) { dir = V(b.pos.x - e.x, 0, b.pos.z - e.z); spd = 5; } }
-      } else if (NETMODE === 'arena') {
+      } else if (NETMODE === 'arena' || NETMODE === 'jeli') {
         const t = nearest(humans(), b.pos); if (t) { dir = t.d > 7 ? V(t.o.pos.x - b.pos.x, 0, t.o.pos.z - b.pos.z) : V(-(t.o.pos.z - b.pos.z), 0, t.o.pos.x - b.pos.x); spd = t.d > 7 ? 4.6 : 3;
-          b.thr -= dt; if (b.thr <= 0 && t.d < 16) { b.thr = 2.5 + Math.random() * 2; const o = V(b.pos.x, b.pos.y + 1.3, b.pos.z), tt = Math.max(.2, t.d / 16), v = V((t.o.pos.x - o.x) / tt, 0, (t.o.pos.z - o.z) / tt); v.y = (t.o.pos.y + .8 - o.y + .5 * 15 * tt * tt) / tt; netSend({ t: 'shot', k: 'ball', o: [o.x, o.y, o.z], v: [v.x, v.y, v.z], by: b.id }); remoteShot(b.id, { k: 'ball', o: [o.x, o.y, o.z], v: [v.x, v.y, v.z] }); } }
+          b.thr -= dt; if (b.thr <= 0 && t.d < 16) { b.thr = 2.5 + Math.random() * 2; const o = V(b.pos.x, b.pos.y + 1.3, b.pos.z), tt = Math.max(.2, t.d / 16), v = V((t.o.pos.x - o.x) / tt, 0, (t.o.pos.z - o.z) / tt); v.y = (t.o.pos.y + .8 - o.y + .5 * 15 * tt * tt) / tt; const bk = NETMODE === 'jeli' ? 'jelly' : 'ball'; netSend({ t: 'shot', k: bk, o: [o.x, o.y, o.z], v: [v.x, v.y, v.z], by: b.id }); remoteShot(b.id, { k: bk, o: [o.x, o.y, o.z], v: [v.x, v.y, v.z] }); } }
       }
       if (!dir) { b.wand += (Math.random() - .5) * dt * 2; dir = V(Math.cos(b.wand), 0, Math.sin(b.wand)); spd = 2.5; }
       if (dir.length() > .01) { dir.normalize(); b.pos.x += dir.x * spd * dt; b.pos.z += dir.z * spd * dt; b.yaw = Math.atan2(dir.x, dir.z); b.walk += spd * dt * 2.2; }
@@ -2303,7 +2410,8 @@ if (NETMODE) (function () {
       if (!host && b.tgt) { const before = b.pos.clone(); b.pos.lerp(b.tgt, Math.min(1, dt * 12)); b.walk += before.distanceTo(b.pos) * 4; }
       const u = b.g.userData; b.g.position.copy(b.pos); b.g.rotation.y = b.yaw; b.sh.position.set(b.pos.x, .03, b.pos.z);
       u.legL.rotation.x = Math.sin(b.walk) * .7; u.legR.rotation.x = -Math.sin(b.walk) * .7; u.armL.rotation.x = -Math.sin(b.walk) * .6; u.armR.rotation.x = Math.sin(b.walk) * .6;
-      const stun = host ? b.stun > 0 : b.stunV, dead = host ? b.dead > 0 : b.deadV; b.g.visible = !dead; b.g.rotation.z = stun ? Math.sin(elapsed * 20) * .2 : 0;
+      const stun = host ? b.stun > 0 : b.stunV, dead = host ? b.dead > 0 : b.deadV; b.g.visible = !dead; b.g.rotation.z = stun && !JL ? Math.sin(elapsed * 20) * .2 : 0;
+      if (JL) { if (stun) { if (!b.bub) b.bub = bubM(); b.g.position.y += 2.2; b.bub.position.set(b.pos.x, b.pos.y + 3.1, b.pos.z); } else if (b.bub) { scene.remove(b.bub); b.bub = null; } }
       b.ebeTag.visible = N.ebe === b.id; if (b.ebeTag.visible && Math.random() < .3) fx({ pos: V(b.pos.x, b.pos.y + .2, b.pos.z), vel: V((Math.random() - .5) * 2, 2, (Math.random() - .5) * 2), life: .5, size: .4, size2: 0, color: '#ff2a2a', add: true });
     }
   }
@@ -2311,7 +2419,7 @@ if (NETMODE) (function () {
   function botHitCheck(p, k, by, rad = 1.1) { if (!isHost()) return false; for (const b of bots) { if (b.dead > 0 || b.stun > 0) continue; if (Math.hypot(b.pos.x - p.x, b.pos.z - p.z) < rad && Math.abs(b.pos.y + .9 - p.y) < 1.6) { botHit(b, k, by); return true; } } return false; }
   function botCone(from, yaw, k, by) { if (!isHost()) return; const dir = V(Math.sin(yaw), 0, Math.cos(yaw)); for (const b of bots) { if (b.dead > 0 || b.stun > 0) continue; const dx = b.pos.x - from.x, dz = b.pos.z - from.z, d = Math.hypot(dx, dz); if (d < 9 && d > .3 && (dx * dir.x + dz * dir.z) / d > .88) botHit(b, k, by); } }
   function botHit(b, k, by) {
-    b.stun = k === 'net' ? 2 : 1.2; b.hits = (b.hits || 0) + 1; hitFx(b.pos, k); SFX.bonk();
+    b.stun = k === 'net' ? 2 : (k === 'jelly' || k === 'ice') ? 3 : 1.2; b.hits = (b.hits || 0) + 1; hitFx(b.pos, k); SFX.bonk();
     if (NETMODE === 'arena' && b.hits % 3 === 0) { b.dead = 1.2; SFX.poof(); }
     if (NETMODE === 'ebe' && by === N.ebe && k === 'net') setEbe(b.id, true);
     N.score[by] = (N.score[by] || 0) + 1; netSend({ t: 'hit', by, v: b.id, k }); hudNet(); refreshLabels(); checkWin();
@@ -2347,30 +2455,31 @@ if (NETMODE) (function () {
   // ---------- HUD ----------
   function hudNet() {
     const all = [...[N.me, ...Object.keys(N.players).map(Number)].filter(s => s >= 0).sort(), ...(N.bots || []).map(b => b.id)];
-    $('netBar').innerHTML = `<button class="inv" onclick="window.__net.invite()">📨</button><span class="code">🔑 ${code.slice(0, 2)}-${code.slice(2)}</span>` + all.map(s => `<span class="pl ${s === N.me ? 'me' : ''}" style="--c:${typeof s === 'string' ? '#6b6f7a' : RN.COL[s]}">${avOf(s)}${s === N.ebe ? '🏃' : ''}${coop ? '' : ' ' + (NETMODE === 'parkur' ? (N.finish.indexOf(s) >= 0 ? '🏁' + (N.finish.indexOf(s) + 1) : '') : (N.score[s] || 0) + (NETMODE === 'arena' ? '/' + WIN : '⭐'))}${N.wins[s] ? ' 🏆' + N.wins[s] : ''}</span>`).join('') + (N.roundT > 0 ? `<span class="code">⏱ ${Math.floor(N.roundT / 60)}:${String(Math.floor(N.roundT % 60)).padStart(2, '0')}</span>` : '');
+    $('netBar').innerHTML = (code === 'solo' ? '' : `<button class="inv" onclick="window.__net.invite()">📨</button><span class="code">🔑 ${code.slice(0, 2)}-${code.slice(2)}</span>`) + all.map(s => `<span class="pl ${s === N.me ? 'me' : ''}" style="--c:${typeof s === 'string' ? '#6b6f7a' : RN.COL[s]}">${avOf(s)}${s === N.ebe ? '🏃' : ''}${coop ? '' : ' ' + (NETMODE === 'parkur' ? (N.finish.indexOf(s) >= 0 ? '🏁' + (N.finish.indexOf(s) + 1) : '') : (N.score[s] || 0) + (NETMODE === 'arena' ? '/' + WIN : '⭐'))}${N.wins[s] ? ' 🏆' + N.wins[s] : ''}</span>`).join('') + (N.roundT > 0 ? `<span class="code">⏱ ${Math.floor(N.roundT / 60)}:${String(Math.floor(N.roundT % 60)).padStart(2, '0')}</span>` : '');
   }
   N.hud = hudNet; N.isHost = isHost;
   // ---------- her kare ----------
   N.update = dt => {
-    for (const k of ['stuck', 'wet', 'burn', 'big', 'inv']) NETFX[k] = Math.max(0, NETFX[k] - dt);
+    for (const k of ['stuck', 'wet', 'burn', 'big', 'inv', 'bub', 'melt']) NETFX[k] = Math.max(0, NETFX[k] - dt);
+    jeliTick(dt);
     if (N.dead > 0) N.dead -= dt; else if (NETFX.inv > 0 && PVP) robi.visible = Math.floor(elapsed * 14) % 2 === 0; else if (!robi.visible && !photo) robi.visible = true;
     if (N.myEbe.visible) { N.myEbe.scale.set(1.9 + Math.sin(elapsed * 8) * .15, .82 + Math.sin(elapsed * 8) * .06, 1); if (Math.random() < .4) fx({ pos: V(P.pos.x, P.pos.y + .2, P.pos.z), vel: V((Math.random() - .5) * 2, 2, (Math.random() - .5) * 2), life: .5, size: .4, size2: 0, color: '#ff2a2a', add: true }); }
     updateBalls(dt); N.botsTick(dt); passengerPose();
     if (NETFX.burn > 0 && Math.random() < .5) fx({ pos: V(P.pos.x, P.pos.y + .6, P.pos.z), vel: V(0, 2, 0), life: .5, size: .5, size2: 1.2, color: '#ffb020', color2: '#ff2a00', add: true });
     if (NETFX.wet > 0 && Math.random() < .3) fx({ pos: V(P.pos.x + (Math.random() - .5), P.pos.y + 1.6, P.pos.z), vel: V(0, -2, 0), life: .5, size: .15, size2: .1, color: '#7fd0ff', drop: true, grav: 8 });
-    const tsc = NETFX.big > 0 ? 2.2 : 1; robi.scale.setScalar(robi.scale.x + (tsc - robi.scale.x) * Math.min(1, dt * 6));
+    const tsc = NETFX.big > 0 ? 2.2 : 1; if (NETFX.melt <= 0 && !N.myPud) robi.scale.setScalar(robi.scale.x + (tsc - robi.scale.x) * Math.min(1, dt * 6));
     if (NETFX.stuck > 0) { if (!N.myNet) { N.myNet = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), new THREE.MeshBasicMaterial({ map: netTex, transparent: true, side: THREE.DoubleSide, depthWrite: false })); scene.add(N.myNet); } N.myNet.position.set(P.pos.x, P.pos.y + .8, P.pos.z); } else if (N.myNet) { scene.remove(N.myNet); N.myNet = null; }
     // konum gönder (saniyede 10)
     N.sendT -= dt; const pw = input.powerHeld ? currentPower() : null;
-    if (N.sendT <= 0 && N.ok) { N.sendT = .1; netSend({ t: 'p', x: +P.pos.x.toFixed(2), y: +P.pos.y.toFixed(2), z: +P.pos.z.toFixed(2), yaw: +P.yaw.toFixed(2), f: P.flying ? 1 : 0, sp: P.spin > 0 ? 1 : 0, pw: pw === 'fire' || pw === 'water' ? pw : 0, st: NETFX.stuck > 0 ? 1 : 0, b: NETFX.big > 0 ? 1 : 0, d: N.dead > 0 ? 1 : 0, iv: NETFX.inv > 0 ? 1 : 0, ri: riding ? vehicles.indexOf(riding) : -1, ps: N.passenger === null ? -1 : N.passenger, r: riding ? riding.kind : 0 }); }
+    if (N.sendT <= 0 && N.ok) { N.sendT = .1; netSend({ t: 'p', x: +P.pos.x.toFixed(2), y: +P.pos.y.toFixed(2), z: +P.pos.z.toFixed(2), yaw: +P.yaw.toFixed(2), f: P.flying ? 1 : 0, sp: P.spin > 0 ? 1 : 0, pw: pw === 'fire' || pw === 'water' ? pw : 0, st: NETFX.stuck > 0 ? 1 : 0, b: NETFX.big > 0 ? 1 : 0, d: N.dead > 0 ? 1 : 0, iv: NETFX.inv > 0 ? 1 : 0, ri: riding ? vehicles.indexOf(riding) : -1, bu: NETFX.bub > 0 ? 1 : 0, ml: NETFX.melt > 0 ? 1 : 0, ps: N.passenger === null ? -1 : N.passenger, r: riding ? riding.kind : 0 }); }
     // uzak oyuncular
     for (const r of Object.values(N.players)) {
       if (r.tgt) { const k = Math.min(1, dt * 12); const before = r.pos.clone(); r.pos.lerp(r.tgt, k); let d = r.tyaw - r.yaw; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; r.yaw += d * k; r.walk += before.distanceTo(r.pos) * 4; }
       const u = r.g.userData, mv = r.tgt ? r.tgt.distanceTo(r.pos) : 0;
-      r.g.position.copy(r.pos); r.g.rotation.y = r.yaw; r.g.scale.setScalar(r.st.b ? 2.2 : 1);
+      r.g.position.copy(r.pos); r.g.rotation.y = r.yaw; if (!r.st.ml) r.g.scale.setScalar(r.st.b ? 2.2 : 1);
       r.sh.position.set(r.pos.x, .03, r.pos.z); r.g.visible = (performance.now() - r.last < 8000 || !r.tgt) && !r.st.d && !(r.st.iv && Math.floor(elapsed * 14) % 2);
       u.wings.visible = !!r.st.f; u.legL.rotation.x = Math.sin(r.walk) * .7; u.legR.rotation.x = -Math.sin(r.walk) * .7; u.armL.rotation.set(Math.sin(r.walk) * -.6, 0, r.st.f ? -1.3 : 0); u.armR.rotation.set(r.st.pw ? -1.45 : Math.sin(r.walk) * .6, 0, r.st.f ? 1.3 : 0);
-      u.hip.rotation.y = r.st.sp ? (r.walk * 3) % 6.28 : 0; remoteVehicle(r, u);
+      u.hip.rotation.y = r.st.sp ? (r.walk * 3) % 6.28 : 0; remoteVehicle(r, u); remoteJeli(r);
       if (r.st.st) { if (!r.net) { r.net = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), new THREE.MeshBasicMaterial({ map: netTex, transparent: true, side: THREE.DoubleSide, depthWrite: false })); scene.add(r.net); } r.net.position.set(r.pos.x, r.pos.y + .8, r.pos.z); } else if (r.net) { scene.remove(r.net); r.net = null; }
       // uzak oyuncunun ateş/su akışı (görsel) + bana isabet
       if (r.st.pw && Math.random() < .7) {
@@ -2388,6 +2497,7 @@ if (NETMODE) (function () {
     for (let i = rshots.length - 1; i >= 0; i--) {
       const s = rshots[i]; s.life -= dt; s.v.y -= 15 * dt; s.mesh.position.addScaledVector(s.v, dt); s.mesh.rotation.y += dt * 5;
       const hitMe = s.mesh.position.distanceTo(V(P.pos.x, P.pos.y + .9, P.pos.z)) < (s.k === 'net' ? 1.4 : 1);
+      if (JL && petObj && N.dogT <= 0 && !(N.dogCd > elapsed) && !hitMe && s.mesh.position.distanceTo(V(pet.pos.x, pet.pos.y + .6, pet.pos.z)) < 1.3 && P.pos.distanceTo(pet.pos) < 6) { N.dogN = (N.dogN || 0) + 1; N.dogT = 3; N.dogCd = elapsed + 11; SFX.bark && SFX.bark(); toast('🐶 Jöle köpeğin seni korudu! Jelibona yakalandı!', 2); SAY('Köpeğin seni korudu!'); scene.remove(s.mesh); rshots.splice(i, 1); continue; }
       if (hitMe) gotHit(s.s, s.k);
       else if (typeof s.s === 'number' && botHitCheck(s.mesh.position, s.k, s.s, s.k === 'net' ? 1.4 : 1)) { scene.remove(s.mesh); rshots.splice(i, 1); continue; }
       if (s.life <= 0 || hitMe || s.mesh.position.y < -2) { scene.remove(s.mesh); rshots.splice(i, 1); }
@@ -2395,7 +2505,8 @@ if (NETMODE) (function () {
     if (N.ebeImm > 0) N.ebeImm -= dt;
 
   };
-  connect();
+  if (code === 'solo') { const pf = RN.prof ? RN.prof() : {}; setTimeout(() => sys({ t: 'welcome', me: { slot: 0, av: pf.av, name: pf.name || 'Sen', pid: pf.pid }, peers: [], mode: NETMODE }), 50); N.invite = () => toast('Tek kişilik oyun: arkadaşlarla oynamak için menüden 👫 Birlikte Oyna', 3); }
+  else connect();
   addEventListener('pagehide', () => { N.closing = true; try { N.ws.close(); } catch (e) {} });
 })();
 // =============== SÜPER GÜÇ ANI (sinematik) ===============
@@ -2719,7 +2830,8 @@ $('lvlIntro').textContent = `⭐ Seviye ${LVL} · ⚙️ ${SV.gears}`;
 setTimeout(() => { if (!started) SAY((W_INTRO[WID] ? W_INTRO[WID][0] : LEARN ? 'Eğitim Bahçesi' : BUILD ? 'Parkur Atölyesi' : BAHCE ? 'Koruma Bahçesi' : 'Büyülü Orman') + '! Başlamak için yeşil Oyna düğmesine bas.'); }, 700);
 $('charPick').innerHTML = Object.entries(CHARS).map(([k, c]) => `<button data-k="${k}" class="${(SV.char || 'robi') === k ? 'on' : ''}" title="${c.name}">${c.e}</button>`).join('');
 $('charPick').querySelectorAll('button').forEach(b => b.onclick = () => { SV.char = b.dataset.k; save(); applyLook(); SAY(CHARS[SV.char].name + '!'); tone(880, .08, 'triangle', .06); $('charPick').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); });
-if (NETMODE) { const MD = (window.RobiNet && RobiNet.MODES[NETMODE]) || ['👫', 'Birlikte Oyna', '']; $('introTitle').innerHTML = `${MD[0]} ${MD[1]}<small>🔑 Oda ${NETH[2].slice(0, 2)}-${NETH[2].slice(2)} ${window.RobiNet ? RobiNet.codeEmoji(NETH[2]) : ''}</small>`; $('introText').innerHTML = `<p>${MD[2]}</p><ul><li>Karakterini seç, sonra ▶ Oyna</li><li>Arkadaşların bu kodla odaya katılabilir (en fazla 6 kişi)</li>${NETMODE === 'orman' ? '<li>Görevler ortak: biri söndürünce herkeste söner!</li>' : '<li>💧 su: kaydırır · 🔥 ateş: koşturur · 🕸️ ağ: dondurur · isabet = ⭐</li>'}</ul>`; }
+if (NETMODE) { const MD = (window.RobiNet && RobiNet.MODES[NETMODE]) || ['👫', 'Birlikte Oyna', '']; $('introTitle').innerHTML = NETH[2] === 'solo' ? `${MD[0]} ${MD[1]}<small>🤖 Botlara karşı</small>` : `${MD[0]} ${MD[1]}<small>🔑 Oda ${NETH[2].slice(0, 2)}-${NETH[2].slice(2)} ${window.RobiNet ? RobiNet.codeEmoji(NETH[2]) : ''}</small>`; $('introText').innerHTML = `<p>${MD[2]}</p><ul><li>Karakterini seç, sonra ▶ Oyna</li>${NETH[2] === 'solo' ? '' : '<li>Arkadaşların bu kodla odaya katılabilir (en fazla 6 kişi)</li>'}${NETMODE === 'orman' ? '<li>Görevler ortak: biri söndürünce herkeste söner!</li>' : NETMODE === 'jeli' ? '<li>🍬 Jelibon tabancası: vurduğun jelibonun içinde havaya kalkar</li><li>🍦 Dondurma kutusunu bul: vurduğun erir</li><li>🐶 Jöle köpeğin seni korur · 🏊 havuzda zıpla</li>' : '<li>💧 su: kaydırır · 🔥 ateş: koşturur · 🕸️ ağ: dondurur · isabet = ⭐</li>'}</ul>${NETMODE === 'jeli' ? '<div id="jSess" style="margin:6px 0"><b>⏱ Anne molası süresi:</b> <button class="jss" data-m="5">5 dk</button><button class="jss" data-m="10">10 dk</button><button class="jss" data-m="15">15 dk</button><button class="jss on" data-m="0">Sınırsız</button></div>' : ''}`;
+  if (NETMODE === 'jeli') document.querySelectorAll('.jss').forEach(b => b.onclick = () => { document.querySelectorAll('.jss').forEach(x => x.classList.toggle('on', x === b)); NET.setSession(+b.dataset.m); SAY(+b.dataset.m ? b.dataset.m + ' dakika' : 'Sınırsız'); }); }
 if (NETMODE) { let cd = 6; const st = $('start'), base = st.textContent; const tick = () => { if (started || $('intro').style.display === 'none') return; cd--; st.textContent = `${base} (${cd})`; if (cd <= 0) st.click(); else setTimeout(tick, 1000); }; setTimeout(tick, 1000); $('charPick').addEventListener('click', () => { cd = Math.max(cd, 4); }); }
 $('start').onclick = () => {
   if (RO.timeLeft() <= 0) { $('intro').style.display = 'none'; started = true; sleepTime(); return; }
@@ -2729,7 +2841,7 @@ $('start').onclick = () => {
   if (LEARN && !SV.tutorialDone) setTimeout(tutStart, 1200);
   if (BUILD) { $('editUI').innerHTML = TOOLS.map(([k, e, n]) => `<button data-tool="${k}" class="${k === tool ? 'on' : ''}"><i>${e}</i>${n}</button>`).join('') + '<button id="eSample"><i>📋</i>Örnek</button><button id="eClear"><i>🗑️</i>Temizle</button><button id="ePlay" class="play"><i>▶</i>Dene</button>'; $('editUI').querySelectorAll('[data-tool]').forEach(b => b.onclick = () => { tool = b.dataset.tool; $('editUI').querySelectorAll('[data-tool]').forEach(x => x.classList.toggle('on', x === b)); tone(600, .05, 'triangle', .05); }); $('ePlay').onclick = () => { if (!Object.values(layout).some(c => c.o === 'star')) { toast('⭐ Önce bir Bitiş yıldızı koy!'); SFX.bad(); return; } setEdit(false); }; $('eClear').onclick = () => { layout = {}; saveLayout(); rebuildParkur(); }; $('eSample').onclick = () => { layout = JSON.parse(JSON.stringify(SAMPLE)); saveLayout(); rebuildParkur(); }; $('editBtn').onclick = () => { if (NET && !NET.isHost()) { toast('🧱 Parkuru odayı kuran düzenler', 2); return; } setEdit(true); }; if (NETMODE) { setEdit(false); P.pos.set(START.x + (Math.max(0, NET.me) - 2.5) * 1.5, START.y, START.z); } else setEdit(true); }
   if (SV.pet) setPet(SV.pet);
-  toast(W_INTRO[WID] ? `${W_INTRO[WID][0]}: görevler üstte yazıyor. İyi eğlenceler!` : BUILD ? '🧱 Bir araç seç ve kareye dokun! Hazır olunca ▶ Dene.' : BAHCE ? '🌳 Koruma Bahçesine hoş geldin! Hayvanlara dokun ve sev.' : LEARN ? '🎓 Eğitim Bahçesine hoş geldin! Önce 👕 butonuna bas ve bir kostüm seç.' : '🌲 Orman yanıyor! Kostüm sandıklarını bul, ateşleri söndür, hayvanları kurtar!', 5);
+  toast(JELI ? '🍬 Jelibon tabancanla botları ve arkadaşlarını vur! Renk görevini de unutma!' : W_INTRO[WID] ? `${W_INTRO[WID][0]}: görevler üstte yazıyor. İyi eğlenceler!` : BUILD ? '🧱 Bir araç seç ve kareye dokun! Hazır olunca ▶ Dene.' : BAHCE ? '🌳 Koruma Bahçesine hoş geldin! Hayvanlara dokun ve sev.' : LEARN ? '🎓 Eğitim Bahçesine hoş geldin! Önce 👕 butonuna bas ve bir kostüm seç.' : '🌲 Orman yanıyor! Kostüm sandıklarını bul, ateşleri söndür, hayvanları kurtar!', 5);
 };
 hud();
 requestAnimationFrame(frame);

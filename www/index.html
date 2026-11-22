@@ -33,7 +33,7 @@ h1{margin:2px 0 0;font-size:clamp(24px,5.5vh,38px);line-height:1;color:#ffd166;-
 .paint .art{background:conic-gradient(#e53935,#ffd166,#22b573,#2e8bff,#a259ff,#e53935)}
 .jelly .art{background:linear-gradient(135deg,#ffd6e7,#ffe9d6)}
 .room .art{background:linear-gradient(#cfe8f7,#e2b47c)}.forest .art{background:linear-gradient(#9fd8ff 40%,#6ab84a 40%)}
-.learn .art{background:linear-gradient(135deg,#ffd6f0,#c9b8ff)}.build .art{background:linear-gradient(135deg,#bde0ff,#ffd166)}.brain .art{background:linear-gradient(135deg,#bfe6ff,#e8d0ff)}.multi .art{background:linear-gradient(135deg,#ffb3b3,#b3d4ff,#b9f5c9)}.garden .art{background:linear-gradient(135deg,#ffe3f1,#bff0c9)}
+.learn .art{background:linear-gradient(135deg,#ffd6f0,#c9b8ff)}.build .art{background:linear-gradient(135deg,#bde0ff,#ffd166)}.jelly .art{background:linear-gradient(135deg,#ffc2e2,#c9f0ff,#fff0b3)}.brain .art{background:linear-gradient(135deg,#bfe6ff,#e8d0ff)}.multi .art{background:linear-gradient(135deg,#ffb3b3,#b3d4ff,#b9f5c9)}.garden .art{background:linear-gradient(135deg,#ffe3f1,#bff0c9)}
 .wt{padding:6px 9px 8px;display:flex;flex-direction:column;justify-content:flex-start;min-width:0;flex:1}.wt b{font-size:16px;line-height:1.05}.wt small{color:#5a4f70;font-size:12px;line-height:1.15;font-weight:700}
 .play{display:inline-block;margin-top:3px;background:#ff7a2f;color:#fff;border:2.5px solid var(--ink);border-radius:9px;padding:0 9px;font-weight:800;font-size:13px;align-self:flex-start;text-shadow:0 1px 0 var(--ink)}
 .world.locked{filter:grayscale(.8)}.world.locked .art{opacity:.6}
@@ -177,6 +177,7 @@ const WORLDS = [
   { id: 'boyama', cls: 'paint', art: '🎨🖍️', name: 'Boyama Atölyesi', sub: '40 bölüm boyama', src: 'boyama.html' },
   { id: 'toplama', cls: 'jelly', art: '🧸🍬', name: 'Jelibon Odası', sub: 'Odanı topla, jelibon kazan', src: 'macera.html#toplama' },
   { id: 'oda', cls: 'room', art: '🛏️🧸', name: 'Dev Oda', sub: 'Arkadaşlarını kurtar', src: 'oda.html' },
+  { id: 'jeli', cls: 'jelly', art: '🍬🍦', name: 'Jelibon Arenası', sub: 'Jelibon tabancası, dondurma, jöle köpek', src: 'macera.html#net-jeli-solo-M3' },
   { id: 'zeka', cls: 'brain', art: '🧠🎴', name: 'Zekâ Oyunları', sub: 'Hafıza, Tahmin, Zihin Gücü', src: 'zeka.html' },
   { id: 'cok', cls: 'multi', art: '👫🌐', name: 'Birlikte Oyna', sub: 'Arkadaşınla aynı odada, 6 kişiye kadar', multi: true },
   { id: 'bahce', cls: 'garden', art: '🌳💗', name: 'Koruma Bahçesi', sub: 'Kurtardığın hayvanları sev', src: 'macera.html#bahce' },
@@ -293,7 +294,7 @@ function renderParent() {
 // ---------- Birlikte Oyna: yakındaki odalar, arkadaşlar, oda kur, kodla katıl ----------
 const RN = window.RobiNet;
 let cokCode = '', cokView = 'main', nearT = 0, onlineMap = {};
-const BIG = { arena: 1, ebe: 1, parkur: 1 };
+const BIG = { arena: 1, ebe: 1, parkur: 1, jeli: 1 };
 function cokGo(mode, code, ask, o) { $('sCok').style.display = 'none'; clearInterval(nearT); const ex = BIG[mode] && o ? `-${o.size || 'S'}${o.bots || 0}` : ''; launch({ id: 'net', name: RN.MODES[mode][1], src: mode === 'boya' ? `boyama.html#net-boya-${code}${ask ? '-a' : ''}` : mode === 'tahmin' ? `zeka.html#net-tahmin-${code}${ask ? '-a' : ''}` : `macera.html#net-${mode}-${code}${ex}${ask ? '-a' : ''}` }, document.body); }
 function openCok() { const p = RO.profile(); if (!p.name) { profileEdit(true); openS('sCok'); RO.say && RO.say('Önce oyuncu adını seçelim!'); return; } cokView = 'main'; renderCok(); openS('sCok'); RO.say && RO.say('Birlikte oyna! Yakındaki bir odaya ya da bir arkadaşına dokun.'); }
 // basit ebeveyn kilidi: yazıyla yazılan sayıya dokun
