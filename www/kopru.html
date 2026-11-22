@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Ritimli Renk Köprüsü</title>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 html,body{width:100%;height:100%;overflow:hidden;font-family:'Fredoka',system-ui,sans-serif;background:#120a2e;color:#fff}
@@ -47,6 +46,33 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
 .play{margin-top:14px;width:100%;padding:14px;border:none;border-radius:999px;font-family:inherit;font-size:28px;font-weight:700;color:#fff;cursor:pointer;background:linear-gradient(180deg,#6ff58a,#22c55e);box-shadow:0 8px 0 #15803d,0 0 30px rgba(34,197,94,.6);text-shadow:0 3px 0 #15803d}
 .play:active{transform:translateY(6px);box-shadow:0 2px 0 #15803d}
 #big{position:fixed;left:50%;top:32%;transform:translate(-50%,-50%);z-index:7;font-size:clamp(34px,8vh,64px);font-weight:700;pointer-events:none;white-space:nowrap;background:linear-gradient(90deg,#ff5fa2,#ffd23f,#5ef38c,#5ec8ff,#c77dff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 4px 0 rgba(40,0,90,.55)) drop-shadow(0 0 20px rgba(255,255,255,.5));opacity:0}
+#menu{overflow-y:auto;align-items:flex-start}#menu .card{margin:auto}
+.play.alt{background:linear-gradient(180deg,#8fd3ff,#3b82f6);box-shadow:0 8px 0 #1e40af,0 0 24px rgba(59,130,246,.5);font-size:22px}
+.play.alt2{background:linear-gradient(180deg,#ffb3d9,#ec4899);box-shadow:0 8px 0 #9d174d,0 0 24px rgba(236,72,153,.5);font-size:22px}
+.opt.lock{opacity:.5;filter:grayscale(.6)}.opt small{display:block;font-size:10px;color:#ffe066}
+.hide{display:none!important}
+#map{position:fixed;inset:0;z-index:25;overflow-y:auto;background:linear-gradient(180deg,#1d0b52,#3a0ca3 40%,#7a1fa2);padding:74px 12px 20px}
+#mapTop{position:fixed;top:8px;left:8px;right:8px;z-index:2;display:flex;align-items:center;gap:12px;padding:6px 14px 6px 6px;border-radius:22px;font-size:22px}
+#mapTop span{margin-left:auto;color:#ffe066;font-weight:700}
+.wsec{max-width:760px;margin:0 auto 16px;border-radius:28px;padding:12px;border:3px solid rgba(255,255,255,.5);box-shadow:0 10px 26px rgba(0,0,0,.35)}
+.wsec h3{font-size:22px;margin:0 4px 8px;text-shadow:0 2px 0 rgba(40,0,90,.5)}
+.nodes{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.nd{position:relative;aspect-ratio:1;border-radius:50%;border:4px solid #fff;background:radial-gradient(circle at 35% 30%,#fff,#ffd23f 45%,#ff8a00);box-shadow:0 6px 0 rgba(90,30,0,.5),0 0 16px rgba(255,210,63,.6);font-family:inherit;font-size:clamp(18px,4vw,28px);font-weight:700;color:#5a2a00;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;max-width:110px;justify-self:center;width:100%}
+.nd small{font-size:clamp(10px,2vw,14px);color:#b45309;letter-spacing:-1px}
+.nd.lock{background:radial-gradient(circle at 35% 30%,#eee,#9ca3af);color:#555;box-shadow:0 6px 0 rgba(0,0,0,.35)}
+.nd.cur{animation:ring .55s infinite alternate;box-shadow:0 0 0 6px rgba(255,255,255,.5),0 0 30px #fff}
+.nd.cur::after{content:'🫧';position:absolute;top:-28px;font-size:30px}
+.castle{grid-column:1/-1;aspect-ratio:auto;border-radius:30px;max-width:340px;padding:12px;font-size:40px;background:radial-gradient(circle at 50% 30%,#fff,#ff9ecf 40%,#a855f7)}
+#win,#wait{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,rgba(60,20,120,.6),rgba(12,4,40,.88));padding:14px}
+#wStars{font-size:64px;letter-spacing:6px;margin:6px 0}#wStars span{display:inline-block;animation:popS .5s cubic-bezier(.34,1.56,.64,1) both}
+#wStars span.off{filter:grayscale(1) brightness(.6)}
+@keyframes popS{from{transform:scale(0) rotate(-90deg)}to{transform:scale(1)}}
+#turn{position:fixed;top:84px;left:50%;transform:translateX(-50%);z-index:6;padding:6px 18px;border-radius:999px;font-weight:700;font-size:20px;pointer-events:none;white-space:nowrap}
+#turn.me{background:linear-gradient(90deg,#ffd23f,#ff8a00);color:#4a1d00;animation:ring .45s infinite alternate}
+#kHand{position:fixed;z-index:9;font-size:54px;pointer-events:none;opacity:0;transition:left .25s,top .25s,opacity .2s;filter:drop-shadow(0 4px 6px rgba(0,0,0,.45))}
+#kHand.on{opacity:1;animation:tap .8s ease-in-out infinite}@keyframes tap{50%{transform:translateY(-18px) scale(1.12)}}
+#ctrl.beat .jb{filter:brightness(1.22);transform:scale(1.05)}
+@media (max-height:520px){.card{padding:10px 14px}.opt .pv{width:34px;height:34px;font-size:18px}.play{padding:9px;font-size:20px}.sub{display:none}}
 #big.go{animation:bigA 1.8s ease forwards}@keyframes bigA{0%{opacity:0;transform:translate(-50%,-50%) scale(.3)}15%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}25%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-70%) scale(1)}}
 </style>
 </head>
@@ -67,12 +93,23 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
   <div class="sub">Doğru renge dokun, Pofuduk'a ışıltılı jöle köprüler kur! 🌈</div>
   <div class="st">POFUDUK'U SEÇ</div>
   <div class="grid" id="skins"></div>
-  <div class="st">OYUN</div>
+  <div class="st">KOSTÜM <span id="kTot" style="color:#ffe066"></span></div>
+  <div class="grid" id="cos" style="grid-template-columns:repeat(6,1fr)"></div>
+  <button class="play" id="pMap">🗺️ MACERA HARİTASI</button>
+  <div class="st">SERBEST OYUN</div>
   <div class="grid" id="modes" style="grid-template-columns:repeat(3,1fr)"></div>
-  <button class="play" id="play">OYNA! ▶</button>
+  <div style="display:flex;gap:10px"><button class="play alt" id="play">♾️ SERBEST</button><button class="play alt2" id="pCoop">👫 ARKADAŞLA</button></div>
 </div></div>
+<div id="map" class="hide"><div id="mapTop" class="glass"><div class="ib glass" id="mBack">⬅</div><b>🗺️ Macera Haritası</b><span id="mTot"></span></div><div id="mapBody"></div></div>
+<div id="win" class="hide"><div class="card glass" style="animation:none"><div class="title" id="wTitle">Bölüm bitti!</div><div id="wStars"></div><div class="sub" id="wSub"></div>
+  <div style="display:flex;gap:10px"><button class="play alt" id="wMap" style="flex:1;font-size:34px">🗺️</button><button class="play alt" id="wAgain" style="flex:1;font-size:34px">🔁</button><button class="play" id="wNext" style="flex:2;font-size:24px">SONRAKİ ▶</button></div></div></div>
+<div id="wait" class="hide"><div class="card glass" style="animation:none"><div class="title">👫 Birlikte Köprü</div><div class="sub" id="waitMsg">⏳ Arkadaşın bekleniyor...</div><div id="waitCode" style="font-size:30px;font-weight:700;margin:6px 0"></div>
+  <div class="sub">Sırayla renge basın! Bir köprü senden, bir köprü arkadaşından 🌈</div><button class="play alt2" id="waitInv">📨 ARKADAŞINI ÇAĞIR</button><button class="play alt" id="waitBack" style="margin-top:8px">🏠 ÇIK</button></div></div>
+<div id="turn" class="glass hide"></div>
+<div id="kHand">👆</div>
 <script src="ortak.js"></script>
 <script src="analiz.js"></script>
+<script src="net.js"></script>
 <script>
 // ======================= SES =======================
 const RO = window.RobiOrtak || {}, AN = window.RobiAnaliz || { screen() {}, ev() {} };
@@ -85,7 +122,7 @@ const S = { ctx: null, muted: false, step: 0, timer: null,
   tramp() { [260, 390, 310, 480, 580].forEach((f, i) => this.tone(f, i * .06, .09, 'triangle', .2, f * 1.25)); [880, 1046, 932, 1174].forEach((f, i) => this.tone(f, .35 + i * .08, .09, 'sine', .06)); },
   fan() { [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => { this.tone(f, i * .07, .5, 'triangle', .2); this.tone(f * 2, i * .07, .3, 'sine', .05); }); },
   music() { if (this.timer) return; const bass = [131, 131, 165, 196, 175, 175, 147, 196], mel = [523, 659, 784, 659, 698, 880, 784, 659, 587, 698, 880, 698, 659, 784, 1047, 784];
-    this.timer = setInterval(() => { if (this.muted || !this.ctx || this.ctx.state !== 'running') return; const s = this.step++; if (s % 2 === 0) this.tone(bass[(s / 2 | 0) % 8], 0, .25, 'triangle', .07); this.tone(mel[s % 16] * (G.fever ? 1.5 : 1), 0, .16, 'sine', .04); if (s % 4 === 0) this.tone(60, 0, .08, 'sine', .12, 40); G.beat = 1; }, 170); } };
+    this.timer = setInterval(() => { this.beatN = (this.beatN || 0) + 1; if (this.beatN % 2 === 0) { this.beatAt = performance.now(); window.onBeat && onBeat(); } if (this.muted || !this.ctx || this.ctx.state !== 'running') return; const s = this.step++; if (this.beatN % 2 === 0) this.tone(bass[(s / 2 | 0) % 8], 0, .25, 'triangle', .07); this.tone(mel[s % 16] * (G.fever ? 1.5 : 1), 0, .16, 'sine', .04); if (s % 4 === 0) this.tone(60, 0, .08, 'sine', .12, 40); G.beat = 1; }, 170); } };
 // ======================= VERİ =======================
 const COL = {
   red: { n: 'Kırmızı', d: 'kırmızıya', h: '#ff2d6f', l: '#ff9db5', p: ['red'] }, yellow: { n: 'Sarı', d: 'sarıya', h: '#ffc21a', l: '#fff3a8', p: ['yellow'] }, blue: { n: 'Mavi', d: 'maviye', h: '#1fc8f5', l: '#a5fbff', p: ['blue'] },
@@ -99,7 +136,7 @@ const WORLDS = [
   { n: 'Gökkuşağı Uzayı', i: '🚀', sky: ['#05021a', '#1d0b52', '#7a1fa2'], top: ['#ffd23f', '#fff2a8'], base: ['#3a0ca3', '#1a0560'], deco: 'space', stars: 1 } ];
 // ======================= KANVAS =======================
 const cv = document.getElementById('c'), x = cv.getContext('2d'); let W = 0, H = 0, DPR = 1;
-function resize() { DPR = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = W * DPR; cv.height = H * DPR; x.setTransform(DPR, 0, 0, DPR, 0, 0); buildBg(); }
+function resize() { if (innerWidth < 20 || innerHeight < 20) return; const was = W; DPR = Math.min(2, devicePixelRatio || 1); W = innerWidth; H = innerHeight; cv.width = W * DPR; cv.height = H * DPR; x.setTransform(DPR, 0, 0, DPR, 0, 0); buildBg(); if (!was && typeof init === 'function' && !G.run) init(); }
 addEventListener('resize', resize);
 const G = { run: false, mode: 'adventure', skin: 'mint', score: 0, built: 0, combo: 0, fever: false, fT: 0, cam: 0, speed: 200, sel: [], shake: 0, beat: 0, world: 0, t: 0, saidFor: null };
 const P = { x: 0, y: 0, r: 36, sx: 1, sy: 1, ph: 0, trail: [], happy: 0, giggle: 0 };
@@ -127,13 +164,15 @@ function buildBg() {
 }
 // ======================= DÜNYA =======================
 function decos(w) { const d = [], n = Math.floor(w / 80); for (let i = 0; i < n; i++) d.push({ o: 30 + i * 78 + Math.random() * 20, k: Math.floor(Math.random() * 3), s: .75 + Math.random() * .5, hue: Math.random() * 360 }); return d; }
-function nextColor() { const pr = ['red', 'yellow', 'blue'], se = ['orange', 'green', 'purple']; if (G.mode === 'primary') return pr[Math.random() * 3 | 0]; if (G.mode === 'mix') return se[Math.random() * 3 | 0]; if (G.built < 4) return pr[Math.random() * 3 | 0]; return (Math.random() < .55 ? pr : se)[Math.random() * 3 | 0]; }
-function seg(sx) { const gw = Math.min(190, Math.max(140, W * .2)); gaps.push({ x: sx, w: gw, c: nextColor(), built: false, a: 0, pulse: Math.random() * 6 }); if (Math.random() < .75) stars.push({ x: sx + gw * .5, y: gy() - 120 - Math.random() * 60, r: 26, got: false, bob: Math.random() * 6, e: ['⭐', '🫧', '🍬', '💎'][Math.random() * 4 | 0] }); const iw = 220 + Math.random() * 120; isl.push({ x: sx + gw, w: iw, d: decos(iw), tiles: Math.random() < .5 }); return sx + gw + iw; }
-function init() { Object.assign(G, { score: 0, built: 0, combo: 0, fever: false, fT: 0, cam: 0, sel: [], shake: 0, world: 0, saidFor: null }); G.speed = G.mode === 'primary' ? 165 : 195; isl = []; gaps = []; parts = []; stars = []; beams = []; tramps = []; texts = []; P.x = Math.min(W * .24, 230); P.y = gy() - P.r; P.trail = []; let cx = 0; const fw = P.x + 280; isl.push({ x: 0, w: fw, d: decos(fw), tiles: true }); cx = fw; for (let i = 0; i < 10; i++) cx = seg(cx); hud(); }
+const RND = () => (G.rng ? G.rng() : Math.random());
+function nextColor() { if (window.lvColor) { const lc = lvColor(); if (lc) return lc; } const pr = ['red', 'yellow', 'blue'], se = ['orange', 'green', 'purple']; if (G.mode === 'primary') return pr[RND() * 3 | 0]; if (G.mode === 'mix') return se[RND() * 3 | 0]; if (G.made < 4) return pr[RND() * 3 | 0]; return (RND() < .55 ? pr : se)[RND() * 3 | 0]; }
+function seg(sx) { if (G.finX) return sx; if (G.goal && G.made >= G.goal) { const fw = 1500; G.finX = sx; isl.push({ x: sx, w: fw, d: decos(fw), tiles: true, fin: true }); return sx + fw; } const gw = 170; gaps.push({ id: G.made++, x: sx, w: gw, c: nextColor(), built: false, a: 0, pulse: Math.random() * 6 }); const sr = RND(), sy = RND(), se = RND(); if (sr < .75) stars.push({ x: sx + gw * .5, y: gy() - 120 - sy * 60, r: 26, got: false, bob: Math.random() * 6, e: ['⭐', '🫧', '🍬', '💎'][se * 4 | 0] }); const iw = 220 + RND() * 120; isl.push({ x: sx + gw, w: iw, d: decos(iw), tiles: Math.random() < .5 }); return sx + gw + iw; }
+function init() { Object.assign(G, { score: 0, built: 0, combo: 0, fever: false, fT: 0, cam: 0, sel: [], shake: 0, world: 0, saidFor: null, made: 0, finX: 0, falls: 0, fallStreak: 0, perf: 0, goal: 0 }); window.preInit && preInit(); G.speed = G.mode === 'primary' ? 165 : 195; isl = []; gaps = []; parts = []; stars = []; beams = []; tramps = []; texts = []; P.x = Math.min(W * .24, 230); P.y = gy() - P.r; P.trail = []; let cx = 0; const fw = P.x + 280; isl.push({ x: 0, w: fw, d: decos(fw), tiles: true }); cx = fw; for (let i = 0; i < 10; i++) cx = seg(cx); window.onInit && onInit(); hud(); }
 // ======================= OYNANIŞ =======================
-function press(c, btn) {
-  if (!G.run) return; S.init(); btn.classList.add('pr'); setTimeout(() => btn.classList.remove('pr'), 120);
-  const px = G.cam + P.x, g = gaps.find(q => !q.built && q.x + q.w > px - 20); if (!g) { S.pop(G.combo); return; }
+function press(c, btn, remote) {
+  if (!G.run) return; if (!remote && window.pressGate && !pressGate(c, btn)) return; S.init(); btn.classList.add('pr'); setTimeout(() => btn.classList.remove('pr'), 120);
+  const px = G.cam + P.x, g = G.forceGap || gaps.find(q => !q.built && q.x + q.w > px - 20); if (!g) { S.pop(G.combo); return; }
+  if (!remote) G.pressAt = performance.now(); window.onPressGap && onPressGap(g, c, remote);
   if (G.fever) { build(g, 'rainbow'); return; }
   const T = COL[g.c];
   if (T.p.length === 1) { if (c === T.p[0]) { G.sel = []; clr(); beam(c, g); build(g, g.c); } else { S.boing(); txt(P.x, P.y - 70, `${T.n} dene! 💡`, '#fff'); G.sel = []; clr(); } return; }
@@ -143,26 +182,27 @@ function press(c, btn) {
 const clr = () => document.querySelectorAll('.jb').forEach(b => b.classList.remove('mix'));
 function beam(c, g) { const b = document.querySelector(`.jb[data-c="${c}"]`).getBoundingClientRect(); beams.push({ sx: b.left + b.width / 2, sy: b.top + b.height / 2, ex: g.x - G.cam + g.w / 2, ey: gy(), col: COL[c].h, life: 1 }); }
 function build(g, fc) {
-  g.built = true; g.bc = fc; g.a = .01; G.built++; const pts = 100 + G.combo * 20; G.score += pts; P.happy = .8; if (!G.fever) G.combo++;
+  g.built = true; g.bc = fc; g.a = .01; G.built++; G.fallStreak = 0; const pts = 100 + G.combo * 20; G.score += pts; P.happy = .8; if (!G.fever) G.combo++;
   S.pop(G.combo); G.shake = 6; const sx = g.x - G.cam + g.w / 2; burst(sx, gy(), COL[fc].h, 30); txt(sx, gy() - 50, `+${pts} ✨`, '#fff');
-  const nw = Math.floor(G.built / 6) % WORLDS.length; if (nw !== G.world) { G.world = nw; big(`${WORLDS[nw].i} ${WORLDS[nw].n}!`); burst(W / 2, H * .35, '#ffd23f', 50); say(WORLDS[nw].n + '!'); }
+  const nw = Math.floor(G.built / 6) % WORLDS.length; if (G.lvl == null && nw !== G.world) { G.world = nw; big(`${WORLDS[nw].i} ${WORLDS[nw].n}!`); burst(W / 2, H * .35, '#ffd23f', 50); say(WORLDS[nw].n + '!'); }
   if (!G.fever && G.combo >= 5) { G.fever = true; G.fT = 6; G.combo = 5; S.fan(); burst(P.x, P.y, '#ff5fa2', 70); big('🌈 FEVER MODE! 🌈'); say('Gökkuşağı uçuşu!'); AN.ev('kopru_fever'); }
+  window.onBuild && onBuild(g, fc);
   hud();
 }
 function burst(px, py, col, n) { const pal = [col, '#ffd23f', '#ffffff', '#5ef3ff', '#ff7ad9', '#7dff9b']; for (let i = 0; i < n; i++) { const a = Math.random() * 6.28, sp = 120 + Math.random() * 300; parts.push({ x: px, y: py, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 120, s: 4 + Math.random() * 7, c: pal[Math.random() * pal.length | 0], life: 1, dec: .7 + Math.random() * .7, k: Math.random() < .45 ? 'conf' : Math.random() < .5 ? 'star' : 'spark', rot: Math.random() * 6, vr: (Math.random() - .5) * 12 }); } }
 function txt(px, py, t, c) { texts.push({ x: px, y: py, t, c, life: 1 }); }
 function big(t) { const b = document.getElementById('big'); b.textContent = t; b.classList.remove('go'); void b.offsetWidth; b.classList.add('go'); }
-cv.addEventListener('pointerdown', e => { if (!G.run) return; S.init(); let hit = false; for (const s of stars) { if (s.got) continue; const sx = s.x - G.cam, sy = s.y + Math.sin(s.bob) * 10; if (Math.hypot(e.clientX - sx, e.clientY - sy) < s.r + 28) { s.got = true; hit = true; G.score += 50; S.pop(G.combo + 3); burst(sx, sy, '#ffd23f', 22); txt(sx, sy - 24, '+50 ⭐', '#fff07c'); hud(); } } if (!hit) burst(e.clientX, e.clientY, '#a8fff3', 8); });
+cv.addEventListener('pointerdown', e => { if (!G.run) return; S.init(); let hit = false; for (const s of stars) { if (s.got) continue; const sx = s.x - G.cam, sy = s.y + Math.sin(s.bob) * 10; if (Math.hypot(e.clientX - sx, e.clientY - sy) < s.r + 28) { s.got = true; hit = true; G.score += 50; window.onBubble && onBubble(); S.pop(G.combo + 3); burst(sx, sy, '#ffd23f', 22); txt(sx, sy - 24, '+50 ⭐', '#fff07c'); hud(); } } if (!hit) burst(e.clientX, e.clientY, '#a8fff3', 8); });
 // ======================= GÜNCELLE =======================
 function update(dt) {
   if (!G.run) return; G.t += dt;
   if (G.fever) { G.fT -= dt; if (Math.random() < .6) burst(P.x - 30, P.y + (Math.random() - .5) * 40, `hsl(${G.t * 300 % 360},95%,65%)`, 2); if (G.fT <= 0) { G.fever = false; G.combo = 0; hud(); } }
-  const sp = G.fever ? G.speed * 1.45 : G.speed + Math.min(70, G.built * 2); G.cam += sp * dt; G.beat = Math.max(0, G.beat - dt * 4);
+  const sp = G.fever ? G.speed * 1.45 : G.speed + Math.min(70, G.built * 2); G.cam += sp * dt; window.camHook && camHook(); G.beat = Math.max(0, G.beat - dt * 4);
   const px = G.cam + P.x; let act = null;
   for (const g of gaps) { g.pulse += dt * 5; if (g.built && g.a < 1) g.a = Math.min(1, g.a + dt * 5); if (G.fever && !g.built && g.x < px + 200) build(g, 'rainbow'); if (px >= g.x && px <= g.x + g.w) act = g; }
   // yaklaşan boşluğu sesli söyle (okuma bilmeyenler için)
-  const nx = gaps.find(g => !g.built && g.x > px); if (nx && nx.x - px < 260 && G.saidFor !== nx && !G.fever) { G.saidFor = nx; const T = COL[nx.c]; say(T.p.length === 1 ? `${T.d} bas!` : `${COL[T.p[0]].n} ve ${COL[T.p[1]].n}!`); }
-  if (act && !act.built && !G.fever) { S.tramp(); G.combo = 0; G.sel = []; clr(); hud(); G.cam -= (px - act.x) + 70; tramps.push({ x: act.x + 20, life: 1 }); P.giggle = 1; const T = COL[act.c]; txt(P.x, P.y - 80, T.p.length === 1 ? `Hopla! ${T.n} ☁️` : `Hopla! ${COL[T.p[0]].n} + ${COL[T.p[1]].n} ☁️`, '#fff'); G.saidFor = null; }
+  const nx = gaps.find(g => !g.built && g.x > px); if (nx && nx.x - px < 260 && G.saidFor !== nx && !G.fever) { G.saidFor = nx; const T = COL[nx.c]; if (!window.nearGate || nearGate(nx)) say(T.p.length === 1 ? `${T.d} bas!` : `${COL[T.p[0]].n} ve ${COL[T.p[1]].n}!`); }
+  if (act && !act.built && !G.fever) { G.falls++; G.fallStreak++; S.tramp(); G.combo = 0; G.sel = []; clr(); hud(); G.cam -= (px - act.x) + 70; tramps.push({ x: act.x + 20, life: 1 }); P.giggle = 1; const T = COL[act.c]; txt(P.x, P.y - 80, T.p.length === 1 ? `Hopla! ${T.n} ☁️` : `Hopla! ${COL[T.p[0]].n} + ${COL[T.p[1]].n} ☁️`, '#fff'); G.saidFor = null; }
   P.ph += dt * (G.fever ? 11 : 7.5); const sv = Math.abs(Math.sin(P.ph));
   if (G.fever) { P.y = gy() - 110 + Math.sin(P.ph * .7) * 24; P.sx = 1.1; P.sy = .94; }
   else { P.y = gy() - P.r - sv * 58; if (sv < .12) { P.sx = 1.28; P.sy = .76; } else { P.sx += (1 - P.sx) * dt * 12; P.sy += (1 - P.sy) * dt * 12; } }
@@ -232,6 +272,7 @@ function island(sx, y, w, wd, s) {
   const tg = x.createLinearGradient(0, y - 8, 0, y + 18); tg.addColorStop(0, wd.top[1]); tg.addColorStop(1, wd.top[0]); x.fillStyle = tg; rrect(sx - 4, y - 8, w + 8, 26, 14); x.fill();
   for (let i = 0; i < w / 26; i++) { x.beginPath(); x.ellipse(sx + 10 + i * 26, y + 17, 9, 7, 0, 0, Math.PI); x.fill(); }
   x.fillStyle = 'rgba(255,255,255,.55)'; rrect(sx + 14, y - 4, w - 28, 5, 3); x.fill();
+  if (s.fin && window.finDraw) finDraw(sx, y, w);
   // süsler
   const T = performance.now() / 1000;
   for (const d of s.d) { const dx = sx + d.o; if (dx > sx + w - 20) continue;
@@ -264,6 +305,7 @@ function pof() {
   x.globalCompositeOperation = 'lighter'; const hl = x.createRadialGradient(0, 0, r * .6, 0, 0, r * 2.1); hl.addColorStop(0, G.fever ? 'rgba(255,230,120,.45)' : sk[1] + '66'); hl.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = hl; x.beginPath(); x.arc(0, 0, r * 2.1, 0, 7); x.fill(); x.globalCompositeOperation = 'source-over';
   // kanatlar
   if (G.fever) { const fl = Math.sin(T * 25) * .4; [-1, 1].forEach(d => { x.save(); x.scale(d, 1); x.rotate(fl); const wg = x.createLinearGradient(-r * 2, 0, -r * .5, 0); ['#ff5fa2', '#ffd23f', '#5ef38c', '#5ec8ff', '#c77dff'].forEach((c, i) => wg.addColorStop(i / 4, c)); x.fillStyle = wg; x.globalAlpha = .9; x.beginPath(); x.ellipse(-r * 1.15, -r * .35, r * .85, r * .38, -.5, 0, 7); x.fill(); x.restore(); }); }
+  if (window.cosBack) cosBack(r, T);
   // jöle gövde (alt geniş damla)
   const body = () => { x.beginPath(); x.moveTo(-r, r * .55); x.bezierCurveTo(-r * 1.08, -r * .2, -r * .7, -r * 1.05, 0, -r * 1.05); x.bezierCurveTo(r * .7, -r * 1.05, r * 1.08, -r * .2, r, r * .55); x.quadraticCurveTo(r * .55, r * .95, 0, r * .9); x.quadraticCurveTo(-r * .55, r * .95, -r, r * .55); x.closePath(); };
   const bgd = x.createRadialGradient(-r * .35, -r * .45, r * .1, 0, 0, r * 1.2);
@@ -285,10 +327,11 @@ function pof() {
     else { x.fillStyle = '#2a1150'; x.beginPath(); x.ellipse(ex, ey, 7.5, 9.5, 0, 0, 7); x.fill(); const ig = x.createRadialGradient(ex, ey + 3, 1, ex, ey + 3, 7); ig.addColorStop(0, 'rgba(120,200,255,.9)'); ig.addColorStop(1, 'rgba(120,200,255,0)'); x.fillStyle = ig; x.beginPath(); x.arc(ex, ey + 3, 6, 0, 7); x.fill(); x.fillStyle = '#fff'; x.beginPath(); x.arc(ex - 2.5, ey - 3.5, 3, 0, 7); x.fill(); x.beginPath(); x.arc(ex + 2.5, ey + 3, 1.4, 0, 7); x.fill(); } });
   x.fillStyle = 'rgba(255,110,170,.55)'; x.beginPath(); x.ellipse(-r * .55, r * .14, 7, 4, 0, 0, 7); x.ellipse(r * .55, r * .14, 7, 4, 0, 0, 7); x.fill();
   x.fillStyle = '#7a1040'; x.beginPath(); x.moveTo(-9, r * .2); x.quadraticCurveTo(0, r * .2 + (P.giggle > 0 || G.fever ? 16 : 12), 9, r * .2); x.closePath(); x.fill(); x.fillStyle = '#ff7aa8'; x.beginPath(); x.ellipse(0, r * .2 + 7, 4.5, 3, 0, 0, 7); x.fill();
+  if (window.cosFront) cosFront(r, T);
   x.restore();
 }
 // ======================= ARAYÜZ =======================
-function hud() { document.getElementById('score').textContent = '⭐ ' + G.score.toLocaleString('tr-TR'); const w = WORLDS[G.world]; document.getElementById('wname').textContent = w.n; document.getElementById('lvl').textContent = `${G.world + 1}-${G.built % 6 + 1} · ${w.i}`; document.getElementById('ava').textContent = SKINS[G.skin][4]; document.querySelectorAll('.fs').forEach((s, i) => s.classList.toggle('on', G.fever || i < G.combo)); document.getElementById('flab').textContent = G.fever ? '🌈 FEVER MODE! 🌈' : `KOMBO ${G.combo}/5`; }
+function hud() { document.getElementById('score').textContent = '⭐ ' + G.score.toLocaleString('tr-TR'); const w = WORLDS[G.world]; document.getElementById('wname').textContent = w.n; document.getElementById('lvl').textContent = `${G.world + 1}-${G.built % 6 + 1} · ${w.i}`; document.getElementById('ava').textContent = SKINS[G.skin][4]; window.hudHook && hudHook(); document.querySelectorAll('.fs').forEach((s, i) => s.classList.toggle('on', G.fever || i < G.combo)); document.getElementById('flab').textContent = G.fever ? '🌈 FEVER MODE! 🌈' : `KOMBO ${G.combo}/5`; }
 document.getElementById('fstars').innerHTML = '<div class="fs">★</div>'.repeat(5);
 document.getElementById('skins').innerHTML = Object.entries(SKINS).map(([k, s]) => `<button class="opt glass ${k === G.skin ? 'on' : ''}" data-s="${k}"><div class="pv" style="background:radial-gradient(circle at 30% 30%,${s[2]},${s[1]} 60%,${s[3]})">${s[4]}</div>${s[0]}</button>`).join('');
 document.getElementById('modes').innerHTML = Object.entries(MODES).map(([k, m]) => `<button class="opt glass ${k === G.mode ? 'on' : ''}" data-m="${k}"><div style="font-size:26px">${m[0]}</div>${m[1]}<div style="font-weight:600;font-size:11px;opacity:.85">${m[2]}</div></button>`).join('');
@@ -301,10 +344,320 @@ document.getElementById('bMenu').onclick = () => { S.init(); G.run = false; docu
 document.getElementById('bSnd').onclick = e => { S.init(); S.muted = !S.muted; e.currentTarget.textContent = S.muted ? '🔇' : '🔊'; };
 document.getElementById('bBack').onclick = () => { try { if (window.parent !== window) { parent.postMessage('robi-menu', '*'); return; } } catch (e) {} location.href = 'index.html'; };
 let last = performance.now();
-function loop(now) { const dt = Math.min(.05, (now - last) / 1000); last = now; update(dt); draw(); requestAnimationFrame(loop); }
-resize(); init(); hud(); requestAnimationFrame(loop);
+function loop(now) { requestAnimationFrame(loop); const dt = Math.min(.05, (now - last) / 1000); last = now; if (W < 20 || H < 20) { resize(); return; } try { update(dt); draw(); } catch (e) { console.error('kopru', e); } }
+resize(); if (W) init(); hud(); requestAnimationFrame(loop);
 setInterval(() => { if (document.hidden || !G.run) return; if (RO.tick && RO.tick(5) <= 0) { G.run = false; document.body.innerHTML = '<div style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#2b2340;color:#fff;font-weight:700;font-size:24px;text-align:center"><div style="font-size:70px">😴🌙</div>Pofuduk\'un uyku zamanı!</div>'; } }, 5000);
 window.__k = { G, P, build, press, init, get gaps() { return gaps; } };
+</script>
+<script>
+// ===== v19: Harita (3 dünya × 10 bölüm + Gökkuşağı Şatosu), ritim "Mükemmel!", kostümler, el ipucu, Birlikte Oyna =====
+const $k = id => document.getElementById(id);
+const KKEY = 'robi_kopru';
+const KS = (() => { try { return Object.assign({ stars: 0, lv: {}, cos: 'none' }, JSON.parse(localStorage.getItem(KKEY) || '{}')); } catch (e) { return { stars: 0, lv: {}, cos: 'none' }; } })();
+const kSave = () => { try { localStorage.setItem(KKEY, JSON.stringify(KS)); } catch (e) {} };
+G.lvl = null; G.coop = false;
+
+// ---------- Seviye tasarımı ----------
+const PR3 = ['red', 'yellow', 'blue'], SE3 = ['orange', 'green', 'purple'];
+function LV(L) {
+  if (L === 30) return { w: 2, i: 10, goal: 16, sec: .65, sp: 205, castle: 1 };
+  const w = Math.floor(L / 10), i = L % 10;
+  return { w, i, goal: 5 + Math.floor(i / 2) + w * 2, sec: w === 0 ? (i < 5 ? 0 : .25) : w === 1 ? .45 : .6, sp: 150 + w * 18 + i * 3 };
+}
+function lvColor() {
+  if (G.lvl == null) return null;
+  const c = LV(G.lvl);
+  if (G.made < 2 || RND() >= c.sec) return PR3[RND() * 3 | 0];
+  return SE3[RND() * 3 | 0];
+}
+function preInit() {
+  if (G.lvl != null) { const c = LV(G.lvl); G.goal = c.goal; }
+  if (G.seed) { let s = G.seed >>> 0 || 1; G.rng = () => { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; } else G.rng = null;
+}
+function onInit() {
+  if (G.lvl != null) { const c = LV(G.lvl); G.world = c.w; G.speed = c.sp; }
+  if (G.coop) G.speed = 160;
+  handOff();
+}
+const lvOpen = L => L === 0 || !!KS.lv[L - 1] || (RO.load && RO.load().unlockAll);
+function hudHook() {
+  if (G.lvl != null) {
+    const c = LV(G.lvl);
+    $k('lvl').textContent = c.castle ? `🏰 Şato · ${Math.min(G.built, c.goal)}/${c.goal}` : `${c.w + 1}-${c.i + 1} · ${Math.min(G.built, c.goal)}/${c.goal} 🌉`;
+    if (c.castle) $k('wname').textContent = 'Gökkuşağı Şatosu';
+  }
+}
+
+// ---------- Ritim: müzik vuruşunda basınca "Mükemmel!" ----------
+let perfSaid = 0;
+function onBeat() {
+  if (!G.run) return;
+  const c = $k('ctrl'); c.classList.add('beat'); setTimeout(() => c.classList.remove('beat'), 110);
+}
+function onBuild(g, fc) {
+  addStar(1);
+  const now = performance.now();
+  if (G.pressAt && now - G.pressAt < 40 && !G.fever && S.beatAt) {
+    const per = 340, ph = (now - S.beatAt) % per, d = Math.min(ph, per - ph);
+    if (d < 75) {
+      G.perf++; G.score += 50;
+      S.tone(1568, 0, .12, 'triangle', .14); S.tone(2093, .06, .2, 'sine', .1);
+      txt(P.x + 30, P.y - 120, '🎵 MÜKEMMEL! +50', '#ffe066'); burst(P.x, P.y - 40, '#ffe066', 26);
+      if (perfSaid === 0 || G.perf % 4 === 0) { say(perfSaid === 0 ? 'Mükemmel! Müziğin vuruşunda bastın!' : 'Mükemmel!'); perfSaid++; }
+    }
+  }
+  G.pressAt = 0;
+  if (G.lvl != null && G.built === 2 && G.lvl === 10) say('Müziğe kulak ver! Vuruşta basarsan Mükemmel olur!');
+}
+function onBubble() { addStar(1); }
+
+// ---------- Bölüm sonu: bayrak ya da Gökkuşağı Şatosu ----------
+function finDraw(sx, y, w) {
+  const castle = G.lvl === 30, fx = sx + 260, T = performance.now() / 1000;
+  if (castle) {
+    const cx = fx + 120;
+    x.save(); x.shadowColor = '#ff9ecf'; x.shadowBlur = 40;
+    const cols = ['#ff5fa2', '#ffc21a', '#36e07a', '#1fc8f5', '#a855f7'];
+    [[-150, 130, 60], [-80, 190, 70], [0, 250, 90], [80, 190, 70], [150, 130, 60]].forEach(([ox, h, tw], i) => {
+      const g = x.createLinearGradient(0, y - h, 0, y); g.addColorStop(0, '#fff'); g.addColorStop(1, cols[i]);
+      x.fillStyle = g; rrect(cx + ox - tw / 2, y - h, tw, h, 10); x.fill();
+      x.fillStyle = cols[(i + 2) % 5]; x.beginPath(); x.moveTo(cx + ox - tw / 2 - 8, y - h); x.lineTo(cx + ox, y - h - 60); x.lineTo(cx + ox + tw / 2 + 8, y - h); x.fill();
+      x.fillStyle = 'rgba(255,255,255,.85)'; x.beginPath(); x.arc(cx + ox, y - h * .6, tw * .18, 0, 7); x.fill();
+      x.fillStyle = cols[(i + 1) % 5]; x.fillRect(cx + ox, y - h - 90, 3, 32); x.beginPath(); x.moveTo(cx + ox + 3, y - h - 90); x.lineTo(cx + ox + 30 + Math.sin(T * 6 + i) * 4, y - h - 80); x.lineTo(cx + ox + 3, y - h - 70); x.fill();
+    });
+    x.fillStyle = '#7a1fa2'; x.beginPath(); x.arc(cx, y, 40, Math.PI, 0); x.fill();
+    x.restore();
+    x.globalCompositeOperation = 'lighter';
+    cols.forEach((c, i) => { x.strokeStyle = c; x.globalAlpha = .35; x.lineWidth = 14; x.beginPath(); x.arc(cx, y - 40, 330 - i * 14, Math.PI, 0); x.stroke(); });
+    x.globalAlpha = 1; x.globalCompositeOperation = 'source-over';
+  } else {
+    x.fillStyle = '#fff'; x.fillRect(fx, y - 170, 7, 170);
+    const g = x.createLinearGradient(fx, 0, fx + 110, 0); ['#ff2d6f', '#ffc21a', '#36e07a', '#1fc8f5', '#a855f7'].forEach((c, i) => g.addColorStop(i / 4, c));
+    x.fillStyle = g; x.beginPath(); x.moveTo(fx + 7, y - 170);
+    for (let k = 0; k <= 10; k++) x.lineTo(fx + 7 + k * 11, y - 170 + Math.sin(T * 6 + k * .7) * 6);
+    for (let k = 10; k >= 0; k--) x.lineTo(fx + 7 + k * 11, y - 110 + Math.sin(T * 6 + k * .7) * 6);
+    x.fill();
+    x.font = '700 30px Fredoka,system-ui'; x.textAlign = 'center'; x.fillStyle = '#fff'; x.strokeStyle = 'rgba(40,10,90,.8)'; x.lineWidth = 6; x.strokeText('🏁 BİTİŞ', fx + 60, y - 190); x.fillText('🏁 BİTİŞ', fx + 60, y - 190);
+  }
+}
+
+// ---------- Kamera kancası: birlikte modda bekle, bitişi algıla, el ipucu ----------
+let lastTurnId = -1;
+function camHook() {
+  const px = G.cam + P.x;
+  const nx = gaps.find(g => !g.built && g.x + g.w > px - 20);
+  if ((G.coop || (G.lvl != null && G.lvl < 3)) && nx && !G.fever && px > nx.x - 14) G.cam = nx.x - 14 - P.x; // Pofuduk sırasını bekler, düşmez
+  if (G.finX && px > G.finX + 300 && G.run) levelWin();
+  if (G.coop && nx && nx.id !== lastTurnId) { lastTurnId = nx.id; turnChanged(nx); }
+  handTick(nx);
+}
+
+// ---------- El ipucu (okuma bilmeyenler için hangi düğme) ----------
+const kHand = $k('kHand');
+function handWanted(g) {
+  if (!g || G.fever || !G.run) return false;
+  if (g.x - (G.cam + P.x) > 330) return false;
+  if (G.coop) return isMyTurn(g) && g.id < 4;
+  if (G.fallStreak >= 2) return true;
+  if (G.lvl != null) return G.lvl < 5;
+  return G.mode === 'primary' && G.built < 6;
+}
+function handTick(g) {
+  if (!handWanted(g)) { handOff(); return; }
+  const need = COL[g.c].p.filter(q => !G.sel.includes(q))[0];
+  const b = need && document.querySelector(`.jb[data-c="${need}"]`);
+  if (!b) { handOff(); return; }
+  const r = b.getBoundingClientRect();
+  kHand.style.left = (r.left + r.width / 2 - 22) + 'px'; kHand.style.top = (r.top - 50) + 'px';
+  kHand.textContent = '👇'; kHand.classList.add('on');
+}
+function handOff() { kHand.classList.remove('on'); }
+
+// ---------- Kostümler ----------
+const KC = [
+  { k: 'none', e: '🙂', n: 'Yok', need: 0 }, { k: 'hat', e: '🎩', n: 'Şapka', need: 15 }, { k: 'glasses', e: '🕶️', n: 'Gözlük', need: 40 },
+  { k: 'bow', e: '🎀', n: 'Fiyonk', need: 70 }, { k: 'cape', e: '🦸', n: 'Pelerin', need: 110 }, { k: 'glitter', e: '✨', n: 'Parıltı', need: 160 }];
+function addStar(n) {
+  const before = KS.stars; KS.stars += n;
+  const u = KC.find(c => c.need > 0 && before < c.need && KS.stars >= c.need);
+  if (u) { big(`${u.e} YENİ KOSTÜM!`); say(`Yaşasın! Yeni kostüm açıldı: ${u.n}! Menüden giyebilirsin.`); S.fan(); AN.ev('kopru_kostum_' + u.k); }
+  kSave();
+}
+function renderCos() {
+  $k('kTot').textContent = '⭐ ' + KS.stars;
+  $k('cos').innerHTML = KC.map(c => { const op = KS.stars >= c.need; return `<button class="opt glass ${KS.cos === c.k ? 'on' : ''} ${op ? '' : 'lock'}" data-k="${c.k}"><div class="pv" style="background:rgba(255,255,255,.25)">${op ? c.e : '🔒'}</div>${c.n}${op ? '' : `<small>⭐${c.need}</small>`}</button>`; }).join('');
+  $k('cos').querySelectorAll('[data-k]').forEach(b => b.onclick = () => {
+    S.init(); const c = KC.find(q => q.k === b.dataset.k);
+    if (KS.stars < c.need) { S.boing(); say(`${c.n} için ${c.need} yıldız lazım. ${c.need - KS.stars} yıldız kaldı!`); return; }
+    S.pop(3); KS.cos = c.k; kSave(); renderCos(); if (c.k !== 'none') say(`${c.n} çok yakıştı!`);
+  });
+}
+function cosBack(r, T) {
+  if (KS.cos !== 'cape') return;
+  x.save(); const wv = Math.sin(T * 9) * 8;
+  const g = x.createLinearGradient(-r * 2.4, 0, 0, 0); g.addColorStop(0, '#b4004a'); g.addColorStop(1, '#ff2d6f');
+  x.fillStyle = g; x.beginPath(); x.moveTo(-r * .4, -r * .55); x.quadraticCurveTo(-r * 1.4, -r * .6 + wv, -r * 2.3, -r * .1 + wv);
+  x.quadraticCurveTo(-r * 2, r * .4 - wv, -r * 2.25, r * .85 - wv); x.quadraticCurveTo(-r * 1.2, r * .6, -r * .3, r * .5); x.closePath(); x.fill();
+  x.fillStyle = '#ffd23f'; x.beginPath(); x.arc(-r * .35, -r * .45, 5, 0, 7); x.fill(); x.restore();
+}
+function cosFront(r, T) {
+  const k = KS.cos;
+  if (k === 'hat') {
+    x.save(); x.rotate(-.15); x.fillStyle = '#2b1961'; rrect(-r * .75, -r * 1.12, r * 1.5, 9, 4); x.fill();
+    rrect(-r * .45, -r * 1.12 - r * .75, r * .9, r * .78, 6); x.fill();
+    x.fillStyle = '#ff5fa2'; x.fillRect(-r * .45, -r * 1.12 - 14, r * .9, 9);
+    x.fillStyle = 'rgba(255,255,255,.35)'; x.fillRect(-r * .35, -r * 1.12 - r * .7, 5, r * .5); x.restore();
+  } else if (k === 'glasses') {
+    const ey = -r * .12;
+    x.save(); x.fillStyle = 'rgba(20,10,40,.92)'; x.strokeStyle = '#ffd23f'; x.lineWidth = 2.5;
+    [-1, 1].forEach(d => { rrect(d * r * .33 - 12, ey - 9, 24, 18, 7); x.fill(); x.stroke(); });
+    x.beginPath(); x.moveTo(-r * .33 + 12, ey - 3); x.lineTo(r * .33 - 12, ey - 3); x.stroke();
+    x.fillStyle = 'rgba(255,255,255,.7)'; [-1, 1].forEach(d => { x.beginPath(); x.ellipse(d * r * .33 - 5, ey - 3, 4, 2.5, -.5, 0, 7); x.fill(); }); x.restore();
+  } else if (k === 'bow') {
+    x.save(); x.translate(r * .45, -r * .92); x.rotate(.3); x.fillStyle = '#ff4d8d'; x.strokeStyle = '#fff'; x.lineWidth = 2;
+    [-1, 1].forEach(d => { x.beginPath(); x.moveTo(0, 0); x.quadraticCurveTo(d * 24, -18, d * 26, 0); x.quadraticCurveTo(d * 24, 18, 0, 0); x.fill(); x.stroke(); });
+    x.fillStyle = '#c9184a'; x.beginPath(); x.arc(0, 0, 6, 0, 7); x.fill(); x.restore();
+  } else if (k === 'glitter') {
+    x.save(); x.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 12; i++) { const a = i / 12 * 6.28 + T * 1.6, rr2 = r * (1.15 + .12 * Math.sin(T * 5 + i)); x.fillStyle = `hsla(${(i * 30 + T * 120) % 360},100%,72%,.95)`; star5(Math.cos(a) * rr2, Math.sin(a) * rr2 * .9, 6, 2.5); x.fill(); }
+    x.strokeStyle = `hsla(${T * 160 % 360},100%,75%,.7)`; x.lineWidth = 4; x.beginPath(); x.ellipse(0, 0, r * 1.05, r * 1.02, 0, 0, 7); x.stroke(); x.restore();
+  }
+}
+
+// ---------- Harita ----------
+function renderMap() {
+  const tot = Object.values(KS.lv).reduce((a, b) => a + b, 0);
+  $k('mTot').textContent = `⭐ ${tot}/93`;
+  let cur = 0; while (cur < 30 && KS.lv[cur]) cur++;
+  let h = '';
+  for (let w = 0; w < 3; w++) {
+    const W0 = WORLDS[w];
+    h += `<div class="wsec" style="background:linear-gradient(160deg,${W0.sky[0]},${W0.sky[1]} 60%,${W0.sky[2]})"><h3>${W0.i} ${w + 1}. ${W0.n}</h3><div class="nodes">`;
+    for (let i = 0; i < 10; i++) { const L = w * 10 + i, op = lvOpen(L), st = KS.lv[L] || 0; h += `<button class="nd ${op ? '' : 'lock'} ${L === cur ? 'cur' : ''}" data-l="${L}">${op ? L % 10 + 1 : '🔒'}<small>${op ? '★'.repeat(st) + '☆'.repeat(3 - st) : ''}</small></button>`; }
+    h += '</div></div>';
+  }
+  const co = lvOpen(30), cs = KS.lv[30] || 0;
+  h += `<div class="wsec" style="background:linear-gradient(160deg,#ff9ecf,#a855f7,#1fc8f5)"><h3>🏰 Gökkuşağı Şatosu</h3><div class="nodes"><button class="nd castle ${co ? '' : 'lock'} ${cur === 30 ? 'cur' : ''}" data-l="30">${co ? '🏰🌈' : '🔒🏰'}<small style="font-size:16px">${co ? '★'.repeat(cs) + '☆'.repeat(3 - cs) : '30 bölümü bitir!'}</small></button></div></div>`;
+  $k('mapBody').innerHTML = h;
+  $k('mapBody').querySelectorAll('[data-l]').forEach(b => b.onclick = () => {
+    S.init(); const L = +b.dataset.l;
+    if (!lvOpen(L)) { S.boing(); say('Bu bölüm kilitli. Önce öncekini bitir!'); return; }
+    startLevel(L);
+  });
+  setTimeout(() => { const c = $k('mapBody').querySelector('.cur'); if (c) c.scrollIntoView({ block: 'center' }); }, 50);
+}
+function showMap() { G.run = false; G.lvl = null; $k('menu').classList.add('hide'); $k('win').classList.add('hide'); renderMap(); $k('map').classList.remove('hide'); say('Macera haritası! Parlayan bölüme dokun!'); }
+function startLevel(L) {
+  G.lvl = L; G.seed = 0; G.paused = false;
+  $k('map').classList.add('hide'); $k('menu').classList.add('hide'); $k('win').classList.add('hide');
+  S.init(); S.fan(); S.music(); init(); G.run = true; perfSaid = Math.min(perfSaid, 1);
+  const c = LV(L);
+  big(c.castle ? '🏰 Gökkuşağı Şatosu!' : `${WORLDS[c.w].i} ${c.w + 1}-${c.i + 1}`);
+  say(c.castle ? 'Son bölüm! Gökkuşağı Şatosuna köprü kur!' : L === 0 ? 'Hadi Pofuduk! Parmak hangi renge bakıyorsa ona bas!' : `${c.goal} köprü kur, bitişe ulaş!`);
+  AN.screen('kopru'); AN.ev('kopru_bolum_' + (L + 1));
+}
+function levelWin() {
+  G.run = false; handOff();
+  const L = G.lvl, st = G.falls === 0 ? 3 : G.falls <= 2 ? 2 : 1, castle = L === 30;
+  KS.lv[L] = Math.max(KS.lv[L] || 0, st); addStar(st); kSave();
+  $k('wTitle').textContent = castle ? '🏰 ŞATOYA ULAŞTIN!' : '🎉 BÖLÜM BİTTİ!';
+  $k('wStars').innerHTML = [0, 1, 2].map(i => `<span class="${i < st ? '' : 'off'}" style="animation-delay:${.2 + i * .25}s">⭐</span>`).join('');
+  $k('wSub').textContent = `⭐ ${G.score.toLocaleString('tr-TR')} puan · 🎵 ${G.perf} mükemmel`;
+  $k('wNext').classList.toggle('hide', L >= 30);
+  $k('win').classList.remove('hide');
+  S.fan(); burst(W / 2, H * .4, '#ffd23f', 90);
+  say(castle ? 'Gökkuşağı Şatosuna ulaştın! Sen bir renk ustasısın!' : st === 3 ? 'Harika! Üç yıldız! Hiç düşmedin!' : st === 2 ? 'Çok güzel! İki yıldız!' : 'Bölüm bitti! Tekrar oynarsan daha çok yıldız alırsın!');
+  AN.ev('kopru_bitti_' + (L + 1) + '_' + st);
+}
+$k('wMap').onclick = () => { S.init(); showMap(); };
+$k('wAgain').onclick = () => { S.init(); startLevel(G.lvl); };
+$k('wNext').onclick = () => { S.init(); startLevel(Math.min(30, G.lvl + 1)); };
+$k('mBack').onclick = () => { S.init(); $k('map').classList.add('hide'); openMenu(); };
+$k('pMap').onclick = () => { S.init(); S.pop(2); showMap(); };
+$k('pCoop').onclick = () => { S.init(); try { parent.postMessage('robi-cok:kopru', '*'); } catch (e) {} if (window.parent === window) say('Birlikte oynamak için ana menüdeki Birlikte Oyna bölümünü kullan.'); };
+function openMenu() { renderCos(); $k('menu').classList.remove('hide'); }
+// Serbest oyun (eski sonsuz mod) — duraklatılmışsa devam eder
+$k('play').onclick = () => {
+  S.init(); S.fan(); S.music(); $k('menu').classList.add('hide');
+  if (G.paused && G.lvl == null) { G.paused = false; G.run = true; say('Devam!'); return; }
+  G.lvl = null; G.seed = 0; init(); G.run = true; say('Hadi Pofuduk! Doğru renge bas!'); AN.screen('kopru');
+};
+$k('bMenu').onclick = () => {
+  S.init(); if (G.coop) return;
+  if (G.lvl != null) { G.run = false; handOff(); showMap(); return; }
+  G.run = false; G.paused = true; handOff(); $k('play').textContent = '▶ DEVAM'; openMenu();
+};
+renderCos();
+
+// ---------- Birlikte Oyna: iki tablet, sırayla renk ----------
+const NKH = (location.hash || '').match(/^#net-kopru-(\d{5})(-a)?$/);
+let NK = null;
+function isMyTurn(g) { if (!NK) return true; const t = nkTwo(); return t.length === 2 && t[g.id % 2] === NK.me; }
+const nkTwo = () => NK ? [NK.me, ...Object.keys(NK.peers).map(Number)].filter(s => s >= 0).sort((a, b) => a - b).slice(0, 2) : [];
+const nkName = s => NK.info[s] ? `${NK.info[s].av || '🙂'} ${NK.info[s].name || ''}`.trim() : '🙂';
+const nkSend = o => { if (NK && NK.ws && NK.ws.readyState === 1) NK.ws.send(JSON.stringify(o)); };
+let gateSaid = 0;
+function pressGate(c, btn) {
+  if (!G.coop) return true;
+  const g = gaps.find(q => !q.built && q.x + q.w > G.cam + P.x - 20);
+  if (g && !isMyTurn(g)) { S.boing(); const now = performance.now(); if (now - gateSaid > 2500) { gateSaid = now; say('Sıra arkadaşında! Bekle, sonra sen basacaksın.'); } return false; }
+  return true;
+}
+function onPressGap(g, c, remote) { if (G.coop && !remote) nkSend({ t: 'pc', gi: g.id, c }); }
+let turnSaidAt = 0;
+function nearGate(g) { return !G.coop || (isMyTurn(g) && performance.now() - turnSaidAt > 2500); }
+function turnChanged(g) {
+  const el = $k('turn'), mine = isMyTurn(g), t = nkTwo();
+  el.classList.remove('hide'); el.classList.toggle('me', mine);
+  el.textContent = mine ? '⭐ SIRA SENDE! ⭐' : `${nkName(t[g.id % 2])} basıyor...`;
+  const T0 = COL[g.c];
+  if (mine) turnSaidAt = performance.now();
+  if (mine) say(`Sıra sende! ${T0.p.length === 1 ? T0.d + ' bas!' : COL[T0.p[0]].n + ' ve ' + COL[T0.p[1]].n + '!'}`);
+}
+function nkStart(seed) {
+  $k('wait').classList.add('hide'); $k('menu').classList.add('hide');
+  G.coop = true; G.lvl = null; G.mode = 'adventure'; G.seed = seed; lastTurnId = -1;
+  S.init(); S.fan(); S.music(); init(); G.run = true;
+  big('👫 BİRLİKTE!'); AN.screen('kopru_birlikte');
+}
+function nkWait(msg) {
+  G.run = false; handOff(); $k('turn').classList.add('hide');
+  $k('waitMsg').textContent = msg || '⏳ Arkadaşın bekleniyor...'; $k('wait').classList.remove('hide');
+}
+if (NKH) {
+  NK = { code: NKH[1], me: -1, peers: {}, info: {} };
+  $k('menu').classList.add('hide'); $k('bMenu').classList.add('hide');
+  $k('waitCode').textContent = '🔑 ' + NK.code.slice(0, 2) + '-' + NK.code.slice(2);
+  nkWait();
+  const tryGo = () => { const t = nkTwo(); if (t.length < 2) { nkWait(); return; } if (t[0] === NK.me) { const seed = 1 + Math.floor(Math.random() * 2e9); nkSend({ t: 'go', seed }); nkStart(seed); } else $k('waitMsg').textContent = '🌈 Başlıyoruz...'; };
+  const connect = () => {
+    const RN = window.RobiNet, ws = NK.ws = new WebSocket(window.ROBI_SERVER.replace(/^http/, 'ws') + `/ws?code=${NK.code}&ch=kopru&${RN.q()}${NKH[2] && !NK.in ? '&ask=1' : ''}`);
+    ws.onmessage = e => {
+      let m; try { m = JSON.parse(e.data); } catch (x2) { return; }
+      if (m.t === 'wait') $k('waitMsg').textContent = '⏳ Oda sahibine soruluyor...';
+      else if (m.t === 'denied') { NK.closing = true; say('Oda sahibi şimdi izin vermedi.'); setTimeout(() => $k('bBack').onclick(), 2000); }
+      else if (m.t === 'ask') { const p = m.p; send2(p); }
+      else if (m.t === 'welcome') { NK.in = true; NK.me = m.me.slot; NK.info[NK.me] = m.me; m.peers.forEach(p => { NK.peers[p.slot] = 1; NK.info[p.slot] = p; }); S.init(); S.pop(4); tryGo(); }
+      else if (m.t === 'join') { NK.peers[m.p.slot] = 1; NK.info[m.p.slot] = m.p; S.fan(); say(`${m.p.name || 'Arkadaşın'} geldi! Başlayalım!`); tryGo(); }
+      else if (m.t === 'leave') { delete NK.peers[m.slot]; G.coop = false; nkWait('😢 Arkadaşın çıktı. Yeniden gelmesini bekliyoruz...'); }
+      else if (m.m) {
+        const q = m.m;
+        if (q.t === 'go') nkStart(q.seed);
+        else if (q.t === 'pc') { const g = gaps.find(z => z.id === q.gi && !z.built); if (g) { G.forceGap = g; press(q.c, document.querySelector(`.jb[data-c="${q.c}"]`), true); G.forceGap = null; } }
+      }
+    };
+    ws.onclose = () => { if (!NK.closing) setTimeout(connect, 1500); };
+  };
+  const send2 = p => { const ok = confirm(`${p.av || ''} ${p.name || 'Bir arkadaş'} girmek istiyor. Gelsin mi?`); nkSend({ t: 'allow', slot: p.slot, ok }); };
+  connect();
+  addEventListener('pagehide', () => { NK.closing = true; try { NK.ws.close(); } catch (e) {} });
+}
+$k('waitInv').onclick = () => { if (NK) try { parent.postMessage('robi-invite:kopru:' + NK.code, '*'); } catch (e) {} };
+$k('waitBack').onclick = () => $k('bBack').onclick();
+const oldBack = $k('bBack').onclick;
+$k('bBack').onclick = () => { if (NK) { NK.closing = true; try { NK.ws.close(); } catch (e) {} } oldBack(); };
+window.__k.KS = KS; window.__k.LV = LV; window.__k.startLevel = startLevel; window.__k.levelWin = levelWin;
+
 </script>
 </body>
 </html>

@@ -2,7 +2,7 @@
 // Her oda kodu ayrı bir Durable Object. En fazla 6 oyuncu. Herkes çıkınca 2 dk sonra oda silinir.
 // Sunucu mesajları odadakilere iletir. Oyuncu adı (ebeveynin seçtiği takma ad) sadece oyun sırasında gösterilir, kaydedilmez.
 // Arkadaşlık: listeler cihazda durur; sunucu sadece çevrimiçi durumunu ve davetleri anlık iletir.
-const MAX = 6, EMPTY_TTL = 120000, MODES = ['orman', 'arena', 'ebe', 'parkur', 'boya', 'tahmin', 'jeli'];
+const MAX = 6, EMPTY_TTL = 120000, MODES = ['orman', 'arena', 'ebe', 'parkur', 'boya', 'tahmin', 'jeli', 'kopru'];
 const CORS = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,POST,OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' };
 const FP = '2D:73:5F:25:2B:09:B1:50:BE:3E:24:5B:45:C0:16:AA:9A:C3:99:3C:A2:0E:96:23:BB:B6:37:98:D8:08:47:53';
 const APK = 'https://github.com/UgurBd/robigames/releases/latest/download/RobininMacerasi.apk';

@@ -178,6 +178,7 @@ const WORLDS = [
   { id: 'toplama', cls: 'jelly', art: '🧸🍬', name: 'Jelibon Odası', sub: 'Odanı topla, jelibon kazan', src: 'macera.html#toplama' },
   { id: 'oda', cls: 'room', art: '🛏️🧸', name: 'Dev Oda', sub: 'Arkadaşlarını kurtar', src: 'oda.html' },
   { id: 'kopru', cls: 'jelly', art: '🌈🫧', name: 'Renk Köprüsü', sub: 'Pofuduk ile renkleri eşleştir', src: 'kopru.html' },
+  { id: 'tunel', cls: 'jelly', art: '🚀🌈', name: 'Tünel Uçuşu', sub: 'Jelibonla neon tünelde uç', src: 'tunel.html' },
   { id: 'jeli', cls: 'jelly', art: '🍬🍦', name: 'Jelibon Arenası', sub: 'Jelibon tabancası, dondurma, jöle köpek', src: 'macera.html#net-jeli-solo-M3' },
   { id: 'zeka', cls: 'brain', art: '🧠🎴', name: 'Zekâ Oyunları', sub: 'Hafıza, Tahmin, Zihin Gücü', src: 'zeka.html' },
   { id: 'cok', cls: 'multi', art: '👫🌐', name: 'Birlikte Oyna', sub: 'Arkadaşınla aynı odada, 6 kişiye kadar', multi: true },
@@ -218,6 +219,7 @@ function openS(id) { $(id).style.display = 'flex'; tone(660, .08); }
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => { b.closest('.screen').style.display = 'none'; refresh(); });
 
 addEventListener('message', e => {
+  if (e.data === 'robi-cok:kopru') { frame.onload = null; frame.style.display = 'none'; frame.src = 'about:blank'; menu.style.display = 'flex'; if (!RO.profile().name) { openCok(); return; } openS('sCok'); cokView = 'main'; renderCok(); createRoom('kopru'); return; }
   if (e.data === 'robi-cok:tahmin') { frame.onload = null; frame.style.display = 'none'; frame.src = 'about:blank'; menu.style.display = 'flex'; if (!RO.profile().name) { openCok(); return; } openS('sCok'); cokView = 'main'; renderCok(); createRoom('tahmin'); return; }
   if (typeof e.data === 'string' && e.data.startsWith('robi-invite:')) { const [, m, c] = e.data.split(':'); inviteFromGame(m, c); return; }
   if (typeof e.data === 'string' && e.data.startsWith('robi-addfriend:')) { const [, pid, av, ...nm] = e.data.split(':'); PR.send({ t: 'addreq', to: pid }); itoast('❤️ Arkadaşlık isteği gönderildi!'); RO.say && RO.say('Arkadaşlık isteği gönderildi!'); return; }
@@ -278,6 +280,7 @@ function renderParent() {
     <div class="row"><div><b>📊 Bugün oynanan</b><small>${p.limit ? `Kalan: ${Math.max(0, Math.ceil(left / 60))} dk` : 'Sınır yok'}</small></div><b>${used} dk</b></div>
     <div class="row"><div><b>➕ Bugüne ek süre</b><small>Ödül olarak 10 dakika ekle</small></div><button class="btn sec" id="bonus">+10 dk</button></div>
     <div class="row"><div><b>🗣️ Sesli rehber</b><small>Robi görevleri Türkçe sesli anlatır, ok ile yolu gösterir</small></div><button class="btn sec" id="vg">${s.voiceGuide === false ? '🔇 Kapalı' : '🗣️ Açık'}</button></div>
+    <div class="row"><div><b>🎙️ Rehber sesi</b><small>Öğretmen sesi kız çocuğu ya da erkek çocuğu gibi konuşsun</small></div><button class="btn sec" id="gvb">${RO.guideVoice() === 'erkek' ? '👦 Erkek' : '👧 Kız'}</button></div>
     <div class="row"><div><b>🎵 Müzik</b><small>Oyunlardaki arka plan müziği</small></div><button class="btn sec" id="mus">${s.muted ? '🔇 Kapalı' : '🎵 Açık'}</button></div>
     <div class="row"><div><b>🍬 Jelibon Odası: eşya sayısı</b><small>Çocuk bu kadar oyuncağı toplayınca jelibon hakkı kazanır</small><input type="range" id="roomN" min="1" max="100" value="${p.roomItems || 10}" style="width:100%;accent-color:#ff5ad8"></div><b id="roomV" style="font-size:22px;min-width:44px;text-align:right">${p.roomItems || 10}</b></div>
     <div class="row"><div><b>🍬 Kazanılan jelibon hakları</b><small>Bugün: ${p.jellyToday || 0} · Toplam: ${p.jellyTotal || 0}</small></div><b>🍬</b></div>
@@ -286,6 +289,7 @@ function renderParent() {
     <div class="row" style="border:0"><div><b>🛒 Satın almalar</b><small>Oyunda sadece oyun içi dişli harcanır, gerçek para yoktur.</small></div><b>✅</b></div>`;
   $('lim').onchange = e => { RO.setParent({ limit: +e.target.value }); renderParent(); };
   $('bonus').onclick = () => { RO.setParent({ bonus: (RO.parent().bonus || 0) + 10 }); renderParent(); };
+  $('gvb').onclick = () => { RO.setGuideVoice(RO.guideVoice() === 'erkek' ? 'kiz' : 'erkek'); renderParent(); RO.say('Merhaba! Ben senin oyun arkadaşınım.'); };
   $('vg').onclick = () => { const s2 = RO.load(); s2.voiceGuide = s2.voiceGuide === false; RO.store(s2); renderParent(); };
   $('mus').onclick = () => { const s2 = RO.load(); s2.muted = !s2.muted; RO.store(s2); renderParent(); };
   $('roomN').oninput = e => { $('roomV').textContent = e.target.value; }; $('roomN').onchange = e => RO.setParent({ roomItems: +e.target.value });
@@ -296,7 +300,7 @@ function renderParent() {
 const RN = window.RobiNet;
 let cokCode = '', cokView = 'main', nearT = 0, onlineMap = {};
 const BIG = { arena: 1, ebe: 1, parkur: 1, jeli: 1 };
-function cokGo(mode, code, ask, o) { $('sCok').style.display = 'none'; clearInterval(nearT); const ex = BIG[mode] && o ? `-${o.size || 'S'}${o.bots || 0}` : ''; launch({ id: 'net', name: RN.MODES[mode][1], src: mode === 'boya' ? `boyama.html#net-boya-${code}${ask ? '-a' : ''}` : mode === 'tahmin' ? `zeka.html#net-tahmin-${code}${ask ? '-a' : ''}` : `macera.html#net-${mode}-${code}${ex}${ask ? '-a' : ''}` }, document.body); }
+function cokGo(mode, code, ask, o) { $('sCok').style.display = 'none'; clearInterval(nearT); const ex = BIG[mode] && o ? `-${o.size || 'S'}${o.bots || 0}` : ''; launch({ id: 'net', name: RN.MODES[mode][1], src: mode === 'boya' ? `boyama.html#net-boya-${code}${ask ? '-a' : ''}` : mode === 'tahmin' ? `zeka.html#net-tahmin-${code}${ask ? '-a' : ''}` : mode === 'kopru' ? `kopru.html#net-kopru-${code}${ask ? '-a' : ''}` : `macera.html#net-${mode}-${code}${ex}${ask ? '-a' : ''}` }, document.body); }
 function openCok() { const p = RO.profile(); if (!p.name) { profileEdit(true); openS('sCok'); RO.say && RO.say('Önce oyuncu adını seçelim!'); return; } cokView = 'main'; renderCok(); openS('sCok'); RO.say && RO.say('Birlikte oyna! Yakındaki bir odaya ya da bir arkadaşına dokun.'); }
 // basit ebeveyn kilidi: yazıyla yazılan sayıya dokun
 function wordGate(box, ok, back) {

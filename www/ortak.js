@@ -126,11 +126,20 @@ const Robi = window.RobiOrtak = {
   photos() { try { return JSON.parse(localStorage.getItem('robi_photos') || '[]'); } catch (e) { return []; } },
   addPhoto(url) { const a = Robi.photos(); a.unshift({ url, date: today() }); while (a.length > 12) a.pop(); try { localStorage.setItem('robi_photos', JSON.stringify(a)); return true; } catch (e) { a.pop(); try { localStorage.setItem('robi_photos', JSON.stringify(a)); } catch (e2) {} return false; } },
   // Türkçe sesli rehber (Capacitor TTS, yoksa tarayıcı sesi)
-  async say(text, lang = 'tr-TR') {
+  // Rehber sesi: 'kiz' (ince, neşeli) | 'erkek' (daha kalın, hızlı) — TTS perde/hız ayarı ile çocuk sesine yaklaştırılır
+  guideVoice() { return load().guideVoice || 'kiz'; },
+  setGuideVoice(v) { const s = load(); s.guideVoice = v; store(s); },
+  async say(text, lang = 'tr-TR', o) {
     if (Robi.load().voiceGuide === false) return;
     const t = String(text).replace(/[\p{Extended_Pictographic}️‍⤒⬆️⬇️✕]/gu, '').replace(/\s+/g, ' ').trim(); if (!t) return;
-    try { const cap = window.Capacitor || (window.parent && window.parent.Capacitor); const tts = cap && cap.Plugins && cap.Plugins.TextToSpeech; if (tts) { try { await tts.stop(); } catch (e) {} await tts.speak({ text: t, lang, rate: .95, pitch: 1.15, volume: 1, category: 'ambient' }); return; } } catch (e) {}
-    try { const ss = window.speechSynthesis; if (!ss) return; ss.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang = lang; u.rate = .95; u.pitch = 1.15; const v = ss.getVoices().find(v => v.lang && v.lang.toLowerCase().startsWith(lang.slice(0, 2))); if (v) u.voice = v; ss.speak(u); } catch (e) {}
+    const gv = (o && o.voice) || Robi.guideVoice(), boy = gv === 'erkek';
+    const pitch = (o && o.pitch) || (boy ? 1.0 : 1.5), rate = (o && o.rate) || (boy ? 1.05 : 1.0);
+    try { const cap = window.Capacitor || (window.parent && window.parent.Capacitor); const tts = cap && cap.Plugins && cap.Plugins.TextToSpeech; if (tts) {
+      try { await tts.stop(); } catch (e) {}
+      const opt = { text: t, lang, rate, pitch, volume: 1, category: 'ambient' };
+      try { if (Robi._vi === undefined) { Robi._vi = -1; const r = await tts.getSupportedVoices(); const vs = (r && r.voices) || []; const tr = vs.map((v, i) => ({ v, i })).filter(x => (x.v.lang || '').toLowerCase().startsWith('tr')); const m = tr.find(x => /male|erkek|-tmf-|-mfm-|#male/i.test((x.v.name || '') + (x.v.voiceURI || '')) && !/female/i.test((x.v.name || '') + (x.v.voiceURI || ''))); Robi._vi = m ? m.i : -1; } if (boy && Robi._vi >= 0) opt.voice = Robi._vi; } catch (e) {}
+      await tts.speak(opt); return; } } catch (e) {}
+    try { const ss = window.speechSynthesis; if (!ss) return; ss.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang = lang; u.rate = rate; u.pitch = pitch; const vs = ss.getVoices().filter(v => v.lang && v.lang.toLowerCase().startsWith(lang.slice(0, 2))); const v = (boy && vs.find(v => /male|erkek|tolga|cem|ahmet/i.test(v.name) && !/female/i.test(v.name))) || vs.find(v => !/male/i.test(v.name) || /female/i.test(v.name)) || vs[0]; if (v) u.voice = v; ss.speak(u); } catch (e) {}
   },
   delPhoto(i) { const a = Robi.photos(); a.splice(i, 1); try { localStorage.setItem('robi_photos', JSON.stringify(a)); } catch (e) {} },
 };
