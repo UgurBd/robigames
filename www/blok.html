@@ -91,6 +91,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Fredoka','Baloo 2'
   #cats button{font-size:18px;padding:0 10px}.cl{width:26px;height:26px}
 }
 @media (max-height:520px){#tools{position:fixed;left:8px;top:62px;display:grid;grid-template-columns:repeat(2,42px);gap:6px}#pal{display:grid!important;grid-template-columns:auto 1fr;align-items:center}#parts{grid-column:1/3;grid-row:1}#cats{grid-row:2;grid-column:1}#cols{grid-row:2;grid-column:2}#tools .ib{width:40px;height:40px;font-size:18px}.pt{width:54px;height:54px;font-size:9px;border-radius:14px}#pal{padding:5px;gap:3px;border-radius:18px}.cl{width:24px;height:24px}#cats button{font-size:16px;padding:0 10px;border-radius:12px}.ib{width:42px;height:42px;font-size:19px}#joy{width:118px;height:118px;left:14px;bottom:14px}#knob{width:52px;height:52px}.cb{width:64px;height:64px;font-size:28px}}
+#yardB{position:absolute;left:8px;top:66px;border-radius:999px;padding:8px 16px;font-family:inherit;font-weight:700;font-size:clamp(15px,2.4vw,19px);color:#2e7d32;cursor:pointer;border:3px solid #fff}
 </style>
 </head>
 <body>
@@ -123,6 +124,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Fredoka','Baloo 2'
 
 <div id="playUI" class="hide">
   <div id="who" class="glass"></div>
+  <button id="yardB" class="glass">🌳 BAHÇEYE ÇIK</button>
   <div id="joy"><div id="knob"></div></div>
   <div id="pbtn">
     <button class="cb up" id="cUp">⬆️</button><button class="cb hn" id="cHorn">📯</button>
@@ -183,7 +185,7 @@ renderer.toneMappingExposure = 1.0;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(48, Math.max(1, innerWidth) / Math.max(1, innerHeight), 0.1, 300);
+const camera = new THREE.PerspectiveCamera(48, Math.max(1, innerWidth) / Math.max(1, innerHeight), 0.1, 700);
 function onResize() { if (innerWidth < 20 || innerHeight < 20) return; camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); }
 addEventListener('resize', onResize);
 
@@ -419,7 +421,9 @@ const PLANETS = [];
 { const p = new THREE.Group(); p.position.set(-16.2, 0, 10); room.add(p); p.add(mesh(new THREE.CylinderGeometry(1.1, 0.9, 1.8, 20), M(0xd8b48a, { roughness: 0.95 }), 0, 0.9, 0)); for (let i = 0; i < 9; i++) { const l = mesh(new THREE.SphereGeometry(0.9, 12, 8), M(0x3f9a4a, { roughness: 0.6 }), 0, 0, 0); l.scale.set(0.35, 1.3, 0.15); const a = i / 9 * 6.28; l.position.set(Math.cos(a) * 0.6, 2.8 + (i % 3) * 0.5, Math.sin(a) * 0.6); l.rotation.set(Math.sin(a) * 0.6, a, Math.cos(a) * 0.6); p.add(l); } STATIC.push({ x: -16.2, y: 1, z: 10, hx: 1.1, hy: 1, hz: 1.1 }); }
 
 // ---- Şişme havuz (tekneler burada yüzer) ----
+const WATERS = [];
 const POOL = { x: -10.5, z: 6.5, r: 4.2, water: 1.35 };
+WATERS.push({ x: POOL.x, z: POOL.z, r: POOL.r, lvl: POOL.water });
 const waterTex = ctex(256, 256, (g, w) => { g.fillStyle = '#5fd0f0'; g.fillRect(0, 0, w, w); for (let i = 0; i < 70; i++) { g.strokeStyle = `rgba(255,255,255,${rnd(0.15, 0.45)})`; g.lineWidth = rnd(1, 3); g.beginPath(); const x = rnd(0, w), y = rnd(0, w); g.ellipse(x, y, rnd(8, 24), rnd(3, 7), rnd(0, 3), 0, 7); g.stroke(); } }, [2, 2]);
 {
     const p = new THREE.Group(); p.position.set(POOL.x, 0, POOL.z); room.add(p);
@@ -748,13 +752,13 @@ function camTick(dt) {
     const cp = Math.cos(CAM.pitch);
     camera.position.set(CAM.t.x + Math.sin(CAM.yaw) * cp * CAM.dist, CAM.t.y + Math.sin(CAM.pitch) * CAM.dist, CAM.t.z + Math.cos(CAM.yaw) * cp * CAM.dist);
     // duvarların dışına çıkma
-    camera.position.x = clamp(camera.position.x, -17.2, 17.2); camera.position.z = clamp(camera.position.z, -13, 30); camera.position.y = clamp(camera.position.y, 1.5, 26);
+    if (YARD.on) { camera.position.x = clamp(camera.position.x, YARD.X - 125, YARD.X + 125); camera.position.z = clamp(camera.position.z, -125, 125); camera.position.y = clamp(camera.position.y, 1.2, 70); } else { camera.position.x = clamp(camera.position.x, -17.2, 17.2); camera.position.z = clamp(camera.position.z, -13, 30); camera.position.y = clamp(camera.position.y, 1.5, 12.8); }
     camera.lookAt(CAM.t);
     // alt palet ekranı kaplamasın: görüntüyü yukarı kaydır
     const bh = G.mode === 'build' ? ($('build').offsetHeight || 0) * 0.5 : 0; CAM.off = lerp(CAM.off || 0, bh, Math.min(1, dt * 6));
     if (Math.abs((camera.view && camera.view.offsetY || 0) - CAM.off) > 0.5 || !camera.view || camera.view.fullWidth !== innerWidth || camera.view.fullHeight !== innerHeight) { camera.setViewOffset(innerWidth, innerHeight, 0, CAM.off, innerWidth, innerHeight); }
 }
-function orbit(dx, dy) { CAM.gy = clamp(CAM.gy - dx * 0.006, -1.25, 1.25); CAM.gp = clamp(CAM.gp + dy * 0.005, 0.12, 1.35); }
+function orbit(dx, dy) { CAM.gy = G.mode === 'play' ? CAM.gy - dx * 0.006 : clamp(CAM.gy - dx * 0.006, -1.25, 1.25); CAM.gp = clamp(CAM.gp + dy * 0.005, 0.12, 1.35); }
 function zoom(k) { CAM.gd = clamp(CAM.gd * k, 7, 42); }
 function pan(dx, dy) { const r = V3(Math.cos(CAM.yaw), 0, -Math.sin(CAM.yaw)), f = V3(-Math.sin(CAM.yaw), 0, -Math.cos(CAM.yaw)); CAM.gt.addScaledVector(r, -dx * CAM.dist * 0.0012).addScaledVector(f, dy * CAM.dist * 0.0012); CAM.gt.x = clamp(CAM.gt.x, -14, 14); CAM.gt.z = clamp(CAM.gt.z, -11, 9); }
 addEventListener('wheel', e => { zoom(e.deltaY > 0 ? 1.08 : 0.92); }, { passive: true });
@@ -902,10 +906,11 @@ function physStart() {
     const w = PHY.world, fixed = w.createRigidBody(RAPIER.RigidBodyDesc.fixed());
     // zemin, duvarlar, mobilya
     w.createCollider(RAPIER.ColliderDesc.cuboid(40, 1, 40).setTranslation(0, -1, 0).setFriction(0.9), fixed);
-    [[0, 10, -14.5, 40, 10, 0.5], [18.5, 10, 0, 0.5, 10, 40], [-18.5, 10, 0, 0.5, 10, 40], [0, 10, 14, 40, 10, 0.5], [0, 26, 0, 40, 0.5, 40]].forEach(([x, y, z, hx, hy, hz]) => w.createCollider(RAPIER.ColliderDesc.cuboid(hx, hy, hz).setTranslation(x, y, z), fixed));
+    [[0, 10, -14.5, 40, 10, 0.5], [18.5, 10, 0, 0.5, 10, 40], [-18.5, 10, 0, 0.5, 10, 40], [0, 10, 14, 40, 10, 0.5], [0, 14.6, 0, 40, 0.5, 40]].forEach(([x, y, z, hx, hy, hz]) => w.createCollider(RAPIER.ColliderDesc.cuboid(hx, hy, hz).setTranslation(x, y, z), fixed));
     STATIC.forEach(s => { if (s.y < 0) return; const cd = RAPIER.ColliderDesc.cuboid(s.hx, s.hy, s.hz).setTranslation(s.x, s.y, s.z).setFriction(0.8); if (s.ry) cd.setRotation(toRq(new THREE.Quaternion().setFromAxisAngle(V3(0, 1, 0), s.ry))); w.createCollider(cd, fixed); });
     // rampa
     { RAMP.updateMatrixWorld(); const pts = []; [[-3, 0], [3, 0], [3, 1.6]].forEach(([a, b]) => [-2, 2].forEach(z => { const v = V3(a, b, z).applyMatrix4(RAMP.matrixWorld); pts.push(v.x, v.y, v.z); })); const cd = RAPIER.ColliderDesc.convexHull(new Float32Array(pts)); if (cd) w.createCollider(cd.setFriction(0.9), fixed); }
+    yardPhys(w, fixed);
     // parçalardan gövdeler
     const list = [...PIECES.values()];
     MS.fly = []; list.forEach(p => { p.anim = 0; p.obj.scale.set(1, 1, 1); placeObj(p.obj, p); p.obj.updateMatrixWorld(true); });
@@ -916,6 +921,7 @@ function physStart() {
     pickCtrl();
 }
 function physStop() {
+    yardReset(); YARD.dyn = [];
     PHY.groups.forEach(G => G.pieces.forEach(p => { placeObj(p.obj, p); animParts(p, 0, 0, true); }));
     if (PHY.world) PHY.world.free();
     PHY.world = null; PHY.groups = []; PHY.colMap.clear(); PHY.ctrl = null;
@@ -962,7 +968,7 @@ function joyDir() {
     const f = V3(-Math.sin(CAM.yaw), 0, -Math.cos(CAM.yaw)), r = V3(Math.cos(CAM.yaw), 0, -Math.sin(CAM.yaw));
     return { d: r.multiplyScalar(jx).add(f.multiplyScalar(-jy)).normalize(), m };
 }
-function inPool(p) { return Math.hypot(p.x - POOL.x, p.z - POOL.z) < POOL.r - 0.3; }
+function inPool(p) { for (const w of WATERS) if (Math.hypot(p.x - w.x, p.z - w.z) < w.r - 0.3) return w; return null; }
 const _up = V3(0, 1, 0);
 function driveGroup(G, dt) {
     const b = G.body, t = b.translation(), r = b.rotation(), q = new THREE.Quaternion(r.x, r.y, r.z, r.w), lv = b.linvel(), av = b.angvel();
@@ -972,7 +978,7 @@ function driveGroup(G, dt) {
     // yerde mi?
     const ray = new RAPIER.Ray(toR(t), { x: 0, y: -1, z: 0 }), hit = PHY.world.castRay(ray, 3.5, true, undefined, undefined, undefined, b);
     const grounded = !!hit && hit.timeOfImpact < 3.2;
-    const water = inPool(t) && t.y < POOL.water + 1.2;
+    const wp = inPool(t), water = !!wp && t.y < wp.lvl + 1.2;
     // dik dur (devrilmesin)
     const tilt = V3().crossVectors(upB, _up); const kUp = G.kind === 'fly' ? 18 : G.kind === 'static' || G.kind === 'float' ? 0 : 7;
     if (kUp) b.applyTorqueImpulse(toR(tilt.multiplyScalar(kUp * m * dt * 4)), true);
@@ -993,16 +999,17 @@ function driveGroup(G, dt) {
         const autoUp = CTL.auto && G === PHY.ctrl ? CTL.auto.up || 0 : 0;
         const target = (upIn || autoUp) * 7 + (t.y < 1.5 && !J && !upIn ? 0 : 0);
         b.applyImpulse({ x: 0, y: m * (-GRAV) * dt + (target - vy) * m * 0.08, z: 0 }, true);
-        if (t.y > 22) b.applyImpulse({ x: 0, y: -m * 0.5, z: 0 }, true);
+        if (t.y > (YARD.on ? 48 : 11.5)) b.applyImpulse({ x: 0, y: -m * 0.5, z: 0 }, true);
         if (J) { const vmax = 13 * boost; b.applyImpulse({ x: (J.d.x * vmax * J.m - lv.x) * m * 0.06, y: 0, z: (J.d.z * vmax * J.m - lv.z) * m * 0.06 }, true); const ang = Math.atan2(V3().crossVectors(fw, J.d).y, fw.dot(J.d)); b.setAngvel({ x: av.x * 0.9, y: lerp(av.y, ang * 2.5, Math.min(1, dt * 6)), z: av.z * 0.9 }, true); }
         else b.applyImpulse({ x: -lv.x * m * 0.03, y: 0, z: -lv.z * m * 0.03 }, true);
         want = 10;
     }
     // yüzdürme: havuzdaki her parça suyun içindeyse kaldırma kuvveti
-    if (inPool(t) && t.y < POOL.water + 2) {
-        const floats = G.roles.float ? 1 : 0, depth = clamp(POOL.water - (t.y - 0.6), 0, 2);
+    const wq = inPool(t);
+    if (wq && t.y < wq.lvl + 2) {
+        const floats = G.roles.float ? 1 : 0, depth = clamp(wq.lvl - (t.y - 0.6), 0, 2);
         if (depth > 0) {
-            if (!G.wet) { G.wet = 1; SFX.splash(); burst(V3(t.x, POOL.water, t.z), [0xbfefff, 0xffffff], 18, 5, 0.9); }
+            if (!G.wet) { G.wet = 1; SFX.splash(); burst(V3(t.x, wq.lvl, t.z), [0xbfefff, 0xffffff], 18, 5, 0.9); }
             const k = floats ? 2.6 : 0.55;
             b.applyImpulse({ x: -lv.x * m * 0.04, y: m * (-GRAV) * dt * depth * k - lv.y * m * 0.06, z: -lv.z * m * 0.04 }, true);
             if (floats) b.applyTorqueImpulse(toR(V3().crossVectors(upB, _up).multiplyScalar(m * dt * 10)), true);
@@ -1041,10 +1048,12 @@ function physTick(dt) {
         _m.compose(_v.set(t.x, t.y, t.z), _q.set(r.x, r.y, r.z, r.w), V3(1, 1, 1));
         const lv = b.linvel(), sp = G.thr ? Math.max(G.speed || 0, G.kind === 'fly' ? 6 : 0) : Math.hypot(lv.x, lv.z);
         G.pieces.forEach((p, i) => { const wm = _m.clone().multiply(G.local[i]); wm.decompose(p.obj.position, p.obj.quaternion, _v2); animParts(p, dt, sp * (G.thr || G.kind === 'static' ? 1 : 0)); });
-        if (t.y < -10) { b.setTranslation({ x: 0, y: 6, z: 0 }, true); b.setLinvel({ x: 0, y: 0, z: 0 }, true); }
+        if (t.y < -10) { const sp = YARD.on && G === PHY.ctrl ? YARD.spawn : V3(0, 6, 0); b.setTranslation({ x: sp.x, y: sp.y + 4, z: sp.z }, true); b.setLinvel({ x: 0, y: 0, z: 0 }, true); }
     });
     // kamera aracı takip etsin
     const C = PHY.ctrl;
+    yardTick(dt, performance.now() / 1000);
+    if (C && C.kind !== 'fly' && (C.speed || 0) > 2.5 && !(gesture && (gesture.orbit || gesture.d)) && TOUCH.size === 0) { const r = C.body.rotation(), f = C.fw.clone().applyQuaternion(_q.set(r.x, r.y, r.z, r.w)); let d = Math.atan2(-f.x, -f.z) - CAM.gy; d = Math.atan2(Math.sin(d), Math.cos(d)); CAM.gy += d * Math.min(1, dt * 1.1); }
     if (C) { const t = C.body.translation(); CAM.gt.set(t.x, t.y + 0.5, t.z); SFX.engine(true, C.speed || 0, C.kind); }
     else SFX.engine(false);
 }
@@ -1059,8 +1068,183 @@ joy.addEventListener('pointerup', jUp); joy.addEventListener('pointercancel', jU
 const holdBtn = (id, key) => { const b = $(id); b.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); SFX.init(); CTL[key] = 1; b.classList.add('pr'); b.setPointerCapture(e.pointerId); }); const up = () => { CTL[key] = 0; b.classList.remove('pr'); }; b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up); };
 holdBtn('cUp', 'up'); holdBtn('cDn', 'dn'); holdBtn('cBoost', 'boost');
 $('cHorn').addEventListener('pointerdown', e => { e.preventDefault(); SFX.init(); SFX.horn(); if (window.NETB && NETB.on) NETB.send({ t: 'horn' }); });
-const KEYS = {}; addEventListener('keydown', e => { KEYS[e.key] = 1; if (e.key === ' ') CTL.up = 1; if (e.key === 'Shift') CTL.dn = 1; }); addEventListener('keyup', e => { KEYS[e.key] = 0; if (e.key === ' ') CTL.up = 0; if (e.key === 'Shift') CTL.dn = 0; });
+const KEYS = {}; addEventListener('keydown', e => { KEYS[e.key] = 1; if (e.key === ' ' || e.key.startsWith('Arrow')) e.preventDefault(); if (e.key === ' ') CTL.up = 1; if (e.key === 'Shift') CTL.dn = 1; }); addEventListener('keyup', e => { KEYS[e.key] = 0; if (e.key === ' ') CTL.up = 0; if (e.key === 'Shift') CTL.dn = 0; });
 function keysToCtl() { if (JOY.id !== null) return; const x = (KEYS.ArrowRight || KEYS.d ? 1 : 0) - (KEYS.ArrowLeft || KEYS.a ? 1 : 0), y = (KEYS.ArrowDown || KEYS.s ? 1 : 0) - (KEYS.ArrowUp || KEYS.w ? 1 : 0); if (x || y) { CTL.x = x; CTL.y = y; } else if (!JOY.id) { CTL.x = CTL.y = 0; } }
+
+// =====================================================================
+// BAHÇE: evin dışında geniş sürüş alanı — yol, rampalar, göl, kemer kapılar,
+// gökyüzü halkaları, yıldızlar, devrilen lobutlar/kutular/domino
+// =====================================================================
+const YARD = { on: false, X: 260, spawn: null, grp: new THREE.Group(), bodies: [], gates: [], hoops: [], stars: [], dyn: [], statics: [], lapT: 0, got: 0 };
+YARD.spawn = V3(YARD.X - 66, 1, 0);
+YARD.grp.visible = false; scene.add(YARD.grp);
+(function buildYard() {
+    const Y = YARD.grp, X = YARD.X, add = o => (Y.add(o), o);
+    // gökyüzü kubbesi
+    const skyM = new THREE.ShaderMaterial({ side: THREE.BackSide, depthWrite: false, fog: false, uniforms: {}, vertexShader: 'varying vec3 vp; void main(){ vp = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }', fragmentShader: 'varying vec3 vp; void main(){ float h = clamp(vp.y,0.,1.); vec3 c = mix(vec3(1.0,0.93,0.80), vec3(0.42,0.72,1.0), pow(h,0.55)); gl_FragColor = vec4(c,1.); }' });
+    const sky = add(new THREE.Mesh(new THREE.SphereGeometry(420, 32, 16), skyM)); sky.position.set(X, 0, 0); sky.renderOrder = -1;
+    // çimen
+    const grassT = ctex(512, 512, (g, w) => { g.fillStyle = '#7ccf5a'; g.fillRect(0, 0, w, w); for (let i = 0; i < 9000; i++) { g.fillStyle = `hsla(${rnd(85, 120)},${rnd(45, 70)}%,${rnd(35, 62)}%,${rnd(0.25, 0.7)})`; g.fillRect(rnd(0, w), rnd(0, w), rnd(1, 3), rnd(3, 9)); } for (let i = 0; i < 40; i++) { g.fillStyle = ['#fff', '#ffe066', '#ff9ec7'][i % 3]; g.beginPath(); g.arc(rnd(0, w), rnd(0, w), 2.5, 0, 7); g.fill(); } }, [70, 70]);
+    const ground = add(new THREE.Mesh(new THREE.PlaneGeometry(700, 700), new THREE.MeshStandardMaterial({ map: grassT, roughness: 0.95 }))); ground.rotation.x = -Math.PI / 2; ground.position.set(X, 0, 0); ground.receiveShadow = true;
+    // yarış yolu (elips halka)
+    const SX = 1.4, R0 = 34, R1 = 44;
+    YARD.ell = (r, a) => V3(X + Math.cos(a) * r * SX, 0, Math.sin(a) * r);
+    const roadT = ctex(256, 256, (g, w) => { g.fillStyle = '#5b5f6e'; g.fillRect(0, 0, w, w); for (let i = 0; i < 3000; i++) { g.fillStyle = `rgba(${rnd(0, 1) > 0.5 ? '255,255,255' : '0,0,0'},${rnd(0.03, 0.12)})`; g.fillRect(rnd(0, w), rnd(0, w), 2, 2); } }, [30, 30]);
+    const rg = new THREE.RingGeometry(R0, R1, 160, 1); rg.scale(SX, 1, 1); rg.rotateX(-Math.PI / 2);
+    const road = add(new THREE.Mesh(rg, new THREE.MeshStandardMaterial({ map: roadT, roughness: 0.8 }))); road.position.set(X, 0.03, 0); road.receiveShadow = true;
+    // kenar çizgileri: kırmızı-beyaz bordür
+    [R0 - 0.6, R1].forEach(r => { const n = 120; for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2, p = YARD.ell(r + 0.3, a), p2 = YARD.ell(r + 0.3, a + Math.PI * 2 / n); const len = p.distanceTo(p2); const k = add(mesh(new THREE.BoxGeometry(len, 0.12, 0.8), new THREE.MeshStandardMaterial({ color: i % 2 ? 0xffffff : 0xff4d4d, roughness: 0.6 }), (p.x + p2.x) / 2, 0.06, (p.z + p2.z) / 2, false)); k.rotation.y = -Math.atan2(p2.z - p.z, p2.x - p.x); k.receiveShadow = true; } });
+    // orta kesik çizgi
+    { const n = 70; for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2, p = YARD.ell(39, a), p2 = YARD.ell(39, a + 0.04); const k = add(mesh(new THREE.PlaneGeometry(p.distanceTo(p2), 0.35), new THREE.MeshBasicMaterial({ color: 0xfff6c8 }), (p.x + p2.x) / 2, 0.05, (p.z + p2.z) / 2, false)); k.rotation.set(-Math.PI / 2, 0, Math.atan2(p2.z - p.z, p2.x - p.x)); } }
+    // göl (ortada) — tekneler için
+    const lake = { x: X, z: 0, r: 15, lvl: 0.4 }; WATERS.push(lake); YARD.lake = lake;
+    const sand = add(mesh(new THREE.CircleGeometry(lake.r + 2.6, 64), new THREE.MeshStandardMaterial({ color: 0xf2d79a, roughness: 1 }), X, 0.04, 0, false)); sand.rotation.x = -Math.PI / 2; sand.receiveShadow = true;
+    const lw = add(new THREE.Mesh(new THREE.CircleGeometry(lake.r, 64), new THREE.MeshPhysicalMaterial({ map: waterTex, color: 0x7fdcff, roughness: 0.05, clearcoat: 1, transparent: true, opacity: 0.85 }))); lw.rotation.x = -Math.PI / 2; lw.position.set(X, lake.lvl, 0); YARD.water = lw;
+    for (let i = 0; i < 26; i++) { const a = i / 26 * Math.PI * 2 + rnd(-0.08, 0.08), r = lake.r + rnd(0.6, 1.6); add(mesh(new THREE.DodecahedronGeometry(rnd(0.4, 0.9), 0), new THREE.MeshStandardMaterial({ color: [0xb7b7c2, 0xd0c7b8, 0x9fa3ad][i % 3], roughness: 0.9 }), X + Math.cos(a) * r, 0.2, Math.sin(a) * r)); }
+    // ördek ve nilüfer
+    [[4, -5], [-6, 6], [7, 4]].forEach(([dx, dz]) => { const l = add(mesh(new THREE.CircleGeometry(0.9, 16, 0.3, 5.8), new THREE.MeshStandardMaterial({ color: 0x4caf50, side: THREE.DoubleSide }), X + dx, lake.lvl + 0.03, dz, false)); l.rotation.x = -Math.PI / 2; });
+    // ev (sol tarafta, bizim odanın olduğu ev)
+    const hx = X - 92;
+    const wallM = new THREE.MeshStandardMaterial({ color: 0xfff1de, roughness: 0.9 });
+    const house = new THREE.Group(); house.position.set(hx, 0, 0); add(house);
+    house.add(mesh(new THREE.BoxGeometry(18, 14, 40), wallM, 0, 7, 0));
+    const roof = mesh(new THREE.CylinderGeometry(0.01, 15, 9, 4, 1), new THREE.MeshStandardMaterial({ color: 0xe0574a, roughness: 0.7 }), 0, 18.5, 0); roof.scale.set(1, 1, 2); roof.rotation.y = Math.PI / 4; house.add(roof);
+    [[-12, 'w'], [12, 'w'], [0, 'd']].forEach(([z, k]) => {
+        if (k === 'd') { house.add(mesh(new THREE.BoxGeometry(0.4, 6, 4), new THREE.MeshStandardMaterial({ color: 0x8a5a35 }), 9.1, 3, z)); house.add(mesh(new THREE.SphereGeometry(0.25, 10, 8), metal, 9.4, 3, z + 1.3)); }
+        else { house.add(mesh(new THREE.BoxGeometry(0.3, 4.4, 6.4), new THREE.MeshStandardMaterial({ color: 0xffffff }), 9.05, 7, z)); house.add(mesh(new THREE.BoxGeometry(0.3, 3.8, 5.8), new THREE.MeshStandardMaterial({ color: 0x9fd8ff, emissive: 0x3a6a90, emissiveIntensity: 0.3, roughness: 0.1 }), 9.12, 7, z)); }
+    });
+    YARD.statics.push({ x: hx, y: 7, z: 0, hx: 9, hy: 7, hz: 20 });
+    // çit (çalı) sınırı
+    const hedgeM = new THREE.MeshStandardMaterial({ color: 0x3f9b46, roughness: 0.95 });
+    [[0, -100, 200, 1], [0, 100, 200, 1], [-100, 0, 1, 200], [100, 0, 1, 200]].forEach(([dx, dz, w, d]) => { add(mesh(new THREE.BoxGeometry(w + 2, 2.4, d + 2), hedgeM, X + dx, 1.2, dz)); YARD.statics.push({ x: X + dx, y: 5, z: dz, hx: w / 2 + 1, hy: 5, hz: d / 2 + 1 }); });
+    // ağaçlar
+    const trunkM = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.9 }), leafMs = [0x5cbf4a, 0x46a83e, 0x7ad35a, 0xf29bc0].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.8 }));
+    for (let i = 0; i < 46; i++) {
+        let x, z; do { x = rnd(-95, 95); z = rnd(-95, 95); } while ((Math.hypot(x / SX, z) < R1 + 6) || (x < -78 && Math.abs(z) < 24) || Math.abs(z) < 8 && x < -55);
+        const s = rnd(0.8, 1.5), t = new THREE.Group(); t.position.set(X + x, 0, z); add(t);
+        t.add(mesh(new THREE.CylinderGeometry(0.5 * s, 0.7 * s, 4 * s, 10), trunkM, 0, 2 * s, 0));
+        const lm = leafMs[i % 11 === 0 ? 3 : i % 3]; [[0, 5.2, 0, 2.6], [1.3, 4.4, 0.4, 1.8], [-1.2, 4.6, -0.5, 1.9], [0.2, 6.6, 0.2, 1.7]].forEach(([a, b, c, r]) => t.add(mesh(new THREE.IcosahedronGeometry(r * s, 1), lm, a * s, b * s, c * s)));
+        YARD.statics.push({ x: X + x, y: 2 * s, z, hx: 0.6 * s, hy: 2 * s, hz: 0.6 * s });
+    }
+    // uzak tepeler ve bulutlar
+    for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2, r = rnd(190, 240); const h = add(mesh(new THREE.SphereGeometry(rnd(30, 55), 20, 12), new THREE.MeshStandardMaterial({ color: [0x8fd47a, 0x76c56a, 0xa6dd85][i % 3], roughness: 1 }), X + Math.cos(a) * r, -12, Math.sin(a) * r, false)); h.scale.y = rnd(0.45, 0.7); }
+    const cloudT = ctex(256, 128, (g, w, h) => { for (let i = 0; i < 9; i++) { const r = g.createRadialGradient(40 + i * 22, 70 + Math.sin(i) * 12, 0, 40 + i * 22, 70 + Math.sin(i) * 12, 42); r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = r; g.fillRect(0, 0, w, h); } });
+    for (let i = 0; i < 16; i++) { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: cloudT, transparent: true, opacity: 0.9, depthWrite: false, fog: false })); s.scale.set(rnd(40, 70), rnd(16, 26), 1); s.position.set(X + rnd(-220, 220), rnd(55, 90), rnd(-220, 220)); add(s); }
+    // rampalar: göle atlama rampası + yol tümsekleri
+    YARD.ramps = [];
+    const rampM = new THREE.MeshPhysicalMaterial({ color: 0xffb347, roughness: 0.4, clearcoat: 0.5 }), stripeM = new THREE.MeshStandardMaterial({ color: 0xffffff });
+    function ramp(x, z, ry, L, H, W, bump) {
+        const pts2 = bump ? [[-L / 2, 0], [0, H], [L / 2, 0]] : [[-L / 2, 0], [L / 2, 0], [L / 2, H]];
+        const sh = new THREE.Shape(); pts2.forEach(([a, b], i) => i ? sh.lineTo(a, b) : sh.moveTo(a, b));
+        const g = new THREE.ExtrudeGeometry(sh, { depth: W, bevelEnabled: false }); g.translate(0, 0, -W / 2);
+        const o = add(mesh(g, rampM, x, 0, z)); o.rotation.y = ry; o.receiveShadow = true;
+        o.updateMatrixWorld(); const pts = []; pts2.forEach(([a, b]) => [-W / 2, W / 2].forEach(zz => { const v = V3(a, b, zz).applyMatrix4(o.matrixWorld); pts.push(v.x, v.y, v.z); })); YARD.ramps.push(pts);
+    }
+    ramp(X - 26, 0, 0, 9, 2.6, 6, false);              // göle uçuş rampası (doğuya bakar)
+    [Math.PI / 2, -Math.PI / 2].forEach(a => { const p = YARD.ell(39, a); ramp(p.x, p.z, 0, 7, 1.1, 9, true); }); // yolun üst ve alt düzlüklerinde tümsek
+    { const p = YARD.ell(56, 0.6); ramp(p.x, p.z, -0.6 + Math.PI, 10, 3.4, 7, false); } // dış alanda büyük rampa
+    // gökkuşağı kemer kapıları (yolun üstünde, içinden geçince yıldız)
+    const rb = [0xff5a5a, 0xffb347, 0xffe066, 0x6ee68a, 0x5ab8ff, 0xb07cff];
+    [Math.PI / 4, 3 * Math.PI / 4, 5 * Math.PI / 4, 7 * Math.PI / 4].forEach(a => {
+        const p0 = YARD.ell(R0 - 1.5, a), p1 = YARD.ell(R1 + 1.5, a), mid = p0.clone().add(p1).multiplyScalar(0.5), r = p0.distanceTo(p1) / 2;
+        const gate = new THREE.Group(); gate.position.copy(mid); gate.rotation.y = -Math.atan2(p1.z - p0.z, p1.x - p0.x); add(gate);
+        rb.forEach((c, i) => { const t = new THREE.Mesh(new THREE.TorusGeometry(r - i * 0.45, 0.24, 8, 48, Math.PI), new THREE.MeshStandardMaterial({ color: c, emissive: c, emissiveIntensity: 0.25, roughness: 0.4 })); t.castShadow = true; gate.add(t); });
+        [p0, p1].forEach(q => YARD.statics.push({ x: q.x, y: 1.5, z: q.z, hx: 0.5, hy: 1.5, hz: 0.5 }));
+        YARD.gates.push({ o: gate, p: mid, r, t: 0 });
+    });
+    // gökyüzü halkaları (uçan araçlar için)
+    const hoopM = new THREE.MeshStandardMaterial({ color: 0xffd23f, emissive: 0xffb300, emissiveIntensity: 0.6, roughness: 0.3, metalness: 0.3 });
+    [[-20, 9, -20], [10, 13, -26], [34, 17, -8], [30, 11, 18], [0, 15, 24], [-30, 20, 10], [0, 24, 0], [-45, 12, -30]].forEach(([dx, y, dz], i) => {
+        const h = new THREE.Group(); h.position.set(X + dx, y, dz); h.rotation.y = i * 0.7; add(h);
+        h.add(new THREE.Mesh(new THREE.TorusGeometry(3.2, 0.32, 10, 40), hoopM)); const gl = glow(0xffe27a, 9, 0.35); h.add(gl);
+        YARD.hoops.push({ o: h, t: 0 });
+    });
+    // yoldaki yıldızlar
+    const starSh = new THREE.Shape(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 0.42 : 1; const x = Math.cos(a) * r, y = Math.sin(a) * r; i ? starSh.lineTo(x, y) : starSh.moveTo(x, y); }
+    const starG = new THREE.ExtrudeGeometry(starSh, { depth: 0.25, bevelEnabled: true, bevelThickness: 0.08, bevelSize: 0.08, bevelSegments: 2 }); starG.center();
+    const starM = new THREE.MeshStandardMaterial({ color: 0xffd23f, emissive: 0xffa000, emissiveIntensity: 0.55, metalness: 0.4, roughness: 0.25 });
+    for (let i = 0; i < 28; i++) { const a = i / 28 * Math.PI * 2 + 0.11, p = YARD.ell(39 + (i % 3 - 1) * 2.5, a); const s = new THREE.Mesh(starG, starM); s.position.set(p.x, 1.4, p.z); s.castShadow = true; add(s); YARD.stars.push({ o: s, t: 0 }); }
+})();
+// ---- fizik: bahçenin sabitleri (physStart içinden çağrılır) ----
+function yardPhys(w, fixed) {
+    w.createCollider(RAPIER.ColliderDesc.cuboid(130, 1, 130).setTranslation(YARD.X, -1, 0).setFriction(0.9), fixed);
+    YARD.statics.forEach(s => w.createCollider(RAPIER.ColliderDesc.cuboid(s.hx, s.hy, s.hz).setTranslation(s.x, s.y, s.z).setFriction(0.6), fixed));
+    YARD.ramps.forEach(pts => { const cd = RAPIER.ColliderDesc.convexHull(new Float32Array(pts)); if (cd) w.createCollider(cd.setFriction(0.9), fixed); });
+}
+// ---- devrilebilen oyuncaklar: lobutlar, kutu piramidi, domino ----
+const pinG = (() => { const pts = [[0, 0], [0.42, 0], [0.55, 0.5], [0.42, 1.2], [0.25, 1.6], [0.3, 1.95], [0.2, 2.2], [0, 2.25]].map(([a, b]) => new THREE.Vector2(a, b)); const g = new THREE.LatheGeometry(pts, 18); g.translate(0, -1.12, 0); return g; })();
+function spawnDyn() {
+    clearDyn(); const w = PHY.world, X = YARD.X;
+    const mk = (o, pos, cd, dens = 0.6) => { o.position.copy(pos); YARD.grp.add(o); const b = w.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(pos.x, pos.y, pos.z).setAngularDamping(0.3)); w.createCollider(cd.setDensity(dens).setFriction(0.6).setRestitution(0.1), b); YARD.dyn.push({ o, b, home: pos.clone(), down: false }); };
+    // lobutlar (üçgen)
+    const pinM = new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: 0.25, clearcoat: 1 });
+    let n = 0; for (let r = 0; r < 4; r++) for (let k = 0; k <= r; k++) { const o = new THREE.Mesh(pinG, pinM); o.castShadow = true; const band = new THREE.Mesh(new THREE.TorusGeometry(0.33, 0.07, 6, 18), M(0xe8322f)); band.rotation.x = Math.PI / 2; band.position.y = 0.5; o.add(band); mk(o, V3(X + 30 + r * 1.5, 1.13, (k - r / 2) * 1.5), RAPIER.ColliderDesc.cylinder(1.1, 0.45), 0.35); n++; }
+    // kutu piramidi
+    const cc = [0xff6f91, 0xffc94d, 0x6ee68a, 0x5ab8ff, 0xb07cff];
+    for (let r = 0; r < 4; r++) for (let k = 0; k < 4 - r; k++) { const o = new THREE.Mesh(rbox(1.6, 1.6, 1.6, 0.15, 0.06), plastic(cc[(r + k) % 5])); o.castShadow = true; mk(o, V3(X + 22, 0.81 + r * 1.62, 18 + (k - (3 - r) / 2) * 1.65), RAPIER.ColliderDesc.cuboid(0.8, 0.8, 0.8), 0.25); }
+    // domino yayı (dış alanda)
+    for (let i = 0; i < 18; i++) { const a = -Math.PI * 0.32 + i * 0.045, p = V3(X + Math.cos(a + Math.PI / 2) * 62 * 1.2, 1.5, Math.sin(a + Math.PI / 2) * 62); const o = new THREE.Mesh(rbox(1.6, 3, 0.45, 0.1, 0.04), plastic(cc[i % 5])); o.castShadow = true; o.rotation.y = -a; mk(o, p, RAPIER.ColliderDesc.cuboid(0.8, 1.5, 0.225).setRotation({ x: 0, y: Math.sin(-a / 2), z: 0, w: Math.cos(-a / 2) }), 0.3); YARD.dyn[YARD.dyn.length - 1].b.setRotation({ x: 0, y: Math.sin(-a / 2), z: 0, w: Math.cos(-a / 2) }, true); }
+}
+function clearDyn() { YARD.dyn.forEach(d => { YARD.grp.remove(d.o); if (PHY.world) try { PHY.world.removeRigidBody(d.b); } catch (e) {} }); YARD.dyn = []; }
+// ---- bahçeye çık / odaya dön ----
+function goYard(on) {
+    if (G.mode !== 'play' || !PHY.world) return;
+    const C = PHY.ctrl;
+    if (on && !C) { SFX.boing(); speak('Bahçeye çıkmak için önce motorlu bir araç yap!'); return; }
+    YARD.on = on; SFX.whoosh();
+    YARD.grp.visible = on; room.visible = !on;
+    scene.background = on ? null : new THREE.Color(0xf3e3d2);
+    scene.fog = on ? new THREE.Fog(0xdcefff, 120, 330) : null;
+    $('yardB').textContent = on ? '🏠 ODAYA DÖN' : '🌳 BAHÇEYE ÇIK';
+    if (C) {
+        const sp = on ? YARD.spawn : V3(0, 0, 5), lift = C.kind === 'fly' ? 3 : 1.5;
+        const fw = C.fw.clone(); const yaw = Math.atan2(fw.x, fw.z), want = on ? Math.PI / 2 : Math.PI;
+        const q = new THREE.Quaternion().setFromAxisAngle(V3(0, 1, 0), want - yaw);
+        C.body.setTranslation({ x: sp.x, y: sp.y + lift, z: sp.z }, true); C.body.setRotation({ x: q.x, y: q.y, z: q.z, w: q.w }, true);
+        C.body.setLinvel({ x: 0, y: 0, z: 0 }, true); C.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
+        CAM.t.set(sp.x, sp.y + 1, sp.z); CAM.gt.copy(CAM.t); CAM.yaw = CAM.gy = on ? -Math.PI / 2 : 0.15; CAM.gd = on ? 19 : 17;
+    }
+    if (on) {
+        spawnDyn(); YARD.stars.forEach(s => { s.t = 0; s.o.visible = true; }); YARD.hoops.forEach(h => { h.t = 0; h.o.visible = true; });
+        sun.shadow.camera.left = -30; sun.shadow.camera.right = 30; sun.shadow.camera.top = 30; sun.shadow.camera.bottom = -30; sun.shadow.camera.updateProjectionMatrix();
+        AN.ev('blok_bahce');
+        if (!SV.tut.yard) { SV.tut.yard = 1; save(); speak(C.kind === 'fly' ? 'Bahçedeyiz! Altın halkaların içinden uç, yıldız topla!' : C.kind === 'boat' ? 'Bahçedeyiz! Ortadaki göle git, yüz bakalım!' : 'Bahçedeyiz! Yolda yıldız topla, gökkuşağı kapılarından geç, rampadan göle atla, lobutları devir!'); }
+        else speak('Bahçeye çıktık!');
+    } else {
+        clearDyn(); sun.position.set(-30, 26, 6); sun.target.position.set(2, 0, -2);
+        sun.shadow.camera.left = -24; sun.shadow.camera.right = 24; sun.shadow.camera.top = 20; sun.shadow.camera.bottom = -20; sun.shadow.camera.updateProjectionMatrix();
+        speak('Odaya döndük!');
+    }
+}
+function yardTick(dt, T) {
+    if (!YARD.on) return;
+    // güneş ve gölgeler aracı takip etsin
+    sun.target.position.copy(CAM.t); sun.position.copy(CAM.t).add(V3(-30, 40, 12));
+    YARD.water.material.map && (YARD.water.material.map.offset.x = T * 0.01);
+    // dinamik oyuncakların görselleri
+    let fell = 0;
+    YARD.dyn.forEach(d => { const t = d.b.translation(), r = d.b.rotation(); d.o.position.set(t.x, t.y, t.z); d.o.quaternion.set(r.x, r.y, r.z, r.w); if (!d.down) { const up = V3(0, 1, 0).applyQuaternion(d.o.quaternion); if (up.y < 0.5 || V3(t.x, t.y, t.z).distanceTo(d.home) > 2.5) { d.down = true; fell++; } } });
+    if (fell) { addStars(fell >= 3 ? 2 : 1); if (fell >= 3) { SFX.yay(); toast('💥 STRIKE!'); } }
+    const C = PHY.ctrl; if (!C) return;
+    const p = C.body.translation(), pv = V3(p.x, p.y, p.z);
+    // yıldızlar
+    YARD.stars.forEach((s, i) => {
+        if (s.t > 0) { s.t -= dt; if (s.t <= 0) s.o.visible = true; return; }
+        s.o.rotation.y = T * 2.5 + i; s.o.position.y = 1.4 + Math.sin(T * 3 + i) * 0.2;
+        if (Math.hypot(pv.x - s.o.position.x, pv.z - s.o.position.z) < 2.6 && Math.abs(pv.y - s.o.position.y) < 3) { s.t = 25; s.o.visible = false; SFX.chime(); addStars(1); burst(s.o.position.clone(), [0xffe27a, 0xffffff], 12, 3, 0.8); YARD.got++; if (YARD.got % 10 === 0) speak(['Süper sürücü!', 'Yıldız avcısı!', 'Harikasın!'][YARD.got / 10 % 3]); }
+    });
+    // kapılar
+    YARD.gates.forEach(g => { g.t -= dt; if (g.t <= 0 && Math.hypot(pv.x - g.p.x, pv.z - g.p.z) < g.r * 0.85 && pv.y < g.r) { g.t = 6; SFX.yay(); addStars(2); toast('🌈 +2'); burst(pv.clone().add(V3(0, 2, 0)), [0xff5a5a, 0xffe066, 0x6ee68a, 0x5ab8ff], 30, 6, 1.1); } });
+    // halkalar
+    YARD.hoops.forEach((h, i) => {
+        h.o.rotation.y += dt * 0.4;
+        if (h.t > 0) { h.t -= dt; if (h.t <= 0) h.o.visible = true; return; }
+        if (pv.distanceTo(h.o.position) < 3.4) { h.t = 20; h.o.visible = false; SFX.yay(); addStars(3); toast('💫 +3'); burst(h.o.position.clone(), [0xffe27a, 0xffffff, 0xffb300], 36, 6, 1.2); }
+    });
+}
+function yardReset() { if (!YARD.on) return; YARD.on = false; YARD.grp.visible = false; room.visible = true; scene.background = new THREE.Color(0xf3e3d2); scene.fog = null; clearDyn(); sun.position.set(-30, 26, 6); sun.target.position.set(2, 0, -2); Object.assign(sun.shadow.camera, { left: -24, right: 24, top: 20, bottom: -20 }); sun.shadow.camera.updateProjectionMatrix(); $('yardB').textContent = '🌳 BAHÇEYE ÇIK'; }
+$('yardB').onclick = e => { e.currentTarget.blur(); SFX.init(); goYard(!YARD.on); };
+scene.background = new THREE.Color(0xf3e3d2);
 
 // =====================================================================
 // SİHİRLİ SANDIK görevleri, RAF (kayıtlı yapılar), öğretici
@@ -1226,7 +1410,7 @@ function toggleMode(focusId) {
         $('play').textContent = '🔧 YAPIMA DÖN'; $('play').classList.add('stop');
         CAM.gd = 17; CAM.gp = 0.5; SFX.whoosh();
         const c = PHY.ctrl;
-        if (!SV.tut.play) { SV.tut.play = 1; save(); speak(c ? 'Sol alttaki yuvarlakla sür! Kulelere, köprülere çarp, bakalım ne olacak!' : 'Motor eklersen aracın gider! Şimdilik bloklara dokunup izleyebilirsin.'); if (c) handEl($('joy'), 3500); }
+        if (!SV.tut.play) { SV.tut.play = 1; save(); speak(c ? 'Sol alttaki yuvarlakla sür! Odada yer dar gelirse BAHÇEYE ÇIK düğmesine bas!' : 'Motor eklersen aracın gider! Şimdilik bloklara dokunup izleyebilirsin.'); if (c) handEl($('joy'), 3500); }
         else if (c) speak({ car: 'Vın vın! Sür bakalım!', fly: 'Yukarı okuyla havalan!', boat: 'Havuza sür, yüzsün!', walk: 'Robot yürüyor!' }[c.kind]);
         AN.ev('blok_oyna');
         if (window.NETB && NETB.on) NETB.send({ t: 'mode', m: 'play' });
