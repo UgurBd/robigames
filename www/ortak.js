@@ -144,3 +144,40 @@ const Robi = window.RobiOrtak = {
   delPhoto(i) { const a = Robi.photos(); a.splice(i, 1); try { localStorage.setItem('robi_photos', JSON.stringify(a)); } catch (e) {} },
 };
 })();
+// ===== Anne-Baba sesi: kayıtlı sesler varsa oyun cümlelerini ebeveyn sesiyle söyler =====
+(function () {
+  const R = window.RobiOrtak; if (!R || !window.indexedDB) return;
+  const DBN = 'robi_ses', ST = 'clips';
+  let dbp = null;
+  const db = () => dbp || (dbp = new Promise((res, rej) => { const r = indexedDB.open(DBN, 1); r.onupgradeneeded = () => r.result.createObjectStore(ST); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }));
+  const tx = (mode, fn) => db().then(d => new Promise((res, rej) => { const t = d.transaction(ST, mode), q = fn(t.objectStore(ST)); t.oncomplete = () => res(q && q.result); t.onerror = () => rej(t.error); }));
+  const norm = t => String(t).toLocaleLowerCase('tr').replace(/[^a-zçğıöşüâîû ]+/g, ' ').replace(/\s+/g, ' ').trim();
+  const PV = { raw: {}, bufs: {}, keys: new Set(), ctx: null, cur: [], ready: false, norm };
+  PV.ac = () => PV.ctx || (PV.ctx = new (window.AudioContext || window.webkitAudioContext)());
+  PV.load = async () => { try { const ks = await tx('readonly', s => s.getAllKeys()), all = await tx('readonly', s => s.getAll()); PV.raw = {}; ks.forEach((k, i) => PV.raw[k] = all[i]); PV.keys = new Set(ks); PV.bufs = {}; } catch (e) {} PV.ready = true; return PV.keys.size; };
+  PV.buf = async k => { if (PV.bufs[k]) return PV.bufs[k]; const b = PV.raw[k]; if (!b) return null; PV.bufs[k] = await PV.ac().decodeAudioData(await b.arrayBuffer()); return PV.bufs[k]; };
+  // cümleyi kayıtlı parçalarla kapla (en az parçayla); kapanmıyorsa null → telefon sesi
+  PV.segment = t => { const w = norm(t).split(' ').filter(Boolean), n = w.length; if (!n) return null; const best = new Array(n + 1).fill(null); best[0] = []; for (let i = 0; i < n; i++) { if (!best[i]) continue; for (let j = n; j > i; j--) { const k = w.slice(i, j).join(' '); if (PV.keys.has(k) && (!best[j] || best[j].length > best[i].length + 1)) best[j] = best[i].concat([k]); } } return best[n]; };
+  PV.stop = () => { PV.cur.forEach(s => { try { s.stop(); } catch (e) {} }); PV.cur = []; };
+  PV.play = async keys => {
+    const ac = PV.ac(); if (ac.state === 'suspended') { try { await ac.resume(); } catch (e) {} }
+    const bufs = []; for (const k of keys) { const b = await PV.buf(k); if (!b) return false; bufs.push(b); }
+    PV.stop();
+    try { window.speechSynthesis && speechSynthesis.cancel(); } catch (e) {}
+    try { const cap = window.Capacitor || (window.parent && window.parent.Capacitor); cap && cap.Plugins && cap.Plugins.TextToSpeech && cap.Plugins.TextToSpeech.stop(); } catch (e) {}
+    let t = ac.currentTime + 0.03;
+    bufs.forEach(b => { const s = ac.createBufferSource(); s.buffer = b; const g = ac.createGain(); g.gain.value = 1.3; s.connect(g); g.connect(ac.destination); s.start(t); t += b.duration + 0.06; PV.cur.push(s); });
+    return true;
+  };
+  PV.on = () => R.load().parentVoice !== false;
+  PV.tryPlay = async text => { if (!PV.on()) return false; if (!PV.ready) await PV.load(); if (!PV.keys.size) return false; const seq = PV.segment(text); return seq ? PV.play(seq) : false; };
+  PV.save = async (key, blob) => { await tx('readwrite', s => s.put(blob, key)); PV.raw[key] = blob; PV.keys.add(key); delete PV.bufs[key]; };
+  PV.del = async key => { await tx('readwrite', s => s.delete(key)); delete PV.raw[key]; PV.keys.delete(key); delete PV.bufs[key]; };
+  PV.LOVE = ['seni çok seviyorum', 'seninle gurur duyuyorum', 'aferin benim akıllı çocuğum', 'sen harika bir bakıcısın', 'seni çok özledim'];
+  R.pv = PV;
+  const tts = R.say;
+  R.say = async function (text, lang = 'tr-TR', o) { if (R.load().voiceGuide === false) return; try { if (await PV.tryPlay(text)) return; } catch (e) {} return tts.call(R, text, lang, o); };
+  // ara sıra sevgi sözü (yalnızca kaydedildiyse)
+  R.sayLove = async () => { if (!PV.ready) await PV.load(); if (!PV.on()) return false; const has = PV.LOVE.filter(k => PV.keys.has(k)); return has.length ? PV.play([has[Math.floor(Math.random() * has.length)]]) : false; };
+  PV.load();
+})();

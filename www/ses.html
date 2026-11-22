@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Anne-Baba Sesi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;font-family:'Fredoka','Baloo 2','Nunito',system-ui,sans-serif;background:linear-gradient(160deg,#ffe3ef,#e8e2ff 55%,#dff3ff);color:#3b2a5a}
+body{overflow-y:auto}
+.wrap{max-width:760px;margin:0 auto;padding:12px 12px 40px}
+.top{display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:5;padding:8px 0;background:linear-gradient(180deg,#ffe3ef 70%,rgba(255,227,239,0))}
+.top h1{font-size:clamp(20px,4vw,28px);flex:1}
+.ib{width:48px;height:48px;border-radius:50%;border:3px solid #fff;background:#fff;font-size:22px;box-shadow:0 4px 0 #d9cdee;cursor:pointer}
+.card{background:#fff;border-radius:24px;padding:14px 16px;margin:10px 0;box-shadow:0 5px 0 rgba(90,60,140,.12),0 8px 20px rgba(90,60,140,.1);border:3px solid #fff}
+.guide h2{font-size:19px;margin-bottom:8px}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.st{background:#faf6ff;border-radius:18px;padding:10px;font-weight:600;font-size:14px;line-height:1.3}
+.st i{font-style:normal;font-size:30px;display:block}
+.row2{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.who{border:3px solid #eadff7;background:#faf6ff;border-radius:16px;padding:6px 14px;font-family:inherit;font-weight:700;font-size:16px;cursor:pointer;color:#3b2a5a}
+.who.on{border-color:#ff8fbd;background:#ffe3ef}
+.tog{margin-left:auto;border:none;border-radius:999px;padding:8px 14px;font-family:inherit;font-weight:700;font-size:15px;cursor:pointer;background:#c8f5d2;color:#1f7a3d}
+.tog.off{background:#eee;color:#888}
+.prog{height:14px;background:#eee;border-radius:999px;overflow:hidden;margin-top:6px}.prog div{height:100%;background:linear-gradient(90deg,#ff8fbd,#ffb347,#7ee08f);border-radius:999px;transition:width .3s}
+.grp h3{font-size:18px;margin:4px 0 2px;display:flex;align-items:center;gap:8px}
+.grp p.hint{font-size:13px;color:#7a6a96;margin-bottom:6px;font-weight:600}
+.ph{display:flex;align-items:center;gap:8px;padding:8px 6px;border-top:2px dashed #f0e8fb}
+.ph:first-of-type{border-top:none}
+.ph .tx{flex:1;font-weight:700;font-size:clamp(15px,2.8vw,18px);line-height:1.25}
+.ph .tx small{display:block;font-weight:600;font-size:12px;color:#9a8bb5}
+.ph.ok .tx::before{content:'✅ '}
+.b{width:52px;height:52px;border-radius:50%;border:3px solid #fff;font-size:22px;cursor:pointer;flex:none;box-shadow:0 4px 0 rgba(0,0,0,.12)}
+.rec{background:radial-gradient(circle at 35% 30%,#ff9aa8,#ff3d5e)}
+.rec.on{animation:pulse .6s infinite alternate;background:radial-gradient(circle at 35% 30%,#ffd0d6,#e0002e)}
+@keyframes pulse{to{transform:scale(1.15);box-shadow:0 0 0 10px rgba(255,61,94,.25)}}
+.play{background:#d6f0ff}.del{background:#f3f3f3;width:40px;height:40px;font-size:16px}
+.b[disabled]{opacity:.3}
+.meter{height:8px;border-radius:999px;background:#eee;overflow:hidden;width:70px;flex:none}.meter div{height:100%;width:0;background:#ff3d5e}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#3b2a5a;color:#fff;padding:10px 18px;border-radius:999px;font-weight:700;opacity:0;transition:opacity .3s;pointer-events:none;z-index:9}
+#toast.on{opacity:1}
+.demo{border:none;border-radius:999px;padding:8px 14px;font-family:inherit;font-weight:700;font-size:15px;background:#fff3b0;color:#8a5a00;cursor:pointer;margin:4px 4px 0 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><button class="ib" id="back">⬅</button><h1>🎤 Anne-Baba Sesi</h1></div>
+
+  <div class="card guide">
+    <h2>👨‍👩‍👧 Çocuğunuz oyunda sizin sesinizi duysun!</h2>
+    <div class="steps">
+      <div class="st"><i>🤫</i>Sessiz bir oda seçin. TV ve müzik kapalı olsun.</div>
+      <div class="st"><i>📱</i>Tableti ağzınıza bir karış uzaklıkta tutun.</div>
+      <div class="st"><i>🔴</i>Kırmızıya basın, cümleyi söyleyin, bitince tekrar basın.</div>
+      <div class="st"><i>😊</i>Gülümseyerek, neşeli ve yavaş konuşun. Çocuk bunu hisseder!</div>
+      <div class="st"><i>▶️</i>Kayıt kendiliğinden çalar. Beğenmezseniz yeniden kaydedin.</div>
+      <div class="st"><i>⭐</i>Önce yıldızlı gruptan başlayın. Kayıt olmayan cümleleri telefon sesi söyler.</div>
+    </div>
+    <div class="row2">
+      <span style="font-weight:700">Kimin sesi?</span>
+      <button class="who" data-w="anne">👩 Anne</button><button class="who" data-w="baba">👨 Baba</button><button class="who" data-w="ikisi">👨‍👩‍👧 İkimiz</button>
+      <button class="tog" id="use">🔊 Oyunlarda kullan</button>
+    </div>
+    <div style="margin-top:10px;font-weight:700"><span id="cnt">0</span> kayıt hazır</div>
+    <div class="prog"><div id="bar"></div></div>
+    <div class="row2"><span style="font-weight:700">Dene:</span><span id="demos"></span></div>
+  </div>
+  <div id="groups"></div>
+</div>
+<div id="toast"></div>
+<script src="ortak.js"></script>
+<script>
+const RO = window.RobiOrtak, PV = RO.pv, $ = id => document.getElementById(id);
+const GROUPS = [
+  { t: '⭐ Ders soruları (parçalar birleşir)', h: 'Bu kelimeler birleşip “Kırmızı kalbi bul!”, “Mavi olanı bul!” gibi bütün soruları oluşturur. Her kelimeyi tek başına, net söyleyin.', star: 1,
+    p: ['Kırmızı', 'Mavi', 'Sarı', 'Yeşil', 'Mor', 'Turuncu', 'olanı bul', 'küpü', 'topu', 'yıldızı', 'kalbi', 'üçgeni', 'bul'] },
+  { t: '⭐ Övgüler', star: 1, p: ['Aferin! Doğru buldun!', 'Harikasın!', 'Süper! Çok akıllısın!', 'Bravo!', 'Muhteşem!', 'Afiyet olsun!', 'Çok yakıştı!', 'Ne kadar şık!', 'Harika görünüyor!', 'Harikasın kaşif!'] },
+  { t: '💖 Sevgi sözleri', h: 'Oyunda bir iş bitince ara sıra sürpriz olarak çalınır.', star: 1, p: ['Seni çok seviyorum!', 'Seninle gurur duyuyorum!', 'Aferin benim akıllı çocuğum!', 'Sen harika bir bakıcısın!', 'Seni çok özledim!'] },
+  { t: '🥣 Mama', p: ['Yemek vakti! Meyveleri parmağınla kaseye sürükle.', 'Bir tane daha!', 'Çok güzel! Sonuncuyu da koy!', 'Süper! Şimdi parmağınla kasenin üstünde daire çizerek karıştır!', 'Mama hazır! Şimdi dostumuza dokun, kaşıkla yedirelim!', 'Hamm! Bir kaşık daha!', 'Mmm, çok lezzetli! Son kaşık!'] },
+  { t: '🌙 Uyku', p: ['Uyku vakti! Yatağına hoplayalım.', 'Şimdi battaniyeyi parmağınla yukarı çekip üstünü ört.', 'Çok güzel örttün! Şimdi gece lambasına dokun.', 'Dostumuz uyurken sen de gerçek oyuncaklarınla oyna. Sonra gelip günaydın dersin!', 'Şşş... uyuyor.'] },
+  { t: '📚 Ders, 👗 Giyin, ⚽ Oyun', p: ['Ders vakti! Söylediğimi bul ve dokun.', 'Giyinme zamanı! Bir renk ya da şapka seç. Kilitli olanları yıldızlarla açabilirsin.', 'Top oyunu! Halının üstünde bir yere dokun, top oraya gitsin.', 'Getirdi! Bir daha at!', 'Süper! Son kez at!', 'Çok eğlendik! Oyun bitti.'] },
+  { t: '🏞️ Keşif Parkı', p: ['Sol alttaki yuvarlağı parmağınla it, kaşifini yürüt!', 'Mor gölge lekelerini gördün mü? Baloncuk düğmesine basarak onları çiçeğe çevir!', 'Parlayan baloncuk kapsüllerinin içinde minik dostlar var! Onları da baloncukla kurtar!', 'Süper atış! Her yer çiçek açtı!', 'Bir leke daha çiçeğe döndü!'] },
+  { t: '🌈 Renk Köprüsü (parçalar birleşir)', h: '“Maviye bas!” ve “Kırmızı ve Sarı!” gibi cümleler bu parçalardan oluşur.', p: ['kırmızıya', 'sarıya', 'maviye', 'turuncuya', 'yeşile', 'mora', 'bas', 've', 'Hadi Pofuduk! Doğru renge bas!', 'Sıra sende!'] }
+];
+const ALL = GROUPS.flatMap(g => g.p);
+const toast = t => { const e = $('toast'); e.textContent = t; e.classList.add('on'); clearTimeout(e._t); e._t = setTimeout(() => e.classList.remove('on'), 1800); };
+
+function render() {
+  const has = k => PV.keys.has(PV.norm(k));
+  const n = ALL.filter(has).length;
+  $('cnt').textContent = `${n} / ${ALL.length}`; $('bar').style.width = (n / ALL.length * 100) + '%';
+  const s = RO.load();
+  document.querySelectorAll('.who').forEach(b => b.classList.toggle('on', (s.pvWho || 'anne') === b.dataset.w));
+  $('use').classList.toggle('off', s.parentVoice === false); $('use').textContent = s.parentVoice === false ? '🔇 Kullanılmıyor' : '🔊 Oyunlarda kullan';
+  $('groups').innerHTML = GROUPS.map((g, gi) => `<div class="card grp"><h3>${g.t}</h3>${g.h ? `<p class="hint">${g.h}</p>` : ''}${g.p.map((p, pi) => `<div class="ph ${has(p) ? 'ok' : ''}" data-k="${gi}:${pi}"><div class="tx">${p}</div><div class="meter"><div></div></div><button class="b rec" title="Kaydet">🔴</button><button class="b play" ${has(p) ? '' : 'disabled'}>▶️</button><button class="b del" ${has(p) ? '' : 'disabled'}>🗑️</button></div>`).join('')}</div>`).join('');
+  document.querySelectorAll('.ph').forEach(row => {
+    const [gi, pi] = row.dataset.k.split(':').map(Number), text = GROUPS[gi].p[pi], key = PV.norm(text);
+    row.querySelector('.rec').onclick = () => toggleRec(row, key);
+    row.querySelector('.play').onclick = () => PV.play([key]);
+    row.querySelector('.del').onclick = async () => { await PV.del(key); render(); toast('Silindi'); };
+  });
+  const demos = ['Kırmızı kalbi bul!', 'Mavi olanı bul!', 'Maviye bas!', 'Aferin! Doğru buldun!'];
+  $('demos').innerHTML = demos.map(d => `<button class="demo">${d}</button>`).join('');
+  $('demos').querySelectorAll('.demo').forEach(b => b.onclick = async () => { const ok = await PV.tryPlay(b.textContent); if (!ok) toast('Bu cümlenin parçaları henüz kaydedilmedi'); });
+}
+document.querySelectorAll('.who').forEach(b => b.onclick = () => { const s = RO.load(); s.pvWho = b.dataset.w; RO.store(s); render(); });
+$('use').onclick = () => { const s = RO.load(); s.parentVoice = s.parentVoice === false; RO.store(s); render(); };
+$('back').onclick = () => { try { if (window.parent !== window) { parent.postMessage('robi-menu', '*'); return; } } catch (e) {} location.href = 'index.html'; };
+
+// ---- Kayıt: başı-sonu sessizlik kırpılır, ses düzeyi dengelenir, küçük WAV olarak saklanır ----
+let REC = null, stream = null;
+async function getMic() {
+  if (stream && stream.active) return stream;
+  stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+  return stream;
+}
+async function toggleRec(row, key) {
+  if (REC) { const same = REC.row === row; REC.stop(); if (same) return; }
+  let st; try { st = await getMic(); } catch (e) { toast('Mikrofon izni gerekli 🎤'); return; }
+  const ac = PV.ac(); if (ac.state === 'suspended') await ac.resume();
+  const mr = new MediaRecorder(st); const chunks = [];
+  const src = ac.createMediaStreamSource(st), an = ac.createAnalyser(); an.fftSize = 512; src.connect(an); const buf = new Float32Array(an.fftSize);
+  const btn = row.querySelector('.rec'), meter = row.querySelector('.meter div');
+  btn.classList.add('on'); btn.textContent = '⏹';
+  let raf; const tick = () => { an.getFloatTimeDomainData(buf); let m = 0; for (const v of buf) m = Math.max(m, Math.abs(v)); meter.style.width = Math.min(100, m * 160) + '%'; raf = requestAnimationFrame(tick); }; tick();
+  const auto = setTimeout(() => REC && REC.stop(), 9000);
+  REC = { row, stop: () => { clearTimeout(auto); cancelAnimationFrame(raf); try { mr.state !== 'inactive' && mr.stop(); } catch (e) {} src.disconnect(); REC = null; } };
+  mr.ondataavailable = e => e.data.size && chunks.push(e.data);
+  mr.onstop = async () => {
+    btn.classList.remove('on'); btn.textContent = '🔴'; meter.style.width = '0';
+    try {
+      const blob = new Blob(chunks, { type: mr.mimeType || 'audio/webm' });
+      const ab = await ac.decodeAudioData(await blob.arrayBuffer());
+      const wav = await trimToWav(ab);
+      if (!wav) { toast('Ses duyulmadı, tekrar dener misin? 🙂'); return; }
+      await PV.save(key, wav); render(); toast('Kaydedildi ✅'); PV.play([key]);
+    } catch (e) { toast('Kayıt olmadı, tekrar deneyin'); }
+  };
+  mr.start();
+}
+async function trimToWav(ab) {
+  const RATE = 22050;
+  const off = new OfflineAudioContext(1, Math.ceil(ab.duration * RATE), RATE);
+  const s = off.createBufferSource(); s.buffer = ab; s.connect(off.destination); s.start();
+  const r = await off.startRendering(); const d = r.getChannelData(0);
+  let peak = 0; for (const v of d) peak = Math.max(peak, Math.abs(v));
+  if (peak < 0.02) return null;
+  const th = Math.max(0.015, peak * 0.07); let a = 0, b = d.length - 1;
+  while (a < d.length && Math.abs(d[a]) < th) a++; while (b > a && Math.abs(d[b]) < th) b--;
+  a = Math.max(0, a - Math.floor(RATE * 0.06)); b = Math.min(d.length - 1, b + Math.floor(RATE * 0.12));
+  const n = b - a + 1, g = 0.92 / peak, out = new DataView(new ArrayBuffer(44 + n * 2));
+  const W = (o, str) => { for (let i = 0; i < str.length; i++) out.setUint8(o + i, str.charCodeAt(i)); };
+  W(0, 'RIFF'); out.setUint32(4, 36 + n * 2, true); W(8, 'WAVE'); W(12, 'fmt '); out.setUint32(16, 16, true); out.setUint16(20, 1, true); out.setUint16(22, 1, true); out.setUint32(24, RATE, true); out.setUint32(28, RATE * 2, true); out.setUint16(32, 2, true); out.setUint16(34, 16, true); W(36, 'data'); out.setUint32(40, n * 2, true);
+  for (let i = 0; i < n; i++) { const fade = Math.min(1, i / 200, (n - i) / 400); out.setInt16(44 + i * 2, Math.max(-1, Math.min(1, d[a + i] * g * fade)) * 32767, true); }
+  return new Blob([out], { type: 'audio/wav' });
+}
+PV.load().then(render);
+addEventListener('pagehide', () => { try { stream && stream.getTracks().forEach(t => t.stop()); } catch (e) {} });
+</script>
+</body>
+</html>

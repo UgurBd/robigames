@@ -299,6 +299,7 @@ function renderParent() {
     <div class="row"><div><b>📊 Bugün oynanan</b><small>${p.limit ? `Kalan: ${Math.max(0, Math.ceil(left / 60))} dk` : 'Sınır yok'}</small></div><b>${used} dk</b></div>
     <div class="row"><div><b>➕ Bugüne ek süre</b><small>Ödül olarak 10 dakika ekle</small></div><button class="btn sec" id="bonus">+10 dk</button></div>
     <div class="row"><div><b>🗣️ Sesli rehber</b><small>Robi görevleri Türkçe sesli anlatır, ok ile yolu gösterir</small></div><button class="btn sec" id="vg">${s.voiceGuide === false ? '🔇 Kapalı' : '🗣️ Açık'}</button></div>
+    <div class="row"><div><b>🎤 Anne-Baba sesi</b><small>Oyunda çocuğunuz sizin sesinizi duysun. Rehberli kayıt ekranı</small></div><button class="btn" id="pvRec">🎤 Kaydet</button></div>
     <div class="row"><div><b>🎙️ Rehber sesi</b><small>Öğretmen sesi kız çocuğu ya da erkek çocuğu gibi konuşsun</small></div><button class="btn sec" id="gvb">${RO.guideVoice() === 'erkek' ? '👦 Erkek' : '👧 Kız'}</button></div>
     <div class="row"><div><b>🎵 Müzik</b><small>Oyunlardaki arka plan müziği</small></div><button class="btn sec" id="mus">${s.muted ? '🔇 Kapalı' : '🎵 Açık'}</button></div>
     <div class="row"><div><b>🍬 Jelibon Odası: eşya sayısı</b><small>Çocuk bu kadar oyuncağı toplayınca jelibon hakkı kazanır</small><input type="range" id="roomN" min="1" max="100" value="${p.roomItems || 10}" style="width:100%;accent-color:#ff5ad8"></div><b id="roomV" style="font-size:22px;min-width:44px;text-align:right">${p.roomItems || 10}</b></div>
@@ -309,6 +310,7 @@ function renderParent() {
   $('lim').onchange = e => { RO.setParent({ limit: +e.target.value }); renderParent(); };
   $('bonus').onclick = () => { RO.setParent({ bonus: (RO.parent().bonus || 0) + 10 }); renderParent(); };
   $('gvb').onclick = () => { RO.setGuideVoice(RO.guideVoice() === 'erkek' ? 'kiz' : 'erkek'); renderParent(); RO.say('Merhaba! Ben senin oyun arkadaşınım.'); };
+  $('pvRec').onclick = () => { $('sParent').style.display = 'none'; launch({ id: 'ses', name: 'Anne-Baba Sesi', src: 'ses.html' }, $('pvRec')); };
   $('vg').onclick = () => { const s2 = RO.load(); s2.voiceGuide = s2.voiceGuide === false; RO.store(s2); renderParent(); };
   $('mus').onclick = () => { const s2 = RO.load(); s2.muted = !s2.muted; RO.store(s2); renderParent(); };
   $('roomN').oninput = e => { $('roomV').textContent = e.target.value; }; $('roomN').onchange = e => RO.setParent({ roomItems: +e.target.value });

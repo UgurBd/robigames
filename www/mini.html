@@ -713,6 +713,7 @@ function grow(n) {
     if (c.growth >= 100) { c.level++; c.growth = 67; addStars(10, 30); toast(`🎉 ${COMPS[SV.sel].n} Lv.${c.level}!`); speak(`Yaşasın! ${COMPS[SV.sel].n} seviye atladı! Sen harika bir bakıcısın!`); SFX.yay(); buildPet(); }
     else if (stageOf(c) > before) { toast(`🌟 ${STAGE_N[stageOf(c)]}!`); SFX.yay(); speak(`Harika bakım! ${COMPS[SV.sel].n} büyüdü!${stageOf(c) === 2 ? ' Artık parkta seninle birlikte gezecek!' : ''}`); buildPet(); burst(home, pet.position.clone().add(new THREE.Vector3(0, H.petU, 0)), [0xffd65c, 0xff9ac6, 0x7cc7ff], 30, 2.4, H.petU / 1.6); }
     save(); renderNeeds();
+    if (Math.random() < 0.35) setTimeout(() => { try { RO.sayLove && RO.sayLove(); } catch (e) {} }, 3800);
     if (window.NET && NET.on && NET.host) NET.sendView();
 }
 
