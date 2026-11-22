@@ -28,6 +28,10 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Fredoka','Baloo 2'
 #say .av{width:46px;height:46px;border-radius:50%;flex:none;background:radial-gradient(circle at 30% 30%,#fff7c2,#ffc94d);display:flex;align-items:center;justify-content:center;font-size:28px;animation:talk .35s ease-in-out infinite alternate}
 @keyframes talk{to{transform:scale(1.08) rotate(-6deg)}}
 #say span{font-weight:700;color:#3b2a5a;font-size:clamp(15px,2.6vw,19px);line-height:1.25}
+#qCard{position:fixed;left:50%;top:132px;transform:translateX(-50%);z-index:31;border-radius:30px;padding:8px 18px;display:flex;align-items:center;gap:10px;border-color:#7cc7ff;border-width:4px;cursor:pointer;animation:qpop .4s cubic-bezier(.34,1.56,.64,1)}
+#qCard svg{width:clamp(70px,14vh,110px);height:clamp(70px,14vh,110px);filter:drop-shadow(0 4px 4px rgba(0,0,0,.25))}
+#qCard b{font-size:34px;animation:talk .5s infinite alternate}
+@keyframes qpop{from{transform:translateX(-50%) scale(.3)}to{transform:translateX(-50%) scale(1)}}
 #hand{position:fixed;z-index:45;font-size:54px;pointer-events:none;opacity:0;transition:opacity .2s;filter:drop-shadow(0 4px 6px rgba(0,0,0,.4));left:-100px;top:-100px}
 #hand.on{opacity:1;animation:tap .85s ease-in-out infinite}
 #hand.swipe{animation:swp 1.4s ease-in-out infinite}
@@ -129,6 +133,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Fredoka','Baloo 2'
 </div>
 <div id="say" class="glass"><div class="av">🧚</div><span id="sayT"></span></div>
 <div id="hand">👆</div>
+<div id="qCard" class="glass hide"><svg id="qSvg" viewBox="0 0 100 100"></svg><b>🔊</b></div>
 <div id="toast"></div>
 
 <div id="homeUI" class="hide">
@@ -729,7 +734,7 @@ function actBar(steps, i) { $('actBar').classList.remove('hide'); $('actSteps').
 $('actX').onclick = () => { SFX.init(); endAct(true); hAct('cancel'); };
 function endAct(silent) {
     const a = H.act; H.act = null; $('actBar').classList.add('hide'); $('ward').classList.add('hide'); handOff();
-    zoomTo(0.5, 0.55, 1); spoon.visible = false; puree.visible = false; FRUITS.forEach(f => home.remove(f)); FRUITS.length = 0; STUDY.blocks.forEach(b => home.remove(b)); STUDY.blocks.length = 0; STUDY.q = null;
+    zoomTo(0.5, 0.55, 1); spoon.visible = false; puree.visible = false; FRUITS.forEach(f => home.remove(f)); FRUITS.length = 0; STUDY.blocks.forEach(b => home.remove(b)); STUDY.blocks.length = 0; STUDY.q = null; $('qCard').classList.add('hide');
     if (a && a.k === 'sleep' && !H.sleeping) { blanket.visible = false; if (pet.rotation.x !== 0) H.jump = { from: pet.position.clone(), to: H.spot.clone(), t: 0, wake: true }; }
     if (pet && !H.sleeping && !H.jump) H.target = H.spot.clone();
     $('dock').classList.remove('hide');
@@ -851,6 +856,7 @@ function newQuestion(seed) {
     else if (lv === 1) { const ss = pickN(shapes, 3), c = cols[Math.floor(qr() * cols.length)]; opts = ss.map(s => ({ c, s })); ans = Math.floor(qr() * 3); q = `${SHAPES[opts[ans].s].dat.replace(/^./, x => x.toUpperCase())} bul!`; }
     else { const cs = pickN(cols, 4), ss = pickN(shapes, 4); opts = cs.map((c, i) => ({ c, s: ss[i] })); ans = Math.floor(qr() * 4); q = `${SCOL[opts[ans].c][0]} ${SHAPES[opts[ans].s].dat} bul!`; }
     STUDY.q = { opts, ans, q, t: 0 };
+    showQCard(opts[ans], lv);
     const n = opts.length;
     opts.forEach((o, i) => {
         const m = SHAPES[o.s].mk(glossy(SCOL[o.c][2])); const g = new THREE.Group(); g.add(m);
@@ -863,6 +869,23 @@ function newQuestion(seed) {
     actBar(['1', '2', '3', '4', '5'], STUDY.n);
     speak(q);
 }
+
+// Okuma bilmeyenler için: sorulan şeyin resmi (renk lekesi / şekil / renkli şekil) + dokununca tekrar söyler
+const SHAPE_SVG = {
+    kup: '<rect x="18" y="18" width="64" height="64" rx="8"/>',
+    top: '<circle cx="50" cy="50" r="34"/>',
+    yildiz: '<polygon points="50,8 61,38 93,38 67,57 77,89 50,70 23,89 33,57 7,38 39,38"/>',
+    kalp: '<path d="M50 86 C10 58 8 30 28 20 C40 14 50 24 50 32 C50 24 60 14 72 20 C92 30 90 58 50 86Z"/>',
+    ucgen: '<polygon points="50,10 92,86 8,86"/>',
+    leke: '<path d="M50 10 C70 8 92 24 88 48 C94 70 74 92 50 88 C28 94 8 74 12 50 C6 26 28 12 50 10Z"/>'
+};
+function showQCard(o, lv) {
+    const hex = '#' + SCOL[o.c][2].toString(16).padStart(6, '0');
+    const shape = lv === 0 ? 'leke' : o.s, fill = lv === 1 ? '#9aa3b5' : hex;
+    $('qSvg').innerHTML = `<g fill="${fill}" stroke="#fff" stroke-width="5" stroke-linejoin="round">${SHAPE_SVG[shape]}</g>`;
+    const c = $('qCard'); c.classList.remove('hide'); c.style.animation = 'none'; void c.offsetWidth; c.style.animation = '';
+}
+$('qCard').onclick = () => { SFX.init(); if (STUDY.q) speak(STUDY.q.q); };
 function studyAnswer(i) {
     if (!H.act || H.act.k !== 'study' || !STUDY.q || STUDY.q.done) return;
     const b = STUDY.blocks.find(x => x.userData.i === i); if (!b) return;
