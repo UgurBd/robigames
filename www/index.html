@@ -178,6 +178,7 @@ const WORLDS = [
   { id: 'toplama', cls: 'jelly', art: '🧸🍬', name: 'Jelibon Odası', sub: 'Odanı topla, jelibon kazan', src: 'macera.html#toplama' },
   { id: 'oda', cls: 'room', art: '🛏️🧸', name: 'Dev Oda', sub: 'Arkadaşlarını kurtar', src: 'oda.html' },
   { id: 'kopru', cls: 'jelly', art: '🌈🫧', name: 'Renk Köprüsü', sub: 'Pofuduk ile renkleri eşleştir', src: 'kopru.html' },
+  { id: 'mini', cls: 'room', art: '🏡👶', name: 'Mini Dünya', sub: 'Bebeğini besle, uyut, parkta dost kurtar', src: 'mini.html' },
   { id: 'tunel', cls: 'jelly', art: '🚀🌈', name: 'Tünel Uçuşu', sub: 'Jelibonla neon tünelde uç', src: 'tunel.html' },
   { id: 'jeli', cls: 'jelly', art: '🍬🍦', name: 'Jelibon Arenası', sub: 'Jelibon tabancası, dondurma, jöle köpek', src: 'macera.html#net-jeli-solo-M3' },
   { id: 'zeka', cls: 'brain', art: '🧠🎴', name: 'Zekâ Oyunları', sub: 'Hafıza, Tahmin, Zihin Gücü', src: 'zeka.html' },
@@ -236,6 +237,7 @@ function openS(id) { $(id).style.display = 'flex'; tone(660, .08); }
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => { b.closest('.screen').style.display = 'none'; refresh(); });
 
 addEventListener('message', e => {
+  if (e.data === 'robi-cok:mini') { frame.onload = null; frame.style.display = 'none'; frame.src = 'about:blank'; menu.style.display = 'flex'; if (!RO.profile().name) { openCok(); return; } openS('sCok'); cokView = 'main'; renderCok(); createRoom('mini'); return; }
   if (e.data === 'robi-cok:kopru') { frame.onload = null; frame.style.display = 'none'; frame.src = 'about:blank'; menu.style.display = 'flex'; if (!RO.profile().name) { openCok(); return; } openS('sCok'); cokView = 'main'; renderCok(); createRoom('kopru'); return; }
   if (e.data === 'robi-cok:tahmin') { frame.onload = null; frame.style.display = 'none'; frame.src = 'about:blank'; menu.style.display = 'flex'; if (!RO.profile().name) { openCok(); return; } openS('sCok'); cokView = 'main'; renderCok(); createRoom('tahmin'); return; }
   if (typeof e.data === 'string' && e.data.startsWith('robi-invite:')) { const [, m, c] = e.data.split(':'); inviteFromGame(m, c); return; }
@@ -317,7 +319,7 @@ function renderParent() {
 const RN = window.RobiNet;
 let cokCode = '', cokView = 'main', nearT = 0, onlineMap = {};
 const BIG = { arena: 1, ebe: 1, parkur: 1, jeli: 1 };
-function cokGo(mode, code, ask, o) { $('sCok').style.display = 'none'; clearInterval(nearT); const ex = BIG[mode] && o ? `-${o.size || 'S'}${o.bots || 0}` : ''; launch({ id: 'net', name: RN.MODES[mode][1], src: mode === 'boya' ? `boyama.html#net-boya-${code}${ask ? '-a' : ''}` : mode === 'tahmin' ? `zeka.html#net-tahmin-${code}${ask ? '-a' : ''}` : mode === 'kopru' ? `kopru.html#net-kopru-${code}${ask ? '-a' : ''}` : `macera.html#net-${mode}-${code}${ex}${ask ? '-a' : ''}` }, document.body); }
+function cokGo(mode, code, ask, o) { $('sCok').style.display = 'none'; clearInterval(nearT); const ex = BIG[mode] && o ? `-${o.size || 'S'}${o.bots || 0}` : ''; launch({ id: 'net', name: RN.MODES[mode][1], src: mode === 'boya' ? `boyama.html#net-boya-${code}${ask ? '-a' : ''}` : mode === 'tahmin' ? `zeka.html#net-tahmin-${code}${ask ? '-a' : ''}` : mode === 'kopru' ? `kopru.html#net-kopru-${code}${ask ? '-a' : ''}` : mode === 'mini' ? `mini.html#net-mini-${code}${ask ? '-a' : ''}` : `macera.html#net-${mode}-${code}${ex}${ask ? '-a' : ''}` }, document.body); }
 function openCok() { const p = RO.profile(); if (!p.name) { profileEdit(true); openS('sCok'); RO.say && RO.say('Önce oyuncu adını seçelim!'); return; } cokView = 'main'; renderCok(); openS('sCok'); RO.say && RO.say('Birlikte oyna! Yakındaki bir odaya ya da bir arkadaşına dokun.'); }
 // basit ebeveyn kilidi: yazıyla yazılan sayıya dokun
 function wordGate(box, ok, back) {
