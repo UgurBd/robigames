@@ -33,7 +33,7 @@ h1{margin:2px 0 0;font-size:clamp(24px,5.5vh,38px);line-height:1;color:#ffd166;-
 .paint .art{background:conic-gradient(#e53935,#ffd166,#22b573,#2e8bff,#a259ff,#e53935)}
 .jelly .art{background:linear-gradient(135deg,#ffd6e7,#ffe9d6)}
 .room .art{background:linear-gradient(#cfe8f7,#e2b47c)}.forest .art{background:linear-gradient(#9fd8ff 40%,#6ab84a 40%)}
-.learn .art{background:linear-gradient(135deg,#ffd6f0,#c9b8ff)}.build .art{background:linear-gradient(135deg,#bde0ff,#ffd166)}.multi .art{background:linear-gradient(135deg,#ffb3b3,#b3d4ff,#b9f5c9)}.garden .art{background:linear-gradient(135deg,#ffe3f1,#bff0c9)}
+.learn .art{background:linear-gradient(135deg,#ffd6f0,#c9b8ff)}.build .art{background:linear-gradient(135deg,#bde0ff,#ffd166)}.brain .art{background:linear-gradient(135deg,#bfe6ff,#e8d0ff)}.multi .art{background:linear-gradient(135deg,#ffb3b3,#b3d4ff,#b9f5c9)}.garden .art{background:linear-gradient(135deg,#ffe3f1,#bff0c9)}
 .wt{padding:6px 9px 8px;display:flex;flex-direction:column;justify-content:flex-start;min-width:0;flex:1}.wt b{font-size:16px;line-height:1.05}.wt small{color:#5a4f70;font-size:12px;line-height:1.15;font-weight:700}
 .play{display:inline-block;margin-top:3px;background:#ff7a2f;color:#fff;border:2.5px solid var(--ink);border-radius:9px;padding:0 9px;font-weight:800;font-size:13px;align-self:flex-start;text-shadow:0 1px 0 var(--ink)}
 .world.locked{filter:grayscale(.8)}.world.locked .art{opacity:.6}
@@ -177,6 +177,7 @@ const WORLDS = [
   { id: 'boyama', cls: 'paint', art: '🎨🖍️', name: 'Boyama Atölyesi', sub: '40 bölüm boyama', src: 'boyama.html' },
   { id: 'toplama', cls: 'jelly', art: '🧸🍬', name: 'Jelibon Odası', sub: 'Odanı topla, jelibon kazan', src: 'macera.html#toplama' },
   { id: 'oda', cls: 'room', art: '🛏️🧸', name: 'Dev Oda', sub: 'Arkadaşlarını kurtar', src: 'oda.html' },
+  { id: 'zeka', cls: 'brain', art: '🧠🎴', name: 'Zekâ Oyunları', sub: 'Hafıza, Tahmin, Zihin Gücü', src: 'zeka.html' },
   { id: 'cok', cls: 'multi', art: '👫🌐', name: 'Birlikte Oyna', sub: 'Arkadaşınla aynı odada, 6 kişiye kadar', multi: true },
   { id: 'bahce', cls: 'garden', art: '🌳💗', name: 'Koruma Bahçesi', sub: 'Kurtardığın hayvanları sev', src: 'macera.html#bahce' },
   { id: 'tasarla', cls: 'build', art: '🧱⭐', name: 'Parkur Atölyesi', sub: 'Kendi parkurunu kur', src: 'macera.html#tasarla' },
@@ -215,6 +216,7 @@ function openS(id) { $(id).style.display = 'flex'; tone(660, .08); }
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => { b.closest('.screen').style.display = 'none'; refresh(); });
 
 addEventListener('message', e => {
+  if (e.data === 'robi-cok:tahmin') { frame.onload = null; frame.style.display = 'none'; frame.src = 'about:blank'; menu.style.display = 'flex'; if (!RO.profile().name) { openCok(); return; } openS('sCok'); cokView = 'main'; renderCok(); createRoom('tahmin'); return; }
   if (typeof e.data === 'string' && e.data.startsWith('robi-invite:')) { const [, m, c] = e.data.split(':'); inviteFromGame(m, c); return; }
   if (typeof e.data === 'string' && e.data.startsWith('robi-addfriend:')) { const [, pid, av, ...nm] = e.data.split(':'); PR.send({ t: 'addreq', to: pid }); itoast('❤️ Arkadaşlık isteği gönderildi!'); RO.say && RO.say('Arkadaşlık isteği gönderildi!'); return; }
   if (e.data === 'robi-menu' || e.data === 'robi-menu-break') {
@@ -291,7 +293,7 @@ function renderParent() {
 // ---------- Birlikte Oyna: yakındaki odalar, arkadaşlar, oda kur, kodla katıl ----------
 const RN = window.RobiNet;
 let cokCode = '', cokView = 'main', nearT = 0, onlineMap = {};
-function cokGo(mode, code, ask) { $('sCok').style.display = 'none'; clearInterval(nearT); launch({ id: 'net', name: RN.MODES[mode][1], src: mode === 'boya' ? `boyama.html#net-boya-${code}${ask ? '-a' : ''}` : `macera.html#net-${mode}-${code}${ask ? '-a' : ''}` }, document.body); }
+function cokGo(mode, code, ask) { $('sCok').style.display = 'none'; clearInterval(nearT); launch({ id: 'net', name: RN.MODES[mode][1], src: mode === 'boya' ? `boyama.html#net-boya-${code}${ask ? '-a' : ''}` : mode === 'tahmin' ? `zeka.html#net-tahmin-${code}${ask ? '-a' : ''}` : `macera.html#net-${mode}-${code}${ask ? '-a' : ''}` }, document.body); }
 function openCok() { const p = RO.profile(); if (!p.name) { profileEdit(true); openS('sCok'); RO.say && RO.say('Önce oyuncu adını seçelim!'); return; } cokView = 'main'; renderCok(); openS('sCok'); RO.say && RO.say('Birlikte oyna! Yakındaki bir odaya ya da bir arkadaşına dokun.'); }
 // basit ebeveyn kilidi: yazıyla yazılan sayıya dokun
 function wordGate(box, ok, back) {
@@ -317,7 +319,7 @@ function renderCok() {
     <p style="font-weight:800;margin:10px 0 4px">🏠 Yakındaki odalar <small style="font-weight:600">(aynı evdeki tabletler)</small></p><div id="nearList" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;min-height:40px"><small>⏳ Aranıyor...</small></div>
     <p style="font-weight:800;margin:12px 0 4px">👫 Arkadaşlarım</p><div id="frList" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">${fr.map(f => `<button class="btn sec fr" data-pid="${f.pid}" style="padding:4px 10px;position:relative"><span style="font-size:30px">${f.av}</span><br><small>${f.name}</small><i class="dot" style="position:absolute;top:4px;right:4px;width:12px;height:12px;border-radius:50%;background:${onlineMap[f.pid] ? '#22b573' : '#bbb'}"></i></button>`).join('') || '<small>Henüz arkadaş yok. Birlikte oynadıktan sonra ❤️ ile ekleyebilirsiniz.</small>'}<button class="btn sec" id="frAdd" style="padding:4px 10px">➕<br><small>Ekle</small></button></div>
     <p style="font-weight:800;margin:12px 0 4px">🎮 Yeni oda kur</p>
-    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">${Object.entries(RN.MODES).map(([k, [e, n]]) => `<button class="btn sec" data-mode="${k}" style="padding:6px 2px;text-align:center"><div style="font-size:30px">${e}</div><small>${n}</small></button>`).join('')}</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">${Object.entries(RN.MODES).map(([k, [e, n]]) => `<button class="btn sec" data-mode="${k}" style="padding:6px 2px;text-align:center"><div style="font-size:30px">${e}</div><small>${n}</small></button>`).join('')}</div>
     <button class="btn sec" id="byCode" style="margin-top:10px">🔢 Kodla katıl</button>
     <p id="cokMsg" style="font-weight:700;color:#e53935;min-height:20px;margin:6px 0 0"></p>`;
   $('pfEdit').onclick = () => wordGate($('cokBody'), () => profileEdit(false), renderCok);

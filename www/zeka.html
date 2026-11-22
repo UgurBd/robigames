@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Robi Zekâ Oyunları</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#2b2340}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{margin:0;height:100%;overflow:hidden;font-family:'Baloo 2',system-ui,sans-serif;color:var(--ink);background:#eef6ff;background-image:radial-gradient(#9ad7ff66 2px,transparent 2px);background-size:22px 22px;touch-action:none}
+button{font-family:inherit;color:var(--ink);cursor:pointer}
+.btn{border:3.5px solid var(--ink);border-radius:14px;background:#fff;box-shadow:0 4px 0 var(--ink);font-weight:800;font-size:17px;padding:4px 14px}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.btn.go{background:#22b573;color:#fff;text-shadow:0 1px 0 var(--ink)}
+.btn.on{background:#ffd166}
+.scr{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;padding:8px;gap:8px}
+.top{display:flex;gap:8px;align-items:center;width:100%;justify-content:space-between}
+.top .t{font-weight:800;font-size:20px;flex:1;text-align:center}
+h1{margin:0;font-size:34px;color:#2e8bff;-webkit-text-stroke:2px var(--ink);text-shadow:0 4px 0 var(--ink);line-height:1}
+.games{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin:auto}
+.game{width:min(30vw,240px);border:4px solid var(--ink);border-radius:22px;box-shadow:0 6px 0 var(--ink);background:#fff;padding:0;overflow:hidden;text-align:center}
+.game .art{height:min(28vh,120px);display:flex;align-items:center;justify-content:center;font-size:min(12vh,58px);border-bottom:4px solid var(--ink)}
+.game b{display:block;font-size:21px;margin-top:4px}.game small{display:block;font-size:13px;color:#5a4f70;font-weight:700;padding:0 8px 8px}
+.lvls{display:grid;grid-template-columns:repeat(10,1fr);gap:7px;width:min(820px,100%);overflow-y:auto;padding:4px}
+.lv{border:3px solid var(--ink);border-radius:14px;background:#fff;box-shadow:0 3px 0 var(--ink);font-weight:800;font-size:18px;padding:4px 0;line-height:1.05}
+.lv small{display:block;font-size:11px;color:#f5b400}.lv.lock{background:#e9e5f2;color:#999}.lv.done{background:#fff3c4}
+.board{flex:1;width:100%;display:flex;align-items:center;justify-content:center;min-height:0}
+#mGrid{display:grid;gap:min(1.6vh,10px)}
+.cell{border:4px solid var(--ink);border-radius:18px;box-shadow:0 5px 0 var(--ink);background:#fff;display:flex;align-items:center;justify-content:center;transition:transform .25s,background .25s;position:relative}
+.cell.cover{background:linear-gradient(135deg,#9ad7ff,#a259ff)}
+.cell.cover span{visibility:hidden}
+.cell.ok{background:#b9f5c9}.cell.bad{animation:shake .4s}.cell.empty.cover{background:linear-gradient(135deg,#9ad7ff,#a259ff)}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.ask{font-size:28px;font-weight:800;display:flex;align-items:center;gap:10px;min-height:56px}
+.ask .big{font-size:50px;animation:bob 1s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-6px)}}
+.cards{display:flex;gap:min(2vw,14px);flex-wrap:wrap;justify-content:center;max-width:95vw}
+.card{width:min(18vw,120px,18vh);aspect-ratio:3/4;border:4px solid var(--ink);border-radius:18px;box-shadow:0 5px 0 var(--ink);font-size:min(9vw,56px,9vh);display:flex;align-items:center;justify-content:center;background:#fff;transition:transform .3s}
+.card.sel{transform:translateY(-12px);outline:5px solid #ffd166}
+.card.back{background:repeating-linear-gradient(45deg,#a259ff,#a259ff 10px,#c18bff 10px,#c18bff 20px)}
+.card.back span{visibility:hidden}
+.card.hit{background:#b9f5c9}.card.miss{background:#ffc2c2}
+.card:disabled:not(.hit):not(.miss):not(.sel){opacity:.45}.card.hit{transform:scale(1.12)}
+.score{display:flex;gap:16px;font-weight:800;font-size:20px}
+.score span{background:#fff;border:3px solid var(--ink);border-radius:14px;padding:0 10px;box-shadow:0 3px 0 var(--ink)}
+.msg{font-weight:800;font-size:22px;text-align:center;min-height:34px}
+#zCan{flex:1;width:100%;border:4px solid var(--ink);border-radius:20px;box-shadow:0 6px 0 var(--ink);background:linear-gradient(#bfe6ff,#eaf7ff);touch-action:none;min-height:0}
+#party{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;background:rgba(43,35,64,.55)}
+#party .box{background:#fff;border:4px solid var(--ink);box-shadow:0 8px 0 var(--ink);border-radius:26px;padding:16px 26px;text-align:center;position:relative;overflow:hidden;min-width:min(420px,90vw)}
+#party h2{margin:0;font-size:38px;color:#ff5ad8;-webkit-text-stroke:2px var(--ink)}
+.conf{position:absolute;top:-10px;width:10px;height:16px;border-radius:3px;animation:fall 2s linear forwards}
+@keyframes fall{to{transform:translateY(420px) rotate(600deg)}}
+.seg{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<!-- ANA -->
+<div class="scr" id="home">
+  <div class="top"><button class="btn" id="back">◀</button><span class="t"></span><span></span></div>
+  <h1>🧠 Zekâ Oyunları</h1>
+  <div class="games">
+    <button class="game" data-go="hafiza"><div class="art" style="background:#ffe7a8">🎴❓</div><b>Hafıza</b><small>Resimler saklanır, yerlerini hatırla!</small></button>
+    <button class="game" data-go="tahmin"><div class="art" style="background:#e8d0ff">🔮🃏</div><b>Tahmin</b><small>Arkadaşın hangi kartı seçti?</small></button>
+    <button class="game" data-go="zihin"><div class="art" style="background:#bfe6ff">🎈🌬️</div><b>Zihin Gücü</b><small>Sakin nefesle balonu uçur!</small></button>
+  </div>
+</div>
+<!-- HAFIZA -->
+<div class="scr" id="hafiza">
+  <div class="top"><button class="btn" data-go="home">◀</button><span class="t">🎴 Hafıza · seviye seç</span><span id="hTot" style="font-weight:800"></span></div>
+  <div class="lvls" id="hLv"></div>
+</div>
+<div class="scr" id="hplay">
+  <div class="top"><button class="btn" data-go="hafiza">◀</button><span class="t" id="hTitle"></span><button class="btn" id="hSay">🔊</button></div>
+  <div class="ask" id="hAsk"></div>
+  <div class="board"><div id="mGrid"></div></div>
+</div>
+<!-- TAHMİN -->
+<div class="scr" id="tahmin">
+  <div class="top"><button class="btn" data-go="home">◀</button><span class="t">🔮 Tahmin</span><span></span></div>
+  <p class="msg">Kaç kart olsun?</p>
+  <div class="seg" id="tN"></div>
+  <p class="msg" style="margin-top:10px">Kiminle oynayalım?</p>
+  <div class="seg"><button class="btn go" id="tBot" style="font-size:22px">🤖 Robi ile</button><button class="btn go" id="tFriend" style="font-size:22px;background:#2e8bff">👫 Arkadaşla (iki tablet)</button></div>
+  <p style="max-width:560px;text-align:center;font-weight:700;color:#5a4f70">Sırası gelen bir kart seçer ve saklar. Diğeri tahmin eder. Bilirse puan alır! Arkadaşını ne kadar iyi tanıyorsun?</p>
+</div>
+<div class="scr" id="tplay">
+  <div class="top"><button class="btn" id="tExit">◀</button><span class="t" id="tTitle">🔮 Tahmin</span><span id="tCode" style="font-weight:800"></span></div>
+  <div class="score" id="tScore"></div>
+  <div class="msg" id="tMsg"></div>
+  <div class="board"><div class="cards" id="tCards"></div></div>
+  <div class="msg" id="tHint" style="font-size:15px;color:#5a4f70"></div>
+</div>
+<!-- ZİHİN GÜCÜ -->
+<div class="scr" id="zihin">
+  <div class="top"><button class="btn" data-go="home">◀</button><span class="t">🎈 Zihin Gücü · seviye seç</span><span id="zTot" style="font-weight:800"></span></div>
+  <p style="margin:0;font-weight:700;color:#5a4f70;text-align:center">Mikrofona yavaş ve uzun üfle: "hıııı" 🌬️ Sakin kaldıkça balon yükselir. Sert üflersen sallanır!</p>
+  <div class="lvls" id="zLv" style="grid-template-columns:repeat(6,1fr)"></div>
+</div>
+<div class="scr" id="zplay">
+  <div class="top"><button class="btn" id="zExit">◀</button><span class="t" id="zTitle"></span><span id="zMode" style="font-weight:800;font-size:14px"></span></div>
+  <canvas id="zCan"></canvas>
+</div>
+<div id="party"><div class="box"><h2 id="pT">Yaşasın!</h2><div id="pS" style="font-size:40px"></div><div id="pE" style="font-size:60px">🤖🎉</div><p id="pM" style="font-weight:800"></p><div class="seg" id="pB"></div></div></div>
+<script src="ortak.js"></script>
+<script src="kutuphane.js"></script>
+<script src="analiz.js"></script>
+<script src="net.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const RO = window.RobiOrtak || { award() {}, tick: () => 1e9, load: () => ({}), say() {} };
+const AN = window.RobiAnaliz || { screen() {}, done() {}, ev() {} };
+const KB = window.RobiKutuphane || { speak() {} };
+const say = t => { try { KB.speak(t, 'tr-TR'); } catch (e) {} };
+let AC = null;
+function tone(f, d = .1, type = 'triangle', vol = .07, t0 = 0) { try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); const t = AC.currentTime + t0, o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.value = f; g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + d); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + d + .02); } catch (e) {} }
+const yay = () => [523, 659, 784, 1046].forEach((f, i) => tone(f, .15, 'triangle', .07, i * .09));
+const boo = () => tone(200, .25, 'sawtooth', .05);
+const SCR = ['home', 'hafiza', 'hplay', 'tahmin', 'tplay', 'zihin', 'zplay'];
+function show(id) { SCR.forEach(s => $(s).style.display = s === id ? 'flex' : 'none'); AN.screen('zeka:' + id); if (id === 'hafiza') hRender(); if (id === 'zihin') zRender(); if (id === 'tahmin') tSetup(); if (id !== 'zplay') zStop(); }
+document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { tone(660, .06); show(b.dataset.go); });
+$('back').onclick = () => { try { if (window.parent !== window) { parent.postMessage('robi-menu', '*'); return; } } catch (e) {} location.href = 'index.html'; };
+let Z = null, MIC = null, TN = null;
+const KEY = 'robi_zeka'; let ZS = { h: {}, z: {}, t: { best: 0 } }; try { ZS = Object.assign(ZS, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
+const zsave = () => { try { localStorage.setItem(KEY, JSON.stringify(ZS)); } catch (e) {} };
+function party(o) {
+  $('party').style.display = 'flex'; $('pT').textContent = o.t; $('pS').textContent = o.stars ? '⭐'.repeat(o.stars) + '☆'.repeat(3 - o.stars) : ''; $('pM').textContent = o.m || ''; $('pE').textContent = o.e || '🤖🎉';
+  const box = $('party').querySelector('.box'); box.querySelectorAll('.conf').forEach(c => c.remove());
+  for (let i = 0; i < 36; i++) { const c = document.createElement('i'); c.className = 'conf'; c.style.left = Math.random() * 100 + '%'; c.style.background = ['#ff5a5a', '#ffd166', '#22b573', '#2e8bff', '#a259ff', '#ff5ad8'][i % 6]; c.style.animationDelay = Math.random() * .4 + 's'; box.appendChild(c); }
+  [523, 659, 784, 1046, 784, 1046, 1318].forEach((f, i) => tone(f, .18, 'square', .045, i * .11)); setTimeout(() => say(o.say || o.t), 700);
+  $('pB').innerHTML = ''; o.b.forEach(([t, cls, fn]) => { const b = document.createElement('button'); b.className = 'btn ' + cls; b.textContent = t; b.onclick = () => { $('party').style.display = 'none'; fn(); }; $('pB').appendChild(b); });
+}
+// ================= HAFIZA =================
+const SETS = [
+  ['Hayvanlar', [['🐶', 'köpek'], ['🐱', 'kedi'], ['🐰', 'tavşan'], ['🦊', 'tilki'], ['🐻', 'ayı'], ['🐼', 'panda'], ['🐸', 'kurbağa'], ['🐵', 'maymun'], ['🦁', 'aslan'], ['🐘', 'fil'], ['🐢', 'kaplumbağa'], ['🐟', 'balık']]],
+  ['Yaratıklar', [['🐉', 'ejderha'], ['👾', 'uzaylı canavar'], ['👻', 'hayalet'], ['🦄', 'tek boynuzlu at'], ['🦖', 'dinozor'], ['🐙', 'ahtapot'], ['🧌', 'dev'], ['🧚', 'peri'], ['🦕', 'uzun boyunlu dinozor'], ['🐲', 'yavru ejder'], ['👽', 'uzaylı'], ['🧞', 'cin']]],
+  ['Kahramanlar', [['🤖', 'Robi'], ['🦸', 'süper kahraman'], ['👸', 'prenses'], ['🤴', 'kral'], ['🧙', 'büyücü'], ['🥷', 'ninja'], ['🧑‍🚀', 'astronot'], ['🧑‍🚒', 'itfaiyeci'], ['👮', 'polis'], ['🧑‍⚕️', 'doktor'], ['🧜', 'deniz kızı'], ['🏴‍☠️', 'korsan']]],
+  ['Sayılar', [['1', 'bir'], ['2', 'iki'], ['3', 'üç'], ['4', 'dört'], ['5', 'beş'], ['6', 'altı'], ['7', 'yedi'], ['8', 'sekiz'], ['9', 'dokuz'], ['0', 'sıfır'], ['10', 'on'], ['12', 'on iki']]],
+  ['Harfler', [['A', 'A'], ['B', 'Be'], ['C', 'Ce'], ['D', 'De'], ['E', 'E'], ['K', 'Ke'], ['M', 'Me'], ['O', 'O'], ['R', 'Re'], ['S', 'Se'], ['T', 'Te'], ['Z', 'Ze']]],
+];
+const HLV = 30;
+function hCfg(L) { const k = Math.min(12, 2 + Math.floor(L / 2.5)), cells = Math.min(20, k + Math.ceil(k * .4)), cols = Math.ceil(Math.sqrt(cells * 1.7)), rows = Math.ceil(cells / cols); return { k, cells: cols * rows, cols, rows, t: Math.max(1.1, 3.8 - L * .09), set: SETS[L % 5] }; }
+const hOpen = L => L === 0 || ZS.h[L - 1] || (RO.load && RO.load().unlockAll);
+function hRender() {
+  $('hTot').textContent = '⭐ ' + Object.values(ZS.h).reduce((a, b) => a + b, 0);
+  $('hLv').innerHTML = Array.from({ length: HLV }, (_, L) => { const c = hCfg(L), st = ZS.h[L], op = hOpen(L); return `<button class="lv ${op ? '' : 'lock'} ${st ? 'done' : ''}" data-l="${L}">${op ? c.set[1][L % 12][0] : '🔒'}<br>${L + 1}<small>${st ? '★'.repeat(st) : '&nbsp;'}</small></button>`; }).join('');
+  $('hLv').querySelectorAll('.lv').forEach(b => b.onclick = () => { const L = +b.dataset.l; if (!hOpen(L)) { boo(); return; } hStart(L); });
+}
+let H = null;
+function hStart(L) {
+  const c = hCfg(L), pool = c.set[1].slice().sort(() => Math.random() - .5).slice(0, c.k), pos = Array.from({ length: c.cells }, (_, i) => i).sort(() => Math.random() - .5).slice(0, c.k);
+  H = { L, c, items: pool.map((it, i) => ({ e: it[0], n: it[1], cell: pos[i], found: false })), order: [], q: 0, miss: 0, phase: 'look', lock: true };
+  H.order = H.items.slice().sort(() => Math.random() - .5);
+  show('hplay'); $('hTitle').textContent = `🎴 Seviye ${L + 1} · ${c.set[0]}`;
+  const g = $('mGrid'), vw = innerWidth * .94, vh = innerHeight - 150, size = Math.min(vw / c.cols, vh / c.rows) - 10;
+  g.style.gridTemplateColumns = `repeat(${c.cols}, ${size}px)`; g.innerHTML = Array.from({ length: c.cells }, (_, i) => { const it = H.items.find(x => x.cell === i); return `<button class="cell ${it ? '' : 'empty'}" data-c="${i}" style="width:${size}px;height:${size}px;font-size:${size * .55}px;${it && /^[0-9A-Z]+$/.test(it.e) ? 'font-weight:800;color:#2e8bff' : ''}"><span>${it ? it.e : ''}</span></button>`; }).join('');
+  g.querySelectorAll('.cell').forEach(b => b.onclick = () => hTap(+b.dataset.c, b));
+  $('hAsk').innerHTML = `👀 İyi bak! Yerlerini aklında tut... <b id="hCount"></b>`; say('İyi bak! Yerlerini aklında tut!');
+  let left = Math.ceil(c.t); $('hCount').textContent = left;
+  const iv = setInterval(() => { left--; if ($('hCount')) $('hCount').textContent = left > 0 ? left : ''; if (left <= 0) clearInterval(iv); }, 1000);
+  H.timer = setTimeout(() => { g.querySelectorAll('.cell').forEach(x => x.classList.add('cover')); tone(400, .12); H.phase = 'ask'; H.lock = false; hAsk(); }, c.t * 1000 + 300);
+}
+function hAsk() { const it = H.order[H.q]; $('hAsk').innerHTML = `<span class="big">${it.e}</span> nerede?`; say(`${it.n} nerede?`); }
+$('hSay').onclick = () => { if (H && H.phase === 'ask') hAsk(); };
+function hTap(i, b) {
+  if (!H || H.lock || H.phase !== 'ask') return; const it = H.order[H.q];
+  if (it.cell === i) {
+    b.classList.remove('cover'); b.classList.add('ok'); it.found = true; yay(); H.q++;
+    if (H.q >= H.order.length) { H.lock = true; setTimeout(hDone, 700); } else setTimeout(hAsk, 600);
+  } else {
+    H.miss++; boo(); b.classList.add('bad'); const was = b.classList.contains('cover'); b.classList.remove('cover'); H.lock = true;
+    setTimeout(() => { b.classList.remove('bad'); if (was && !H.items.some(x => x.cell === i && x.found)) b.classList.add('cover'); H.lock = false; }, 800);
+    if (H.miss % 3 === 0) { const ok = $('mGrid').querySelector(`[data-c="${it.cell}"]`); ok.classList.remove('cover'); setTimeout(() => ok.classList.add('cover'), 900); say('İpucu! Burada!'); }
+  }
+}
+function hDone() {
+  const stars = H.miss === 0 ? 3 : H.miss <= 2 ? 2 : 1, L = H.L; ZS.h[L] = Math.max(ZS.h[L] || 0, stars); zsave(); AN.done(); AN.ev('hafiza_' + (L + 1));
+  if (Object.keys(ZS.h).length >= 5) RO.award && RO.award('memory');
+  party({ t: ['Güzel!', 'Çok güzel!', 'SÜPER HAFIZA!'][stars - 1], stars, m: H.miss ? `${H.miss} yanlış. Hiç yanlış yapmazsan 3 yıldız!` : 'Hepsini ilk seferde buldun!', e: '🧠✨', b: [['🔁 Tekrar', '', () => hStart(L)], ...(L < HLV - 1 ? [['Sonraki ▶', 'go', () => hStart(L + 1)]] : []), ['Seviyeler', '', () => show('hafiza')]] });
+}
+// ================= TAHMİN =================
+const TC = [['🍎', '#ffc2c2', 'elma'], ['🐶', '#ffe7a8', 'köpek'], ['⭐', '#fff3a0', 'yıldız'], ['🚗', '#bfe6ff', 'araba'], ['🌙', '#d8ccff', 'ay'], ['🎈', '#ffc2ea', 'balon'], ['🐟', '#b9f5ef', 'balık'], ['🌸', '#ffd6f0', 'çiçek']];
+let tn = 4, T = null;
+function tSetup() { $('tN').innerHTML = [2, 4, 6, 8].map(n => `<button class="btn ${n === tn ? 'on' : ''}" data-n="${n}" style="font-size:24px;min-width:70px">${n}<br><small style="font-size:12px">şans %${Math.round(100 / n)}</small></button>`).join(''); $('tN').querySelectorAll('[data-n]').forEach(b => b.onclick = () => { tn = +b.dataset.n; tSetup(); }); }
+function tCardsHTML(state) { return TC.slice(0, T.n).map(([e, bg], i) => `<button class="card ${state[i] || ''}" data-i="${i}" style="background-color:${bg}"><span>${e}</span></button>`).join(''); }
+function tDraw(cls, onTap, enabled = true) { $('tCards').innerHTML = tCardsHTML(cls); $('tCards').querySelectorAll('.card').forEach(b => { b.disabled = !enabled; b.onclick = () => onTap(+b.dataset.i, b); }); }
+function tScore() { $('tScore').innerHTML = T.names.map((n, k) => `<span>${n}: ${T.sc[k]}</span>`).join('') + `<span>Tur ${T.round}</span>`; }
+// --- Robi'ye karşı ---
+$('tBot').onclick = () => { T = { bot: true, n: tn, sc: [0, 0], names: ['🙂 Sen', '🤖 Robi'], round: 1, turn: 0 }; show('tplay'); $('tCode').textContent = ''; $('tTitle').textContent = `🔮 Tahmin · ${tn} kart`; tBotRound(); };
+function tBotRound() {
+  tScore(); const n = T.n;
+  if (T.turn === 0) { // Robi saklar, çocuk tahmin eder
+    T.secret = Math.floor(Math.random() * n); $('tMsg').textContent = '🤖 Robi bir kart seçti. Hangisi? Hisset ve dokun!'; say('Robi bir kart seçti. Sence hangisi?'); $('tHint').textContent = '';
+    tDraw({}, (i, b) => { const hit = i === T.secret, cls = {}; cls[T.secret] = 'hit'; if (!hit) cls[i] = 'miss'; tDraw(cls, () => {}, false); if (hit) { T.sc[0]++; yay(); $('tMsg').textContent = '🎉 Bildin! Süper his!'; say('Bildin! Harika!'); } else { boo(); $('tMsg').textContent = `😮 Robi ${TC[T.secret][0]} seçmişti.`; say('Robi ' + TC[T.secret][2] + ' seçmişti.'); } tNext(); });
+  } else { // çocuk saklar, Robi tahmin eder
+    $('tMsg').textContent = '🙂 Şimdi sen bir kart seç. Robi tahmin edecek!'; say('Şimdi sen bir kart seç. Robi tahmin edecek!');
+    tDraw({}, (i) => { const cls = {}; cls[i] = 'sel'; tDraw(cls, () => {}, false); $('tMsg').textContent = '🤖 Robi düşünüyor... 🤔'; say('Robi düşünüyor');
+      setTimeout(() => { const g = Math.floor(Math.random() * n), c2 = {}; c2[i] = 'hit'; if (g !== i) c2[g] = 'miss'; tDraw(c2, () => {}, false); if (g === i) { T.sc[1]++; $('tMsg').textContent = '🤖 Robi bildi!'; say('Robi bildi!'); tone(700, .2); } else { $('tMsg').textContent = `🤖 Robi ${TC[g][0]} dedi. Bilemedi!`; say('Robi bilemedi!'); } tNext(); }, 1600); });
+  }
+}
+function tNext() { tScore(); setTimeout(() => { T.turn = 1 - T.turn; if (T.turn === 0) T.round++; if (T.bot && T.round > 6) return tEnd(); T.bot ? tBotRound() : null; }, 2200); }
+function tEnd() {
+  const [a, b] = T.sc, chance = (6 / T.n).toFixed(1);
+  party({ t: a > b ? 'Kazandın!' : a === b ? 'Berabere!' : 'Robi kazandı!', m: `Sen ${a} · Robi ${b}. (Şansla ortalama ${chance} bilinir)`, e: a >= b ? '🙂🏆' : '🤖🏆', say: a > b ? 'Yaşasın! Kazandın!' : 'Çok güzel oynadın! Bir daha?', b: [['🔁 Tekrar', 'go', () => $('tBot').onclick()], ['Menü', '', () => show('tahmin')]] });
+}
+$('tExit').onclick = () => { if (TN) { TN.closing = true; try { TN.ws.close(); } catch (e) {} $('back').onclick(); return; } show('tahmin'); };
+// --- İki tablet (oda) ---
+$('tFriend').onclick = () => { try { parent.postMessage('robi-cok:tahmin', '*'); } catch (e) {} };
+const TNH = (location.hash || '').match(/^#net-tahmin-(\d{5})(-a)?$/);
+if (TNH) (function () {
+  const RN = window.RobiNet, code = TNH[1]; TN = { code, me: -1, peers: {}, info: {} };
+  T = { bot: false, n: 4, sc: [0, 0], names: ['', ''], round: 1, turn: 0 };
+  const two = () => [TN.me, ...Object.keys(TN.peers).map(Number)].filter(s => s >= 0).sort((a, b) => a - b).slice(0, 2);
+  const myIdx = () => two().indexOf(TN.me), isHost = () => myIdx() === 0;
+  const nm = s => TN.info[s] ? `${TN.info[s].av || RN.AV[s]} ${TN.info[s].name || ''}` : RN.AV[s];
+  const send = o => { if (TN.ws && TN.ws.readyState === 1) TN.ws.send(JSON.stringify(o)); };
+  function names() { const t = two(); T.names = [t[0] !== undefined ? nm(t[0]) : '…', t[1] !== undefined ? nm(t[1]) : '⏳']; tScore(); }
+  function round() {
+    names(); $('tTitle').textContent = `🔮 Tahmin · ${T.n} kart`;
+    if (two().length < 2) { $('tMsg').textContent = '⏳ Arkadaşın bekleniyor...'; $('tHint').textContent = 'Menüden 📨 ile çağırabilir ya da kodu söyleyebilirsin: ' + code.slice(0, 2) + '-' + code.slice(2); tDraw({}, () => {}, false); return; }
+    $('tHint').textContent = isHost() ? '' : '';
+    const chooser = T.turn, iAmChooser = myIdx() === chooser; T.secret = null; T.ready = false;
+    if (iAmChooser) { $('tMsg').textContent = '🙂 Sıra sende: bir kart seç ve sakla!'; say('Sıra sende! Bir kart seç.'); tDraw({}, (i) => { if (T.secret !== null) return; T.secret = i; const c = {}; c[i] = 'sel'; tDraw(c, () => {}, false); send({ t: 'ready' }); $('tMsg').textContent = '🤫 Arkadaşın tahmin ediyor...'; }); }
+    else { $('tMsg').textContent = '⏳ Arkadaşın kart seçiyor...'; tDraw({}, () => {}, false); }
+  }
+  function onMsg(s, m) {
+    if (m.t === 'cfg') { T.n = m.n; T.sc = [0, 0]; T.round = 1; T.turn = 0; round(); }
+    else if (m.t === 'ready' && myIdx() !== T.turn) { $('tMsg').textContent = '🔮 Arkadaşın bir kart seçti! Hangisi? Hisset ve dokun!'; say('Arkadaşın bir kart seçti. Sence hangisi?'); tDraw({}, (j) => { send({ t: 'guess', j }); tDraw({ [j]: 'sel' }, () => {}, false); $('tMsg').textContent = '⏳ ...'; }); }
+    else if (m.t === 'guess' && myIdx() === T.turn && T.secret !== null) { const hit = m.j === T.secret; const r = { t: 'res', i: T.secret, j: m.j, hit }; send(r); onRes(r); }
+    else if (m.t === 'res') onRes(m);
+  }
+  function onRes(r) {
+    const c = { [r.i]: 'hit' }; if (!r.hit) c[r.j] = 'miss'; tDraw(c, () => {}, false);
+    const guesser = 1 - T.turn, iGuessed = myIdx() === guesser;
+    if (r.hit) { T.sc[guesser]++; yay(); $('tMsg').textContent = iGuessed ? '🎉 Bildin! Arkadaşını çok iyi tanıyorsun!' : '😲 Arkadaşın bildi!'; say(iGuessed ? 'Bildin! Harika!' : 'Arkadaşın bildi!'); }
+    else { boo(); $('tMsg').textContent = iGuessed ? `😮 ${TC[r.i][0]} seçilmişti.` : `😄 Bilemedi! Sen ${TC[r.i][0]} seçmiştin.`; say(iGuessed ? TC[r.i][2] + ' seçilmişti.' : 'Bilemedi!'); }
+    tScore(); setTimeout(() => { T.turn = 1 - T.turn; if (T.turn === 0) T.round++; round(); }, 2400);
+  }
+  function hostCfg() { if (!isHost()) return; const b = document.createElement('div'); b.className = 'seg'; b.id = 'tCfg'; b.innerHTML = [2, 4, 6, 8].map(n => `<button class="btn ${n === T.n ? 'on' : ''}" data-n="${n}">${n} kart</button>`).join(''); const old = $('tCfg'); if (old) old.remove(); $('tplay').appendChild(b); b.querySelectorAll('[data-n]').forEach(x => x.onclick = () => { send({ t: 'cfg', n: +x.dataset.n }); onMsg(TN.me, { t: 'cfg', n: +x.dataset.n }); hostCfg(); }); }
+  function connect() {
+    const ws = TN.ws = new WebSocket(window.ROBI_SERVER.replace(/^http/, 'ws') + `/ws?code=${code}&ch=tahmin&${RN.q()}${TNH[2] && !TN.in ? '&ask=1' : ''}`);
+    ws.onmessage = e => { let m; try { m = JSON.parse(e.data); } catch (x) { return; }
+      if (m.t === 'wait') { $('tMsg').textContent = '⏳ Oda sahibine soruluyor...'; }
+      else if (m.t === 'denied') { TN.closing = true; say('Oda sahibi şimdi izin vermedi.'); setTimeout(() => $('back').onclick(), 2000); }
+      else if (m.t === 'ask') { const p = m.p; if (confirm(`${p.av || ''} ${p.name || 'Bir arkadaş'} girmek istiyor. Gelsin mi?`)) send({ t: 'allow', slot: p.slot, ok: true }); else send({ t: 'allow', slot: p.slot, ok: false }); }
+      else if (m.t === 'welcome') { TN.in = true; TN.me = m.me.slot; TN.info[TN.me] = m.me; m.peers.forEach(p => { TN.peers[p.slot] = 1; TN.info[p.slot] = p; }); yay(); round(); hostCfg(); }
+      else if (m.t === 'join') { TN.peers[m.p.slot] = 1; TN.info[m.p.slot] = m.p; yay(); say('Arkadaşın geldi! Başlayalım!'); T.sc = [0, 0]; T.round = 1; T.turn = 0; if (isHost()) send({ t: 'cfg', n: T.n }); round(); hostCfg(); }
+      else if (m.t === 'leave') { delete TN.peers[m.slot]; round(); hostCfg(); }
+      else if (m.m) onMsg(m.s, m.m); };
+    ws.onclose = () => { if (!TN.closing) setTimeout(connect, 1500); };
+  }
+  show('tplay'); $('tCode').textContent = '🔑 ' + code.slice(0, 2) + '-' + code.slice(2); connect();
+  addEventListener('pagehide', () => { TN.closing = true; try { TN.ws.close(); } catch (e) {} });
+})();
+// ================= ZİHİN GÜCÜ =================
+const ZLV = [
+  { k: 'lift', sec: 3, txt: 'Balonu çizginin üstünde 3 saniye tut' }, { k: 'lift', sec: 5, txt: 'Balonu 5 saniye yukarıda tut' }, { k: 'lift', sec: 8, txt: '8 saniye sakin nefes!' },
+  { k: 'band', sec: 4, txt: 'Balonu iki çizginin arasında tut' }, { k: 'band', sec: 6, txt: 'Bulutların arasında süzül' }, { k: 'band', sec: 8, txt: 'Uzun ve sakin süzül' },
+  { k: 'stars', n: 5, txt: 'Yıldızları topla' }, { k: 'stars', n: 7, txt: 'Daha çok yıldız!' }, { k: 'stars', n: 8, obst: 1, txt: 'Yıldız topla, kara bulutlardan kaç' },
+  { k: 'stars', n: 10, obst: 1, txt: 'Yıldız ustası!' }, { k: 'band', sec: 12, txt: 'Zen ustası: 12 saniye süzül' }, { k: 'stars', n: 12, obst: 2, txt: 'Büyük Zihin Gücü!' },
+];
+const zOpen = L => L === 0 || ZS.z[L - 1] || (RO.load && RO.load().unlockAll);
+function zRender() { $('zTot').textContent = '⭐ ' + Object.values(ZS.z).reduce((a, b) => a + b, 0); $('zLv').innerHTML = ZLV.map((l, L) => `<button class="lv ${zOpen(L) ? '' : 'lock'} ${ZS.z[L] ? 'done' : ''}" data-l="${L}">${zOpen(L) ? ['🎈', '☁️', '⭐'][['lift', 'band', 'stars'].indexOf(l.k)] : '🔒'} ${L + 1}<small>${ZS.z[L] ? '★'.repeat(ZS.z[L]) : '&nbsp;'}</small><span style="display:block;font-size:11px;font-weight:700;color:#5a4f70">${l.txt}</span></button>`).join(''); $('zLv').querySelectorAll('.lv').forEach(b => b.onclick = () => { const L = +b.dataset.l; if (!zOpen(L)) { boo(); return; } zStart(L); }); }
+async function micOn() {
+  if (MIC) return MIC;
+  try {
+    const st = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') await AC.resume();
+    const src = AC.createMediaStreamSource(st), an = AC.createAnalyser(); an.fftSize = 1024; src.connect(an);
+    MIC = { st, an, buf: new Float32Array(an.fftSize), floor: .01 }; return MIC;
+  } catch (e) { return null; }
+}
+function micLevel() { if (!MIC) return 0; MIC.an.getFloatTimeDomainData(MIC.buf); let s = 0; for (const v of MIC.buf) s += v * v; return Math.sqrt(s / MIC.buf.length); }
+function zStop() { if (Z) { cancelAnimationFrame(Z.raf); Z = null; } if (MIC) { MIC.st.getTracks().forEach(t => t.stop()); MIC = null; } }
+$('zExit').onclick = () => show('zihin');
+async function zStart(L) {
+  show('zplay'); const lv = ZLV[L]; $('zTitle').textContent = `🎈 ${L + 1}. ${lv.txt}`;
+  const cv = $('zCan'), r = cv.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1); cv.width = r.width * dpr; cv.height = r.height * dpr;
+  Z = { L, lv, y: .85, vy: 0, t: 0, hold: 0, got: 0, stars: [], clouds: [], x: .28, calib: 1.6, cs: [], mode: 'mic', touch: null, still: 0, msg: '', hard: 0, wob: 0 };
+  const m = await micOn(); if (!Z) return;
+  if (!m) { Z.mode = 'touch'; Z.calib = 0; $('zMode').textContent = '👆 Parmak modu'; say('Mikrofon yok. Parmağını balonun yanına koy ve hiç kıpırdatmadan tut!'); }
+  else { $('zMode').textContent = '🎤 Nefes modu'; say('Önce sessiz ol, ölçüyorum. Sonra yavaşça üfle!'); }
+  if (lv.k === 'stars') { for (let i = 0; i < lv.n; i++) Z.stars.push({ x: 1.2 + i * .45, y: .25 + Math.random() * .5, got: false }); for (let i = 0; i < (lv.obst ? lv.n * .6 * lv.obst : 0); i++) Z.clouds.push({ x: 1.4 + i * .55 + Math.random() * .2, y: .15 + Math.random() * .7 }); }
+  cv.onpointerdown = e => { Z && (Z.touch = { x: e.clientX, y: e.clientY }); cv.setPointerCapture(e.pointerId); };
+  cv.onpointermove = e => { if (Z && Z.touch) { const d = Math.hypot(e.clientX - Z.touch.x, e.clientY - Z.touch.y); if (d > 10) { Z.still = 0; Z.touch = { x: e.clientX, y: e.clientY }; Z.wob = .4; } } };
+  cv.onpointerup = cv.onpointercancel = () => { if (Z) { Z.touch = null; Z.still = 0; } };
+  let last = performance.now(); const loop = now => { if (!Z) return; const dt = Math.min(.05, (now - last) / 1000); last = now; zTick(dt); zDraw(); Z.raf = requestAnimationFrame(loop); }; Z.raf = requestAnimationFrame(loop);
+}
+function zTick(dt) {
+  const lv = Z.lv; let lift = 0, calm = false;
+  if (Z.mode === 'mic') {
+    const v = micLevel();
+    if (Z.calib > 0) { Z.calib -= dt; Z.cs.push(v); if (Z.calib <= 0) { const s = Z.cs.slice().sort((a, b) => a - b); MIC.floor = Math.max(.003, s[Math.floor(s.length * .7)]); say('Şimdi yavaşça üfle!'); } Z.msg = '🤫 Sessiz ol, ölçüyorum...'; return; }
+    const lo = MIC.floor * 1.8 + .006, hi = Math.max(lo * 6, .16);
+    Z.lev = Math.min(1, Math.max(0, (v - MIC.floor) / (hi - MIC.floor)));
+    if (v > hi) { Z.hard += dt; lift = -.4; Z.wob = .35; Z.msg = '😵 Çok sert! Yavaş üfle...'; } else if (v > lo) { calm = true; lift = 1.15; Z.hard = 0; Z.msg = '🌬️ Çok güzel, sakin...'; } else { Z.msg = '🌬️ Yavaşça "hıııı" diye üfle'; Z.hard = 0; }
+  } else {
+    if (Z.touch) { Z.still += dt; if (Z.still > .35) { calm = true; lift = 1.1; Z.msg = '🧘 Harika, hiç kıpırdama...'; } else Z.msg = '🧘 Sabit tut...'; } else Z.msg = '👆 Parmağını ekrana koy, kıpırdatma';
+    Z.lev = calm ? .6 : 0;
+  }
+  // fizik (y: 0 üst, 1 alt)
+  Z.vy += (calm ? -lift * 1.25 : 0) * dt + .55 * dt + (lift < 0 ? .9 * dt : 0); Z.vy *= .96; Z.y = Math.min(.9, Math.max(.06, Z.y + Z.vy * dt)); if (Z.y >= .9) Z.vy = 0; if (Z.y <= .06) Z.vy = Math.max(0, Z.vy);
+  Z.wob = Math.max(0, Z.wob - dt); Z.t += dt;
+  if (lv.k === 'lift') { if (Z.y < .4) Z.hold += dt; else Z.hold = Math.max(0, Z.hold - dt * .5); if (Z.hold >= lv.sec) zWin(); }
+  if (lv.k === 'band') { Z.bandY = .45 + Math.sin(Z.t * .4) * .12; if (Math.abs(Z.y - Z.bandY) < .12) Z.hold += dt; else Z.hold = Math.max(0, Z.hold - dt * .3); if (Z.hold >= lv.sec) zWin(); }
+  if (lv.k === 'stars') {
+    const sp = .12 * dt; Z.stars.forEach(s => { s.x -= sp; if (!s.got && Math.abs(s.x - Z.x) < .05 && Math.abs(s.y - Z.y) < .09) { s.got = true; Z.got++; tone(900 + Z.got * 60, .1, 'sine', .08); } });
+    Z.clouds.forEach(c => { c.x -= sp; if (!c.hit && Math.abs(c.x - Z.x) < .06 && Math.abs(c.y - Z.y) < .09) { c.hit = true; Z.wob = .6; Z.vy = .3; boo(); } });
+    if (Z.stars.every(s => s.x < -.1 || s.got)) { if (Z.got >= Math.ceil(lv.n * .6)) zWin(); else { Z.stars.forEach((s, i) => { s.x = 1.2 + i * .45; s.y = .25 + Math.random() * .5; }); Z.clouds.forEach((c, i) => { c.x = 1.4 + i * .55; c.hit = false; }); say('Biraz daha! Tekrar deneyelim.'); } }
+  }
+}
+function zWin() {
+  const L = Z.L, lv = Z.lv, stars = lv.k === 'stars' ? (Z.got === lv.n ? 3 : Z.got >= lv.n * .8 ? 2 : 1) : (Z.t < lv.sec * 1.6 ? 3 : Z.t < lv.sec * 2.6 ? 2 : 1);
+  ZS.z[L] = Math.max(ZS.z[L] || 0, stars); zsave(); AN.done(); AN.ev('zihin_' + (L + 1)); cancelAnimationFrame(Z.raf); Z = null;
+  party({ t: 'ZİHİN GÜCÜ!', stars, m: 'Sakin nefesinle başardın! 🌬️', e: '🎈🧘', say: 'Yaşasın! Zihin gücünle başardın!', b: [['🔁 Tekrar', '', () => zStart(L)], ...(L < ZLV.length - 1 ? [['Sonraki ▶', 'go', () => zStart(L + 1)]] : []), ['Seviyeler', '', () => show('zihin')]] });
+}
+function zDraw() {
+  if (!Z) return; const cv = $('zCan'), g = cv.getContext('2d'), W = cv.width, H = cv.height, lv = Z.lv; g.clearRect(0, 0, W, H);
+  // bulutlar arka plan
+  g.fillStyle = 'rgba(255,255,255,.8)'; for (let i = 0; i < 5; i++) { const x = ((i * .27 + .1 - Z.t * .01) % 1.2) * W, y = (.12 + (i % 3) * .1) * H; g.beginPath(); g.ellipse(x, y, W * .06, H * .035, 0, 0, 7); g.ellipse(x + W * .04, y - H * .02, W * .04, H * .035, 0, 0, 7); g.fill(); }
+  g.fillStyle = '#7ed957'; g.fillRect(0, H * .94, W, H * .06);
+  if (lv.k === 'lift') { g.setLineDash([16, 12]); g.strokeStyle = '#ff5ad8'; g.lineWidth = 5; g.beginPath(); g.moveTo(0, H * .4); g.lineTo(W, H * .4); g.stroke(); g.setLineDash([]); }
+  if (lv.k === 'band' && Z.bandY) { g.fillStyle = 'rgba(162,89,255,.18)'; g.fillRect(0, (Z.bandY - .12) * H, W, .24 * H); g.strokeStyle = '#a259ff'; g.lineWidth = 4; g.setLineDash([14, 10]); [-.12, .12].forEach(o => { g.beginPath(); g.moveTo(0, (Z.bandY + o) * H); g.lineTo(W, (Z.bandY + o) * H); g.stroke(); }); g.setLineDash([]); }
+  const fs = Math.min(W, H) * .09; g.textAlign = 'center'; g.textBaseline = 'middle';
+  if (lv.k === 'stars') { g.font = `${fs * .8}px system-ui`; Z.stars.forEach(s => { if (!s.got && s.x > -.1 && s.x < 1.1) g.fillText('⭐', s.x * W, s.y * H); }); Z.clouds.forEach(c => { if (c.x > -.1 && c.x < 1.1) g.fillText('🌩️', c.x * W, c.y * H); }); }
+  // balon
+  const wob = Math.sin(Z.t * 30) * Z.wob * fs * .3; g.font = `${fs * 1.4}px system-ui`; g.fillText('🎈', Z.x * W + wob, Z.y * H); g.font = `${fs * .7}px system-ui`; g.fillText('🤖', Z.x * W + wob, Z.y * H + fs * 1.05);
+  // nefes göstergesi
+  const cx = W - fs * 1.4, cy = H - fs * 1.6, rr = fs * .9; g.beginPath(); g.arc(cx, cy, rr, 0, 7); g.fillStyle = '#fff'; g.fill(); g.lineWidth = 5; g.strokeStyle = '#2b2340'; g.stroke();
+  g.beginPath(); g.arc(cx, cy, rr * (.25 + .75 * (Z.lev || 0)), 0, 7); g.fillStyle = Z.hard > 0 ? '#ff5a5a' : '#2bd4c4'; g.fill(); g.font = `${fs * .6}px system-ui`; g.fillStyle = '#2b2340'; g.fillText('🌬️', cx, cy);
+  // ilerleme ve mesaj
+  g.font = `800 ${fs * .42}px 'Baloo 2',system-ui`; g.fillStyle = '#2b2340'; g.textAlign = 'left'; g.fillText(Z.msg, fs * .4, fs * .5);
+  const p = lv.k === 'stars' ? Z.got / lv.n : Z.hold / lv.sec; g.fillStyle = '#fff'; g.fillRect(fs * .4, fs * .9, W * .4, fs * .3); g.fillStyle = '#22b573'; g.fillRect(fs * .4, fs * .9, W * .4 * Math.min(1, p), fs * .3); g.strokeStyle = '#2b2340'; g.lineWidth = 3; g.strokeRect(fs * .4, fs * .9, W * .4, fs * .3);
+}
+setInterval(() => { if (document.hidden) return; if (RO.tick && RO.tick(5) <= 0) { zStop(); document.body.innerHTML = '<div style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#2b2340;color:#fff;font-weight:800;font-size:24px;text-align:center"><div style="font-size:70px">😴🌙</div>Robi\'nin uyku zamanı!</div>'; } }, 5000);
+if (!TNH) show('home');
+</script>
+</body>
+</html>
