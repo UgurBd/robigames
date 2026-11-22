@@ -293,7 +293,8 @@ function renderParent() {
 // ---------- Birlikte Oyna: yakındaki odalar, arkadaşlar, oda kur, kodla katıl ----------
 const RN = window.RobiNet;
 let cokCode = '', cokView = 'main', nearT = 0, onlineMap = {};
-function cokGo(mode, code, ask) { $('sCok').style.display = 'none'; clearInterval(nearT); launch({ id: 'net', name: RN.MODES[mode][1], src: mode === 'boya' ? `boyama.html#net-boya-${code}${ask ? '-a' : ''}` : mode === 'tahmin' ? `zeka.html#net-tahmin-${code}${ask ? '-a' : ''}` : `macera.html#net-${mode}-${code}${ask ? '-a' : ''}` }, document.body); }
+const BIG = { arena: 1, ebe: 1, parkur: 1 };
+function cokGo(mode, code, ask, o) { $('sCok').style.display = 'none'; clearInterval(nearT); const ex = BIG[mode] && o ? `-${o.size || 'S'}${o.bots || 0}` : ''; launch({ id: 'net', name: RN.MODES[mode][1], src: mode === 'boya' ? `boyama.html#net-boya-${code}${ask ? '-a' : ''}` : mode === 'tahmin' ? `zeka.html#net-tahmin-${code}${ask ? '-a' : ''}` : `macera.html#net-${mode}-${code}${ex}${ask ? '-a' : ''}` }, document.body); }
 function openCok() { const p = RO.profile(); if (!p.name) { profileEdit(true); openS('sCok'); RO.say && RO.say('Önce oyuncu adını seçelim!'); return; } cokView = 'main'; renderCok(); openS('sCok'); RO.say && RO.say('Birlikte oyna! Yakındaki bir odaya ya da bir arkadaşına dokun.'); }
 // basit ebeveyn kilidi: yazıyla yazılan sayıya dokun
 function wordGate(box, ok, back) {
@@ -333,11 +334,25 @@ function renderCok() {
 async function loadNearby() {
   const l = await RN.nearby(), el = $('nearList'); if (!el) return;
   el.innerHTML = l.length ? l.map(r => `<button class="btn go" data-nc="${r.code}" data-nm="${r.mode}" style="padding:6px 12px"><span style="font-size:28px">${r.av || '🙂'}${RN.MODES[r.mode][0]}</span><br><small>${r.name || 'Arkadaş'} · ${RN.MODES[r.mode][1]} · ${r.n}/6</small></button>`).join('') : '<small>Aynı Wi-Fi\'de açık oda yok.</small>';
-  el.querySelectorAll('[data-nc]').forEach(b => b.onclick = () => { RO.say && RO.say('Oda sahibine soruyorum!'); cokGo(b.dataset.nm, b.dataset.nc, true); });
+  el.querySelectorAll('[data-nc]').forEach(b => b.onclick = () => { RO.say && RO.say('Oda sahibine soruyorum!'); const r = l.find(x => x.code === b.dataset.nc); cokGo(b.dataset.nm, b.dataset.nc, true, r); });
 }
-async function createRoom(mode, inviteTo) {
+function roomOpts(mode, inviteTo) {
+  let size = 'M', bots = 0;
+  const draw = () => { $('cokBody').innerHTML = `<p style="font-weight:800">${RN.MODES[mode][0]} ${RN.MODES[mode][1]}: alan ne kadar büyük olsun?</p>
+    <div style="display:flex;gap:8px;justify-content:center">${[['S', '🟢', 'Küçük'], ['M', '🟡', 'Orta'], ['L', '🔴', 'Büyük']].map(([k, e, t]) => `<button class="btn sec" data-sz="${k}" style="font-size:20px;${k === size ? 'background:#ffd166' : ''}">${e}<br>${t}</button>`).join('')}</div>
+    <p style="font-weight:800;margin-top:12px">🤖 Kaç bot olsun?</p>
+    <div style="display:flex;gap:8px;justify-content:center">${[0, 2, 4, 6].map(n => `<button class="btn sec" data-bt="${n}" style="font-size:22px;min-width:60px;${n === bots ? 'background:#ffd166' : ''}">${n ? '🤖'.repeat(Math.min(n, 3)) + (n > 3 ? '+' : '') : '🚫'}<br>${n}</button>`).join('')}</div>
+    <div style="margin-top:14px"><button class="btn sec" id="roBack">◀</button> <button class="btn go" id="roGo" style="font-size:22px">▶ Başla</button></div><p id="cokMsg" style="min-height:20px"></p>`;
+    $('cokBody').querySelectorAll('[data-sz]').forEach(b => b.onclick = () => { size = b.dataset.sz; RO.say && RO.say({ S: 'Küçük', M: 'Orta', L: 'Büyük' }[size]); draw(); });
+    $('cokBody').querySelectorAll('[data-bt]').forEach(b => b.onclick = () => { bots = +b.dataset.bt; RO.say && RO.say(bots ? bots + ' bot' : 'Bot yok'); draw(); });
+    $('roBack').onclick = renderCok; $('roGo').onclick = () => createRoom(mode, inviteTo, { size, bots }); };
+  draw(); RO.say && RO.say('Alan ne kadar büyük olsun?');
+}
+async function createRoom(mode, inviteTo, o) {
+  if (BIG[mode] && !o) return roomOpts(mode, inviteTo);
+
   const m = $('cokMsg'); if (m) { m.style.color = '#5a4f70'; m.textContent = '⏳ Oda kuruluyor...'; }
-  try { const r = await RN.create(mode); if (inviteTo) { PR.send({ t: 'invite', to: inviteTo.pid, code: r.code, mode }); RO.say && RO.say(inviteTo.name + ' çağrıldı!'); cokGo(mode, r.code); } else { RO.say && RO.say('Oda kuruldu! Arkadaşlarını çağırabilirsin.'); cokGo(mode, r.code); } }
+  try { const r = await RN.create(mode, o && o.size, o && o.bots); if (inviteTo) { PR.send({ t: 'invite', to: inviteTo.pid, code: r.code, mode }); RO.say && RO.say(inviteTo.name + ' çağrıldı!'); cokGo(mode, r.code, false, r); } else { RO.say && RO.say('Oda kuruldu! Arkadaşlarını çağırabilirsin.'); cokGo(mode, r.code, false, r); } }
   catch (e) { if (m) { m.style.color = '#e53935'; m.textContent = '📡 İnternete bağlanılamadı. Tekrar dene.'; } }
 }
 function pickModeFor(f) {
@@ -373,7 +388,7 @@ const PR = (() => {
   function status() { const ids = RO.friends().map(f => f.pid); if (ids.length) send({ t: 'st', ids }); }
   function handle(m) {
     if (m.t === 'st') { onlineMap = m.on; document.querySelectorAll('#frList .fr').forEach(b => { const d = b.querySelector('.dot'); if (d) d.style.background = onlineMap[b.dataset.pid] ? '#22b573' : '#bbb'; }); }
-    if (m.t === 'invite') pop(`<div style="font-size:70px">${m.from.av}</div><h2 style="margin:4px 0">${m.from.name}</h2><p style="font-size:20px;font-weight:800">seni ${RN.MODES[m.mode] ? RN.MODES[m.mode][0] + ' ' + RN.MODES[m.mode][1] : 'oyuna'} çağırıyor!</p>`, [['▶ Gel!', 'go', () => { if (frame.style.display === 'block') { frame.onload = null; frame.style.display = 'none'; frame.src = 'about:blank'; menu.style.display = 'flex'; } setTimeout(() => cokGo(m.mode, m.code), 300); }], ['Sonra', 'sec', () => {}]], `${m.from.name} seni oyuna çağırıyor! Gelmek ister misin?`);
+    if (m.t === 'invite') pop(`<div style="font-size:70px">${m.from.av}</div><h2 style="margin:4px 0">${m.from.name}</h2><p style="font-size:20px;font-weight:800">seni ${RN.MODES[m.mode] ? RN.MODES[m.mode][0] + ' ' + RN.MODES[m.mode][1] : 'oyuna'} çağırıyor!</p>`, [['▶ Gel!', 'go', () => { if (frame.style.display === 'block') { frame.onload = null; frame.style.display = 'none'; frame.src = 'about:blank'; menu.style.display = 'flex'; } setTimeout(() => { openS('sCok'); cokView = 'main'; renderCok(); joinCode(m.code); }, 300); }], ['Sonra', 'sec', () => {}]], `${m.from.name} seni oyuna çağırıyor! Gelmek ister misin?`);
     if (m.t === 'addreq') pop(`<div style="font-size:60px">${m.from.av}</div><h2 style="margin:4px 0">${m.from.name}</h2><p style="font-weight:800">arkadaş olmak istiyor ❤️</p>`, [['❤️ Kabul', 'go', () => setTimeout(() => { $('popBox').innerHTML = '<div id="popGate"></div>'; $('pop').style.display = 'flex'; wordGate($('popGate'), () => { RO.addFriend(m.from); send({ t: 'addok', to: m.from.pid }); $('pop').style.display = 'none'; itoast(`❤️ ${m.from.name} artık arkadaşın!`); RO.say && RO.say(m.from.name + ' artık arkadaşın!'); status(); if ($('sCok').style.display === 'flex' && cokView === 'main') renderCok(); }, () => $('pop').style.display = 'none'); }, 50)], ['Hayır', 'sec', () => send({ t: 'nope', to: m.from.pid })]], `${m.from.name} arkadaş olmak istiyor!`);
     if (m.t === 'addok') { RO.addFriend(m.from); itoast(`❤️ ${m.from.name} artık arkadaşın!`); RO.say && RO.say(m.from.name + ' artık arkadaşın!'); status(); if ($('sCok').style.display === 'flex' && cokView === 'main') renderCok(); }
     if (m.t === 'sent' && !m.ok) itoast(m.k === 'invite' ? '😴 Arkadaşın şu an oyunu açmamış. Kodu söyleyerek çağırabilirsin.' : '😴 Arkadaşın şu an oyunu açmamış. Oyunu açınca tekrar dene.');
@@ -403,7 +418,7 @@ function renderCode() {
 async function joinCode(code) {
   const msg = (t, c = '#e53935') => { const m = $('cokMsg'); if (m) { m.style.color = c; m.textContent = t; } };
   msg('⏳ Oda aranıyor...', '#5a4f70');
-  try { const i = await RN.info(code); if (!i) { msg('😕 Bu kodda oda yok. Kodu kontrol et.'); RO.say && RO.say('Bu kodda oda yok.'); return; } if (i.n >= i.max) { msg('😕 Oda dolu (6 kişi).'); RO.say && RO.say('Oda dolu.'); return; } cokCode = ''; cokGo(i.mode, code); } catch (e) { msg('📡 İnternete bağlanılamadı.'); }
+  try { const i = await RN.info(code); if (!i) { msg('😕 Bu kodda oda yok. Kodu kontrol et.'); RO.say && RO.say('Bu kodda oda yok.'); return; } if (i.n >= i.max) { msg('😕 Oda dolu (6 kişi).'); RO.say && RO.say('Oda dolu.'); return; } cokCode = ''; cokGo(i.mode, code, false, i); } catch (e) { msg('📡 İnternete bağlanılamadı.'); }
 }
 // davet linkiyle açılış: https://robi-oda.../oda/12345 ya da robigames://oda/12345
 function openInvite(url) {

@@ -35,11 +35,12 @@ export default {
       const host = { name: clip(url.searchParams.get('name'), ''), av: clip(url.searchParams.get('av'), '🐶', 8) };
       for (let i = 0; i < 10; i++) {
         const code = String(10000 + Math.floor(Math.random() * 90000));
-        const r = await env.ROOM.get(env.ROOM.idFromName(code)).fetch(`https://room/init?mode=${mode}`);
+        const size = ['S', 'M', 'L'].includes(url.searchParams.get('size')) ? url.searchParams.get('size') : 'S', bots = Math.max(0, Math.min(6, +url.searchParams.get('bots') || 0));
+        const r = await env.ROOM.get(env.ROOM.idFromName(code)).fetch(`https://room/init?mode=${mode}&size=${size}&bots=${bots}`);
         if (r.ok) {
           // aynı internet bağlantısındaki (aynı ev Wi-Fi) tabletler odayı listede görsün
           const lk = await ipKey(req); await env.LOBBY.get(env.LOBBY.idFromName(lk)).fetch('https://lobby/add', { method: 'POST', body: JSON.stringify({ code, mode, ...host }) });
-          return json({ code, mode });
+          return json({ code, mode, size, bots });
         }
       }
       return json({ error: 'busy' }, 503);
@@ -47,7 +48,7 @@ export default {
     if (url.pathname === '/nearby') {
       const lk = await ipKey(req); const list = await (await env.LOBBY.get(env.LOBBY.idFromName(lk)).fetch('https://lobby/list')).json();
       const out = [];
-      for (const r of list) { const i = await env.ROOM.get(env.ROOM.idFromName(r.code)).fetch('https://room/info'); if (i.ok) { const d = await i.json(); if (d.n < d.max) out.push({ ...r, n: d.n }); } }
+      for (const r of list) { const i = await env.ROOM.get(env.ROOM.idFromName(r.code)).fetch('https://room/info'); if (i.ok) { const d = await i.json(); if (d.n < d.max) out.push({ ...r, n: d.n, size: d.size, bots: d.bots }); } }
       return json(out);
     }
     if (url.pathname === '/info' || url.pathname === '/ws') {
@@ -107,13 +108,14 @@ export class Room {
     const url = new URL(req.url);
     if (url.pathname === '/init') {
       if ((await this.ctx.storage.get('created')) && this.ctx.getWebSockets().length) return new Response('busy', { status: 409 });
-      await this.ctx.storage.put({ created: Date.now(), mode: url.searchParams.get('mode') || 'orman', seed: Math.floor(Math.random() * 1e9) });
+      await this.ctx.storage.put({ created: Date.now(), mode: url.searchParams.get('mode') || 'orman', size: url.searchParams.get('size') || 'S', bots: +url.searchParams.get('bots') || 0, seed: Math.floor(Math.random() * 1e9) });
       await this.ctx.storage.setAlarm(Date.now() + EMPTY_TTL);
       return new Response('ok');
     }
     if (url.pathname === '/info') {
       if (!(await this.ctx.storage.get('created'))) return new Response('{"error":"none"}', { status: 404 });
-      return new Response(JSON.stringify({ mode: await this.ctx.storage.get('mode'), n: this.live().length, max: MAX }));
+      const st = await this.ctx.storage.get(['mode', 'size', 'bots']);
+      return new Response(JSON.stringify({ mode: st.get('mode'), size: st.get('size') || 'S', bots: st.get('bots') || 0, n: this.live().length, max: MAX }));
     }
     if (req.headers.get('Upgrade') !== 'websocket') return new Response('websocket only', { status: 426 });
     if (!(await this.ctx.storage.get('created'))) return new Response('no room', { status: 404 });

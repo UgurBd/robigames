@@ -279,7 +279,7 @@ body.iAmEbe::after{content:'';position:fixed;inset:0;pointer-events:none;z-index
 const LEARN = location.hash === '#ogren';
 const BAHCE = location.hash === '#bahce';
 const BUILD = location.hash === '#tasarla' || /^#net-(arena|ebe|parkur)-/.test(location.hash);
-const NETH = (location.hash || '').match(/^#net-(orman|arena|ebe|parkur)-(\d{5})(-a)?$/), NETMODE = NETH ? NETH[1] : null;
+const NETH = (location.hash || '').match(/^#net-(orman|arena|ebe|parkur)-(\d{5})(?:-([SML])(\d))?(-a)?$/), NETMODE = NETH ? NETH[1] : null, NETSIZE = NETH && NETH[3] || 'S', NETBOTS = NETH ? +(NETH[4] || 0) : 0;
 const WID = NETMODE ? (NETMODE === 'orman' ? 'orman' : 'tasarla') : (location.hash || '#orman').slice(1);
 const NETFX = { stuck: 0, wet: 0, burn: 0, big: 0, inv: 0 };
 const AN = window.RobiAnaliz || { screen() {}, done() {}, ev() {}, btn() {}, bannerShow() {}, interstitial(f) { f && f(); } };
@@ -422,7 +422,7 @@ const mat = c => mats[c] || (mats[c] = new THREE.MeshLambertMaterial({ color: c 
 const emissive = c => new THREE.MeshBasicMaterial({ color: c });
 let seed = 7;
 const rnd = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
-const W = LEARN ? 34 : BAHCE ? 26 : BUILD ? 16 : TOPLA ? 14 : DENIZ ? 40 : OKUL ? 34 : UCURUM ? 40 : UZAY ? 44 : 68;
+const W = LEARN ? 34 : BAHCE ? 26 : BUILD ? (NETSIZE === 'L' ? 38 : NETSIZE === 'M' ? 26 : 16) : TOPLA ? 14 : DENIZ ? 40 : OKUL ? 34 : UCURUM ? 40 : UZAY ? 44 : 68;
 const colliders = [];
 function box(x0, y0, z0, x1, y1, z1, color, opt = {}) {
   let mesh = null;
@@ -680,7 +680,7 @@ function vehicle(kind, x, z, y = 0, yaw = 0) {
   vehicles.push(v); return v;
 }
 let riding = null;
-function nearVehicle() { let best = null, bd = 2.8; for (const v of vehicles) { if (v === riding) continue; const d = Math.hypot(v.pos.x - P.pos.x, v.pos.z - P.pos.z); if (d < bd && Math.abs(v.pos.y - P.pos.y) < 1.5) { bd = d; best = v; } } return best; }
+function nearVehicle() { let best = null, bd = 2.8; for (const v of vehicles) { if (v === riding || v.remoteBy !== undefined) continue; const d = Math.hypot(v.pos.x - P.pos.x, v.pos.z - P.pos.z); if (d < bd && Math.abs(v.pos.y - P.pos.y) < 1.5) { bd = d; best = v; } } return best; }
 function mount(v) {
   riding = v; v.lbl.visible = false; P.yaw = v.yaw; P.pos.x = v.pos.x; P.pos.z = v.pos.z;
   const V0 = VEH[v.kind]; P.r = Math.min(.8, V0.r);
@@ -717,9 +717,11 @@ function updateVehicles(dt) {
       if (V0.breaker) { for (const c of crates) if (c.alive && Math.hypot(c.pos.x - P.pos.x, c.pos.z - P.pos.z) < 1.8) breakCrate(c); for (const b of brambles) if (b.alive && Math.hypot(b.pos.x - P.pos.x, b.pos.z - P.pos.z) < b.r + .8) burnBramble(b); }
     }
   }
-  const nv = !riding && nearVehicle();
+  const nv = !riding && !(NET && NET.passenger !== null) && nearVehicle(), seat = !riding && !nv && NET && NET.passenger === null ? NET.nearSeat() : null;
   const rb = $('bRide');
-  if (riding) { rb.style.display = 'flex'; rb.querySelector('i').textContent = '🚪'; rb.querySelector('span').textContent = 'İn'; }
+  if (NET && NET.passenger !== null) { rb.style.display = 'flex'; rb.querySelector('i').textContent = '🚪'; rb.querySelector('span').textContent = 'İn'; }
+  else if (seat) { rb.style.display = 'flex'; rb.querySelector('i').textContent = '🪑'; rb.querySelector('span').textContent = 'Arkaya'; }
+  else if (riding) { rb.style.display = 'flex'; rb.querySelector('i').textContent = '🚪'; rb.querySelector('span').textContent = 'İn'; }
   else if (nv) { rb.style.display = 'flex'; rb.querySelector('i').textContent = VEH[nv.kind].e; rb.querySelector('span').textContent = 'Bin'; }
   else rb.style.display = 'none';
   $('btns').classList.toggle('riding', !!riding);
@@ -903,7 +905,7 @@ function buildBahce() {
 }
 
 // =============== DÜNYA 4: PARKUR ATÖLYESİ ===============
-const PK = 'robi_parkur', N = 15, CELL = 2;
+const PK = 'robi_parkur', N = NETSIZE === 'L' ? 37 : NETSIZE === 'M' ? 25 : 15, CELL = 2;
 let layout = {}, editMode = false, tool = 'block', buildRoot = new THREE.Group(), builtCols = [], pads = [], cursor = null, parkurT = 0;
 const TOOLS = [['block', '🧱', 'Blok'], ['pad', '🟦', 'Zıpzıp'], ['ring', '⭕', 'Halka'], ['fire', '🔥', 'Ateş'], ['monster', '👾', 'Canavar'], ['gear', '⚙️', 'Dişli'], ['star', '⭐', 'Bitiş'], ['start', '🚩', 'Başlangıç'], ['erase', '🧽', 'Sil']];
 const SAMPLE = { '7,13': { h: 0, o: 'start' }, '7,11': { h: 1 }, '7,10': { h: 2 }, '7,9': { h: 3, o: 'gear' }, '9,9': { h: 0, o: 'pad' }, '9,7': { h: 0, o: 'ring' }, '7,6': { h: 2, o: 'monster' }, '5,6': { h: 0, o: 'fire' }, '7,4': { h: 3 }, '7,3': { h: 4 }, '7,2': { h: 4, o: 'star' }, '5,10': { h: 0, o: 'gear' }, '9,11': { h: 0, o: 'gear' } };
@@ -918,8 +920,26 @@ function buildBuilder() {
   for (let i = -W; i <= W; i += 2) [[i, -W], [i, W], [-W, i], [W, i]].forEach(([x, z]) => add(new THREE.BoxGeometry(.3, 1, .3), '#ffd166', x, .5, z));
   for (let a = 0; a < Math.PI * 2; a += .2) tree(Math.cos(a) * (W + 6), Math.sin(a) * (W + 6), 1.3, false);
   cursor = new THREE.Mesh(new THREE.BoxGeometry(CELL, .1, CELL), new THREE.MeshBasicMaterial({ color: '#ff5ad8', transparent: true, opacity: .5 })); cursor.visible = false; scene.add(cursor);
-  scene.add(buildRoot); loadLayout(); rebuildParkur();
+  scene.add(buildRoot); loadLayout();
+  if (NETMODE && N > 15) { const off = (N - 15) / 2, nl = {}; for (const [k, c] of Object.entries(layout)) { const [i, j] = k.split(',').map(Number); nl[`${i + off},${j + off}`] = c; } layout = nl; }
+  if (NETMODE) netArena();
+  rebuildParkur();
   MISSIONS = { star: { e: '⭐', label: 'Bitiş yıldızı', done: false, check: () => stars.length > 0 && stars.every(s => !s.alive) } };
+}
+// birlikte oyun alanı: oda koduna göre herkeste aynı ek engeller ve araçlar
+function netArena() {
+  let sd = +NETH[2]; const rr = () => { sd = (sd * 1103515245 + 12345) % 2147483648; return sd / 2147483648; };
+  const inner = 15, half = W - 3, BCOL = ['#ff7a2f', '#2e8bff', '#22b573', '#a259ff', '#ffd166'];
+  const n = NETSIZE === 'L' ? 34 : NETSIZE === 'M' ? 16 : 0;
+  for (let i = 0; i < n; i++) {
+    let x, z, t = 0; do { x = (rr() * 2 - 1) * half; z = (rr() * 2 - 1) * half; t++; } while (Math.abs(x) < inner + 1 && Math.abs(z) < inner + 1 && t < 20);
+    const h = 1 + Math.floor(rr() * 3), w = 2 + Math.floor(rr() * 2) * 2, d = 2 + Math.floor(rr() * 2) * 2;
+    const b = add(new THREE.BoxGeometry(w, h * 1.2, d), BCOL[i % 5], x, h * .6, z); const e = new THREE.LineSegments(new THREE.EdgesGeometry(b.geometry), new THREE.LineBasicMaterial({ color: '#2b2340' })); b.add(e);
+    colliders.push({ x0: x - w / 2, y0: 0, z0: z - d / 2, x1: x + w / 2, y1: h * 1.2, z1: z + d / 2 });
+  }
+  for (let i = 0; i < n / 3; i++) { const a = rr() * 6.28, r = inner + 3 + rr() * (half - inner - 3); tree(Math.cos(a) * r, Math.sin(a) * r, 1, true); }
+  const vk = NETSIZE === 'L' ? ['car', 'moto', 'horse', 'tractor', 'skate', 'car', 'moto', 'carpet'] : NETSIZE === 'M' ? ['car', 'moto', 'horse', 'skate'] : ['car', 'moto'];
+  vk.forEach((k, i) => { const a = i / vk.length * Math.PI * 2 + .3, r = NETSIZE === 'S' ? 11 : inner + 2; vehicle(k, Math.cos(a) * r, Math.sin(a) * r, 0, -a); });
 }
 function detach(o) { if (o && o.parent) o.parent.remove(o); }
 function rebuildParkur() {
@@ -1583,7 +1603,7 @@ btn('bFly', () => setFlight(!P.flying));
 btn('bUp', () => P.altUp = true, () => P.altUp = false);
 btn('bDown', () => P.altDown = true, () => P.altDown = false);
 btn('bSwap', () => swapPower());
-btn('bRide', () => { if (riding) dismount(); else { const v = nearVehicle(); if (v) mount(v); } });
+btn('bRide', () => { if (NET && NET.passenger !== null) { NET.leaveSeat(); return; } if (riding) dismount(); else { const v = nearVehicle(); if (v) mount(v); else if (NET) NET.takeSeat(); } });
 const topBtn = (id, fn) => $(id).addEventListener('pointerdown', e => { e.stopPropagation(); fn(); });
 topBtn('wardBtn', openWardrobe); topBtn('photoBtn', photoOpen);
 document.querySelectorAll('#photoUI [data-pose]').forEach(b => b.onclick = () => { photo.pose = b.dataset.pose; photo.t = 0; document.querySelectorAll('#photoUI [data-pose]').forEach(x => x.classList.toggle('on', x === b)); tone(700, .06, 'triangle', .05); });
@@ -2091,7 +2111,7 @@ if (NETMODE) (function () {
     setRemoteLook(r, p.suit || 'white', p.ch || 'robi'); r.g.position.copy(r.pos); return r;
   }
   function setRemoteLook(r, suit, ch) { const s = SUITS[suit] || SUITS.white; r.M.suit.color.set(s.body); r.M.acc.color.set(s.acc); r.suit = suit; r.ch = ch; charParts(ch, r.g.userData); }
-  N.info = {}; const avOf = s => (N.info[s] && N.info[s].av) || RN.AV[s], nameOf = s => (N.info[s] && N.info[s].name) || ['Köpek', 'Kedi', 'Tavşan', 'Tilki', 'Panda', 'Kurbağa'][s];
+  N.info = {}; const avOf = s => typeof s === 'string' ? '🤖' : (N.info[s] && N.info[s].av) || RN.AV[s], nameOf = s => typeof s === 'string' ? 'Bot ' + (+s.slice(1) + 1) : (N.info[s] && N.info[s].name) || ['Köpek', 'Kedi', 'Tavşan', 'Tilki', 'Panda', 'Kurbağa'][s];
   function tagText(slot) { return (N.wins[slot] ? '🏆' : '') + avOf(slot) + ' ' + nameOf(slot).slice(0, 9) + (NETMODE === 'arena' ? ' ' + (N.score[slot] || 0) : ''); }
   function refreshLabels() {
     for (const r of Object.values(N.players)) { const t = tagText(r.slot); if (r.tagT !== t) { r.g.remove(r.tag); r.tag = label(t, RN.COL[r.slot]); r.g.add(r.tag); r.tagT = t; } r.ebeTag.visible = r.slot === N.ebe; r.ring.material.color.set(r.slot === N.ebe ? '#ff2a2a' : RN.COL[r.slot]); }
@@ -2103,7 +2123,7 @@ if (NETMODE) (function () {
   function dropRemote(slot) { const r = N.players[slot]; if (!r) return; scene.remove(r.g); scene.remove(r.sh); if (r.net) scene.remove(r.net); delete N.players[slot]; }
   // ---------- bağlantı ----------
   function connect() {
-    const u = SERVER.replace(/^http/, 'ws') + `/ws?code=${code}&ch=${encodeURIComponent(SV.char || 'robi')}&suit=${SV.suit}&${RN.q ? RN.q() : ''}${NETH[3] && !N.admitted ? '&ask=1' : ''}`;
+    const u = SERVER.replace(/^http/, 'ws') + `/ws?code=${code}&ch=${encodeURIComponent(SV.char || 'robi')}&suit=${SV.suit}&${RN.q ? RN.q() : ''}${NETH[5] && !N.admitted ? '&ask=1' : ''}`;
     let ws; try { ws = new WebSocket(u); } catch (e) { return fail(); } N.ws = ws;
     ws.onopen = () => { N.retry = 0; };
     ws.onmessage = e => { let m; try { m = JSON.parse(e.data); } catch (x) { return; } if (m.t) sys(m); else if (m.m) msg(m.s, m.m); };
@@ -2150,13 +2170,16 @@ if (NETMODE) (function () {
     else if (m.t === 'look' && r) setRemoteLook(r, m.suit, m.ch);
     else if (m.t === 'w' && coop) worldKill(m.k, m.i);
     else if (m.t === 'snap' && m.to === N.me) { if (coop) { (m.f || []).forEach((v, i) => !v && worldKill('fire', i)); (m.a || []).forEach((v, i) => !v && worldKill('animal', i)); (m.i || []).forEach((v, i) => !v && worldKill('item', i)); } N.score = m.score || {}; if (m.ebe >= 0) setEbe(m.ebe); hudNet(); }
+    else if (m.t === 'shot' && m.by) remoteShot(m.by, m);
     else if (m.t === 'shot' && r) remoteShot(s, m);
-    else if (m.t === 'hit') { N.score[m.by] = (N.score[m.by] || 0) + 1; const hr = N.players[m.v]; if (hr) hitFx(hr.g.position, m.k); if (m.by === N.me) { SFX.giggle(); toast(`🎯 İsabet! ${N.score[N.me]}/${WIN}`, 1.4); } hudNet(); refreshLabels(); checkWin(); }
+    else if (m.t === 'bots') botRecv(m.b);
+    else if (m.t === 'hit') { N.score[m.by] = (N.score[m.by] || 0) + 1; const hr = N.players[m.v] || bots.find(b => b.id === m.v); if (hr) hitFx(hr.g.position, m.k); if (m.by === N.me) { SFX.giggle(); toast(`🎯 İsabet! ${N.score[N.me]}/${WIN}`, 1.4); } hudNet(); refreshLabels(); checkWin(); }
     else if (m.t === 'poof' && r) { SFX.poof(); hitFx(r.pos, 'poof'); }
     else if (m.t === 'pick') takeBall(m.i, false);
     else if (m.t === 'ebe') setEbe(m.s);
     else if (m.t === 'layout' && !coop) { layout = m.layout; rebuildParkur(); P.pos.set(START.x + (N.me - 2.5) * 1.5, START.y, START.z); won = false; parkurT = 0; N.finish = []; toast('🧱 Yeni parkur geldi!', 2.5); SAY('Yeni parkur hazır!'); }
     else if (m.t === 'restart') restartRound();
+    else if (m.t === 'fin' && m.bot) { N.finish.push(m.bot); hudNet(); }
     else if (m.t === 'fin') { N.finish.push(s); toast(`🏁 ${avOf(s)} bitirdi! ${N.finish.length}.`, 2.5); hudNet(); }
   }
   // ---------- atışlar ----------
@@ -2186,7 +2209,7 @@ if (NETMODE) (function () {
     N.dead = 1.1; SFX.poof(); hitFx(P.pos, 'poof'); robi.visible = false; netSend({ t: 'poof' }); toast('💫 Puf! Hemen geri geliyorsun...', 1.2);
     setTimeout(() => { const a = Math.random() * 6.28; P.pos.set(Math.cos(a) * 8, 2, Math.sin(a) * 8); P.vel.set(0, 0, 0); P.hp = 3; hud(); robi.visible = true; NETFX.inv = 2; SFX.revive(); joinFx(P.pos, RN.COL[N.me]); }, 1100);
   }
-  function checkWin() { if (NETMODE !== 'arena' || N.ended) return; const w = Object.entries(N.score).find(([k, v]) => !isNaN(k) && v >= WIN); if (w) { N.wins[w[0]] = (N.wins[w[0]] || 0) + 1; endRound(+w[0]); } }
+  function checkWin() { if (NETMODE !== 'arena' || N.ended) return; const w = Object.entries(N.score).find(([k, v]) => k[0] !== 'e' && v >= WIN); if (w) { const id = isNaN(w[0]) ? w[0] : +w[0]; N.wins[id] = (N.wins[id] || 0) + 1; endRound(id); } }
   function hitFx(p, k) {
     const col = { net: '#b9ffb0', water: '#7fd0ff', fire: '#ff8a00', joy: '#ff5ad8', ball: '#ffd166', poof: '#ffffff' }[k] || '#fff';
     for (let i = 0; i < 18; i++) fx({ pos: V(p.x, p.y + 1, p.z), vel: V((Math.random() - .5) * 5, 2 + Math.random() * 4, (Math.random() - .5) * 5), life: .8, size: .35, size2: 0, color: col, add: true });
@@ -2211,9 +2234,89 @@ if (NETMODE) (function () {
   };
   function updateBalls(dt) {
     for (let i = 0; i < balls.length; i++) { const b = balls[i]; if (b.alive) { b.m.position.y = b.p.y + Math.sin(elapsed * 3 + i) * .15; b.m.rotation.y += dt * 2; if (carry < 3 && N.dead <= 0 && Math.hypot(P.pos.x - b.p.x, P.pos.z - b.p.z) < 1.2 && Math.abs(P.pos.y - b.p.y) < 2) takeBall(i, true); } else if ((b.t -= dt) <= 0) { b.alive = true; b.m.visible = true; sparkle(b.p, '#fff6a0', 6); } }
-    for (let i = myBalls.length - 1; i >= 0; i--) { const s = myBalls[i]; s.life -= dt; s.v.y -= 15 * dt; s.m.position.addScaledVector(s.v, dt); if (s.life <= 0 || s.m.position.y < -1) { scene.remove(s.m); myBalls.splice(i, 1); } }
+    for (let i = myBalls.length - 1; i >= 0; i--) { const s = myBalls[i]; s.life -= dt; s.v.y -= 15 * dt; s.m.position.addScaledVector(s.v, dt); if (s.life <= 0 || s.m.position.y < -1 || botHitCheck(s.m.position, 'ball', N.me)) { scene.remove(s.m); myBalls.splice(i, 1); } }
   }
   btn('bThrow', () => N.throwBall()); N.dbgCarry = n => { carry = n; thrBtn(); }; N.dbg = () => ({ carry, b: balls.map(b => [b.alive, +b.p.x.toFixed(1), +b.p.y.toFixed(1), +b.p.z.toFixed(1)]) });
+  // ---------- araç senkronu ve arka koltuk ----------
+  N.passenger = null;
+  const BACK = { car: -.65, moto: -.55, horse: -.6, tractor: -.5, skate: -.35, carpet: -.6 };
+  N.nearSeat = () => { for (const r of Object.values(N.players)) { const ri = r.st.ri; if (ri === undefined || ri < 0 || !vehicles[ri]) continue; if (Object.values(N.players).some(o => o.st.ps === r.slot)) continue; if (Math.hypot(r.pos.x - P.pos.x, r.pos.z - P.pos.z) < 3) return r; } return null; };
+  N.takeSeat = () => { const r = N.nearSeat(); if (!r) return; N.passenger = r.slot; SFX.ring(); toast(`🪑 ${avOf(r.slot)} ${nameOf(r.slot)} sürüyor, sen arkadasın! Ateş, su ve ağ atabilirsin!`, 3); SAY('Arkaya bindin! Sen ateş et!'); };
+  N.leaveSeat = () => { N.passenger = null; P.pos.x += Math.cos(P.yaw) * 1.5; P.pos.z -= Math.sin(P.yaw) * 1.5; P.vel.set(0, 5, 0); toast('🚪 İndin', 1.2); };
+  N.glue = () => {
+    const r = N.players[N.passenger]; const v = r && r.st.ri >= 0 && vehicles[r.st.ri];
+    if (!v) { N.leaveSeat(); return; }
+    const b = BACK[v.kind] || -.6; P.pos.set(r.pos.x + Math.sin(r.yaw) * b, r.pos.y, r.pos.z + Math.cos(r.yaw) * b); P.vel.set(0, 0, 0); P.onGround = true;
+  };
+  function remoteVehicle(r, u) {
+    const ri = r.st.ri === undefined ? -1 : r.st.ri;
+    if (r.ri !== undefined && r.ri !== ri && r.ri >= 0 && vehicles[r.ri]) { const v = vehicles[r.ri]; v.remoteBy = undefined; v.lbl.visible = true; v.pos.set(r.pos.x, groundAt(r.pos.x, r.pos.z, r.pos.y + .5), r.pos.z); v.yaw = r.yaw; v.g.position.copy(v.pos); v.g.rotation.set(0, v.yaw, 0); }
+    r.ri = ri;
+    if (ri >= 0 && vehicles[ri] && vehicles[ri] !== riding) {
+      const v = vehicles[ri]; v.remoteBy = r.slot; v.lbl.visible = false; v.pos.copy(r.pos); v.yaw = r.yaw; v.g.position.copy(r.pos); v.g.rotation.set(0, r.yaw, 0);
+      v.g.userData.wheels.forEach(w => w.rotation.x += .3);
+      u.hip.position.y = VEH[v.kind].seat + (VEH[v.kind].stand ? .5 : .25); u.legL.rotation.set(-1.4, 0, -.25); u.legR.rotation.set(-1.4, 0, .25);
+    } else if (r.st.ps !== undefined && r.st.ps >= 0) {
+      const d = r.st.ps === N.me ? riding : (N.players[r.st.ps] && vehicles[N.players[r.st.ps].st.ri]);
+      u.hip.position.y = d ? VEH[d.kind].seat + .3 : .72; u.legL.rotation.set(-1.4, 0, -.25); u.legR.rotation.set(-1.4, 0, .25);
+    } else u.hip.position.y = .72;
+  }
+  function passengerPose() { if (N.passenger === null) return; const r = N.players[N.passenger], v = r && vehicles[r.st.ri]; const u = robi.userData; u.hip.position.y = v ? VEH[v.kind].seat + .3 : .72; u.legL.rotation.set(-1.4, 0, -.25); u.legR.rotation.set(-1.4, 0, .25); }
+  // ---------- botlar (oda sahibi yönetir, herkes görür) ----------
+  const bots = []; let botSendT = 0;
+  const BCOL = ['#9aa3ad', '#7d6b5d', '#5d7d6b', '#6b5d7d', '#7d5d6b', '#5d6b7d'];
+  function makeBot(i) {
+    const M = { suit: new THREE.MeshLambertMaterial({ color: BCOL[i % 6] }), acc: new THREE.MeshLambertMaterial({ color: '#ffd166' }), cape: new THREE.MeshLambertMaterial({ color: '#555', side: THREE.DoubleSide }) };
+    const g = makeRobi(M); scene.add(g); const sh = blobShadow(.5); const a = i / Math.max(1, NETBOTS) * Math.PI * 2;
+    const b = { id: 'b' + i, i, g, sh, M, pos: V(Math.cos(a) * 8, 0, Math.sin(a) * 8), tgt: null, yaw: 0, vy: 0, walk: 0, stun: 0, thr: 2 + Math.random() * 2, wand: Math.random() * 6.28, fin: false, dead: 0 };
+    b.tag = label('🤖 Bot ' + (i + 1), '#6b6f7a'); g.add(b.tag); b.ebeTag = ebeSprite(); g.add(b.ebeTag); bots.push(b); return b;
+  }
+  for (let i = 0; i < NETBOTS && !coop; i++) makeBot(i);
+  N.bots = bots;
+  const humans = () => [{ id: N.me, pos: P.pos, me: true }, ...Object.values(N.players).map(r => ({ id: r.slot, pos: r.pos }))];
+  const bodies = () => [...humans(), ...bots.map(b => ({ id: b.id, pos: b.pos, bot: b }))];
+  function nearest(list, p, skip) { let best = null, bd = 1e9; for (const o of list) { if (o.id === skip) continue; const d = Math.hypot(o.pos.x - p.x, o.pos.z - p.z); if (d < bd) { bd = d; best = o; } } return best ? { o: best, d: bd } : null; }
+  function botSim(dt) {
+    const starP = stars.find(s => s.alive);
+    for (const b of bots) {
+      if (b.stun > 0) { b.stun -= dt; continue; }
+      if (b.dead > 0) { b.dead -= dt; if (b.dead <= 0) { const a = Math.random() * 6.28; b.pos.set(Math.cos(a) * 9, 2, Math.sin(a) * 9); } continue; }
+      let dir = null, spd = 5;
+      if (NETMODE === 'parkur') { if (starP && !b.fin) { dir = V(starP.pos.x - b.pos.x, 0, starP.pos.z - b.pos.z); if (dir.length() < 1.2) { b.fin = true; N.finish.push(b.id); netSend({ t: 'fin', bot: b.id }); hudNet(); toast(`🏁 🤖 Bot ${b.i + 1} bitirdi!`, 2); } } spd = 4.5; }
+      else if (NETMODE === 'ebe') {
+        if (N.ebe === b.id) { const t = nearest(bodies(), b.pos, b.id); if (t) { dir = V(t.o.pos.x - b.pos.x, 0, t.o.pos.z - b.pos.z); spd = 5.6; if (t.d < 1.2 && N.ebeImm <= 0) setEbe(t.o.id, true); } }
+        else { const e = N.ebe === N.me ? P.pos : (typeof N.ebe === 'string' ? (bots.find(x => x.id === N.ebe) || {}).pos : N.players[N.ebe] && N.players[N.ebe].pos); if (e && Math.hypot(e.x - b.pos.x, e.z - b.pos.z) < 12) { dir = V(b.pos.x - e.x, 0, b.pos.z - e.z); spd = 5; } }
+      } else if (NETMODE === 'arena') {
+        const t = nearest(humans(), b.pos); if (t) { dir = t.d > 7 ? V(t.o.pos.x - b.pos.x, 0, t.o.pos.z - b.pos.z) : V(-(t.o.pos.z - b.pos.z), 0, t.o.pos.x - b.pos.x); spd = t.d > 7 ? 4.6 : 3;
+          b.thr -= dt; if (b.thr <= 0 && t.d < 16) { b.thr = 2.5 + Math.random() * 2; const o = V(b.pos.x, b.pos.y + 1.3, b.pos.z), tt = Math.max(.2, t.d / 16), v = V((t.o.pos.x - o.x) / tt, 0, (t.o.pos.z - o.z) / tt); v.y = (t.o.pos.y + .8 - o.y + .5 * 15 * tt * tt) / tt; netSend({ t: 'shot', k: 'ball', o: [o.x, o.y, o.z], v: [v.x, v.y, v.z], by: b.id }); remoteShot(b.id, { k: 'ball', o: [o.x, o.y, o.z], v: [v.x, v.y, v.z] }); } }
+      }
+      if (!dir) { b.wand += (Math.random() - .5) * dt * 2; dir = V(Math.cos(b.wand), 0, Math.sin(b.wand)); spd = 2.5; }
+      if (dir.length() > .01) { dir.normalize(); b.pos.x += dir.x * spd * dt; b.pos.z += dir.z * spd * dt; b.yaw = Math.atan2(dir.x, dir.z); b.walk += spd * dt * 2.2; }
+      b.pos.x = Math.max(-W + 1, Math.min(W - 1, b.pos.x)); b.pos.z = Math.max(-W + 1, Math.min(W - 1, b.pos.z));
+      const gy = groundAt(b.pos.x, b.pos.z, b.pos.y + 1.4); b.vy -= 25 * dt; b.pos.y += b.vy * dt; if (b.pos.y <= gy) { b.pos.y = gy; b.vy = gy > b.pos.y + .3 ? 9 : (Math.random() < .01 ? 8 : 0); }
+    }
+    botSendT -= dt; if (botSendT <= 0 && bots.length) { botSendT = .1; netSend({ t: 'bots', b: bots.map(b => [+b.pos.x.toFixed(2), +b.pos.y.toFixed(2), +b.pos.z.toFixed(2), +b.yaw.toFixed(2), b.stun > 0 ? 1 : 0, b.dead > 0 ? 1 : 0]) }); }
+  }
+  function botRecv(arr) { arr.forEach((a, i) => { const b = bots[i] || makeBot(i); b.tgt = V(a[0], a[1], a[2]); b.yaw = a[3]; b.stunV = a[4]; b.deadV = a[5]; }); }
+  function botDraw(dt, host) {
+    for (const b of bots) {
+      if (!host && b.tgt) { const before = b.pos.clone(); b.pos.lerp(b.tgt, Math.min(1, dt * 12)); b.walk += before.distanceTo(b.pos) * 4; }
+      const u = b.g.userData; b.g.position.copy(b.pos); b.g.rotation.y = b.yaw; b.sh.position.set(b.pos.x, .03, b.pos.z);
+      u.legL.rotation.x = Math.sin(b.walk) * .7; u.legR.rotation.x = -Math.sin(b.walk) * .7; u.armL.rotation.x = -Math.sin(b.walk) * .6; u.armR.rotation.x = Math.sin(b.walk) * .6;
+      const stun = host ? b.stun > 0 : b.stunV, dead = host ? b.dead > 0 : b.deadV; b.g.visible = !dead; b.g.rotation.z = stun ? Math.sin(elapsed * 20) * .2 : 0;
+      b.ebeTag.visible = N.ebe === b.id; if (b.ebeTag.visible && Math.random() < .3) fx({ pos: V(b.pos.x, b.pos.y + .2, b.pos.z), vel: V((Math.random() - .5) * 2, 2, (Math.random() - .5) * 2), life: .5, size: .4, size2: 0, color: '#ff2a2a', add: true });
+    }
+  }
+  // oda sahibi: oyuncu atışları ve akışları botlara isabet etti mi?
+  function botHitCheck(p, k, by, rad = 1.1) { if (!isHost()) return false; for (const b of bots) { if (b.dead > 0 || b.stun > 0) continue; if (Math.hypot(b.pos.x - p.x, b.pos.z - p.z) < rad && Math.abs(b.pos.y + .9 - p.y) < 1.6) { botHit(b, k, by); return true; } } return false; }
+  function botCone(from, yaw, k, by) { if (!isHost()) return; const dir = V(Math.sin(yaw), 0, Math.cos(yaw)); for (const b of bots) { if (b.dead > 0 || b.stun > 0) continue; const dx = b.pos.x - from.x, dz = b.pos.z - from.z, d = Math.hypot(dx, dz); if (d < 9 && d > .3 && (dx * dir.x + dz * dir.z) / d > .88) botHit(b, k, by); } }
+  function botHit(b, k, by) {
+    b.stun = k === 'net' ? 2 : 1.2; b.hits = (b.hits || 0) + 1; hitFx(b.pos, k); SFX.bonk();
+    if (NETMODE === 'arena' && b.hits % 3 === 0) { b.dead = 1.2; SFX.poof(); }
+    if (NETMODE === 'ebe' && by === N.ebe && k === 'net') setEbe(b.id, true);
+    N.score[by] = (N.score[by] || 0) + 1; netSend({ t: 'hit', by, v: b.id, k }); hudNet(); refreshLabels(); checkWin();
+  }
+  N.botsTick = dt => { if (!bots.length) return; if (NETMODE === 'ebe' && N.ebe === N.me && N.ebeImm <= 0) for (const b of bots) if (b.pos.distanceTo(P.pos) < 1.3) { setEbe(b.id, true); SFX.ring(); break; } const host = isHost(); if (host) { botSim(dt); if (input.powerHeld && (currentPower() === 'fire' || currentPower() === 'water') && Math.random() < .3) botCone(P.pos, P.yaw, currentPower(), N.me); } botDraw(dt, host); };
   // ---------- ebelemece ----------
   function setEbe(s, announce) {
     const prev = N.ebe; N.ebe = s; N.ebeImm = 2.5;
@@ -2228,7 +2331,7 @@ if (NETMODE) (function () {
   function restartRound() { N.score = {}; N.finish = []; N.ended = false; P.hp = 3; refreshLabels(); won = false; parkurT = 0; P.pos.set(START.x + (N.me - 2.5) * 1.5, START.y, START.z); P.vel.set(0, 0, 0); if (BUILD) rebuildParkur(); $('netEnd').style.display = 'none'; paused = false; hudNet(); toast('🔁 Yeni tur başladı!', 2); SAY('Yeni tur başladı!'); }
   function endRound(winner) {
     N.ended = true;
-    const ranks = [N.me, ...Object.keys(N.players).map(Number)].map(s => [s, N.score[s] || 0]).sort((a, b) => b[1] - a[1]);
+    const ranks = [N.me, ...Object.keys(N.players).map(Number), ...N.bots.map(b => b.id)].map(s => [s, N.score[s] || 0]).sort((a, b) => b[1] - a[1]);
     $('netEndList').innerHTML = ranks.map(([s, v], i) => `<div style="font-size:${i ? 22 : 34}px">${['🥇', '🥈', '🥉', '⭐', '⭐', '⭐'][i]} ${avOf(s)} ${s === N.me ? '(sen)' : ''} — ${v} ⭐</div>`).join('');
     $('netEndList').innerHTML = `<div style="font-size:40px">🏆 ${avOf(winner)} ${winner === N.me ? 'KAZANDIN!' : 'kazandı!'}</div>` + $('netEndList').innerHTML;
     refreshLabels(); $('netEnd').style.display = 'flex'; paused = true; neonBurst('white', 6); SFX.join(); SAY(winner === N.me ? 'Yaşasın! Kazandın!' : 'Çok güzel oynadın! Bir tur daha?');
@@ -2243,8 +2346,8 @@ if (NETMODE) (function () {
   $('netMenu').onclick = () => { N.closing = true; try { N.ws.close(); } catch (e) {} $('pMenu').onclick(); };
   // ---------- HUD ----------
   function hudNet() {
-    const all = [N.me, ...Object.keys(N.players).map(Number)].filter(s => s >= 0).sort();
-    $('netBar').innerHTML = `<button class="inv" onclick="window.__net.invite()">📨</button><span class="code">🔑 ${code.slice(0, 2)}-${code.slice(2)}</span>` + all.map(s => `<span class="pl ${s === N.me ? 'me' : ''}" style="--c:${RN.COL[s]}">${avOf(s)}${s === N.ebe ? '🏃' : ''}${coop ? '' : ' ' + (NETMODE === 'parkur' ? (N.finish.indexOf(s) >= 0 ? '🏁' + (N.finish.indexOf(s) + 1) : '') : (N.score[s] || 0) + (NETMODE === 'arena' ? '/' + WIN : '⭐'))}${N.wins[s] ? ' 🏆' + N.wins[s] : ''}</span>`).join('') + (N.roundT > 0 ? `<span class="code">⏱ ${Math.floor(N.roundT / 60)}:${String(Math.floor(N.roundT % 60)).padStart(2, '0')}</span>` : '');
+    const all = [...[N.me, ...Object.keys(N.players).map(Number)].filter(s => s >= 0).sort(), ...(N.bots || []).map(b => b.id)];
+    $('netBar').innerHTML = `<button class="inv" onclick="window.__net.invite()">📨</button><span class="code">🔑 ${code.slice(0, 2)}-${code.slice(2)}</span>` + all.map(s => `<span class="pl ${s === N.me ? 'me' : ''}" style="--c:${typeof s === 'string' ? '#6b6f7a' : RN.COL[s]}">${avOf(s)}${s === N.ebe ? '🏃' : ''}${coop ? '' : ' ' + (NETMODE === 'parkur' ? (N.finish.indexOf(s) >= 0 ? '🏁' + (N.finish.indexOf(s) + 1) : '') : (N.score[s] || 0) + (NETMODE === 'arena' ? '/' + WIN : '⭐'))}${N.wins[s] ? ' 🏆' + N.wins[s] : ''}</span>`).join('') + (N.roundT > 0 ? `<span class="code">⏱ ${Math.floor(N.roundT / 60)}:${String(Math.floor(N.roundT % 60)).padStart(2, '0')}</span>` : '');
   }
   N.hud = hudNet; N.isHost = isHost;
   // ---------- her kare ----------
@@ -2252,14 +2355,14 @@ if (NETMODE) (function () {
     for (const k of ['stuck', 'wet', 'burn', 'big', 'inv']) NETFX[k] = Math.max(0, NETFX[k] - dt);
     if (N.dead > 0) N.dead -= dt; else if (NETFX.inv > 0 && PVP) robi.visible = Math.floor(elapsed * 14) % 2 === 0; else if (!robi.visible && !photo) robi.visible = true;
     if (N.myEbe.visible) { N.myEbe.scale.set(1.9 + Math.sin(elapsed * 8) * .15, .82 + Math.sin(elapsed * 8) * .06, 1); if (Math.random() < .4) fx({ pos: V(P.pos.x, P.pos.y + .2, P.pos.z), vel: V((Math.random() - .5) * 2, 2, (Math.random() - .5) * 2), life: .5, size: .4, size2: 0, color: '#ff2a2a', add: true }); }
-    updateBalls(dt);
+    updateBalls(dt); N.botsTick(dt); passengerPose();
     if (NETFX.burn > 0 && Math.random() < .5) fx({ pos: V(P.pos.x, P.pos.y + .6, P.pos.z), vel: V(0, 2, 0), life: .5, size: .5, size2: 1.2, color: '#ffb020', color2: '#ff2a00', add: true });
     if (NETFX.wet > 0 && Math.random() < .3) fx({ pos: V(P.pos.x + (Math.random() - .5), P.pos.y + 1.6, P.pos.z), vel: V(0, -2, 0), life: .5, size: .15, size2: .1, color: '#7fd0ff', drop: true, grav: 8 });
     const tsc = NETFX.big > 0 ? 2.2 : 1; robi.scale.setScalar(robi.scale.x + (tsc - robi.scale.x) * Math.min(1, dt * 6));
     if (NETFX.stuck > 0) { if (!N.myNet) { N.myNet = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), new THREE.MeshBasicMaterial({ map: netTex, transparent: true, side: THREE.DoubleSide, depthWrite: false })); scene.add(N.myNet); } N.myNet.position.set(P.pos.x, P.pos.y + .8, P.pos.z); } else if (N.myNet) { scene.remove(N.myNet); N.myNet = null; }
     // konum gönder (saniyede 10)
     N.sendT -= dt; const pw = input.powerHeld ? currentPower() : null;
-    if (N.sendT <= 0 && N.ok) { N.sendT = .1; netSend({ t: 'p', x: +P.pos.x.toFixed(2), y: +P.pos.y.toFixed(2), z: +P.pos.z.toFixed(2), yaw: +P.yaw.toFixed(2), f: P.flying ? 1 : 0, sp: P.spin > 0 ? 1 : 0, pw: pw === 'fire' || pw === 'water' ? pw : 0, st: NETFX.stuck > 0 ? 1 : 0, b: NETFX.big > 0 ? 1 : 0, d: N.dead > 0 ? 1 : 0, iv: NETFX.inv > 0 ? 1 : 0, r: riding ? riding.kind : 0 }); }
+    if (N.sendT <= 0 && N.ok) { N.sendT = .1; netSend({ t: 'p', x: +P.pos.x.toFixed(2), y: +P.pos.y.toFixed(2), z: +P.pos.z.toFixed(2), yaw: +P.yaw.toFixed(2), f: P.flying ? 1 : 0, sp: P.spin > 0 ? 1 : 0, pw: pw === 'fire' || pw === 'water' ? pw : 0, st: NETFX.stuck > 0 ? 1 : 0, b: NETFX.big > 0 ? 1 : 0, d: N.dead > 0 ? 1 : 0, iv: NETFX.inv > 0 ? 1 : 0, ri: riding ? vehicles.indexOf(riding) : -1, ps: N.passenger === null ? -1 : N.passenger, r: riding ? riding.kind : 0 }); }
     // uzak oyuncular
     for (const r of Object.values(N.players)) {
       if (r.tgt) { const k = Math.min(1, dt * 12); const before = r.pos.clone(); r.pos.lerp(r.tgt, k); let d = r.tyaw - r.yaw; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; r.yaw += d * k; r.walk += before.distanceTo(r.pos) * 4; }
@@ -2267,7 +2370,7 @@ if (NETMODE) (function () {
       r.g.position.copy(r.pos); r.g.rotation.y = r.yaw; r.g.scale.setScalar(r.st.b ? 2.2 : 1);
       r.sh.position.set(r.pos.x, .03, r.pos.z); r.g.visible = (performance.now() - r.last < 8000 || !r.tgt) && !r.st.d && !(r.st.iv && Math.floor(elapsed * 14) % 2);
       u.wings.visible = !!r.st.f; u.legL.rotation.x = Math.sin(r.walk) * .7; u.legR.rotation.x = -Math.sin(r.walk) * .7; u.armL.rotation.set(Math.sin(r.walk) * -.6, 0, r.st.f ? -1.3 : 0); u.armR.rotation.set(r.st.pw ? -1.45 : Math.sin(r.walk) * .6, 0, r.st.f ? 1.3 : 0);
-      u.hip.rotation.y = r.st.sp ? (r.walk * 3) % 6.28 : 0;
+      u.hip.rotation.y = r.st.sp ? (r.walk * 3) % 6.28 : 0; remoteVehicle(r, u);
       if (r.st.st) { if (!r.net) { r.net = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), new THREE.MeshBasicMaterial({ map: netTex, transparent: true, side: THREE.DoubleSide, depthWrite: false })); scene.add(r.net); } r.net.position.set(r.pos.x, r.pos.y + .8, r.pos.z); } else if (r.net) { scene.remove(r.net); r.net = null; }
       // uzak oyuncunun ateş/su akışı (görsel) + bana isabet
       if (r.st.pw && Math.random() < .7) {
@@ -2276,6 +2379,7 @@ if (NETMODE) (function () {
         fx(r.st.pw === 'fire' ? { pos: hand, vel: v, life: .75, size: .35, size2: 1.4, color: '#fff3b0', color2: '#ff2a00', add: true, grav: 5 } : { pos: hand, vel: v, life: .8, size: .28, size2: .55, color: '#ffffff', color2: '#7fd0ff', drop: true, grav: 10 });
         const dx = P.pos.x - r.pos.x, dz = P.pos.z - r.pos.z, d = Math.hypot(dx, dz);
         if (d < 9 && d > .3 && (dx * dir.x + dz * dir.z) / d > .88 && Math.abs(P.pos.y - r.pos.y) < 3) gotHit(r.slot, r.st.pw);
+        if (Math.random() < .3) botCone(r.pos, r.yaw, r.st.pw, r.slot);
       }
       if (r.ebeTag.visible) { r.ebeTag.scale.set(1.9 + Math.sin(elapsed * 8) * .15, .82, 1); if (Math.random() < .4) fx({ pos: V(r.pos.x, r.pos.y + .2, r.pos.z), vel: V((Math.random() - .5) * 2, 2, (Math.random() - .5) * 2), life: .5, size: .4, size2: 0, color: '#ff2a2a', add: true }); }
       // ebelemece: dokunarak devret
@@ -2285,6 +2389,7 @@ if (NETMODE) (function () {
       const s = rshots[i]; s.life -= dt; s.v.y -= 15 * dt; s.mesh.position.addScaledVector(s.v, dt); s.mesh.rotation.y += dt * 5;
       const hitMe = s.mesh.position.distanceTo(V(P.pos.x, P.pos.y + .9, P.pos.z)) < (s.k === 'net' ? 1.4 : 1);
       if (hitMe) gotHit(s.s, s.k);
+      else if (typeof s.s === 'number' && botHitCheck(s.mesh.position, s.k, s.s, s.k === 'net' ? 1.4 : 1)) { scene.remove(s.mesh); rshots.splice(i, 1); continue; }
       if (s.life <= 0 || hitMe || s.mesh.position.y < -2) { scene.remove(s.mesh); rshots.splice(i, 1); }
     }
     if (N.ebeImm > 0) N.ebeImm -= dt;
@@ -2348,6 +2453,7 @@ function update(dt) {
   uiT -= dt; if (ch || uiT <= 0) { refreshPowerUI(); uiT = .25; }
   usePower(dt);
   movePlayer(dt);
+  if (NET && NET.passenger !== null) NET.glue();
 
   // Robi animasyonu
   const u = robi.userData, spd = Math.hypot(P.vel.x, P.vel.z), flying = canFly() && (!P.onGround || P.flying);
