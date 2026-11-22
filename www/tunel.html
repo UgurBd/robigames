@@ -427,6 +427,10 @@
         #sleep { position: absolute; inset: 0; z-index: 50; display: none; flex-direction: column; align-items: center; justify-content: center; background: #2b2340; color: #fff; font-weight: 700; font-size: 24px; text-align: center; }
         #sleep.show { display: flex; }
         #sleep div { font-size: 70px; }
+        #start-modal { align-items: flex-start; }
+        #start-modal .modal-card { margin: auto; }
+        .start-btn { position: sticky; bottom: 6px; z-index: 5; background: linear-gradient(180deg, #6ef08c 0%, #22b04b 100%) !important; box-shadow: 0 7px 0 #158a37, 0 0 0 4px #fff, 0 12px 26px rgba(34,176,75,.55) !important; text-shadow: 0 3px 0 #158a37 !important; animation: goPulse 1.3s ease-in-out infinite; }
+        @keyframes goPulse { 50% { transform: scale(1.04); } }
         @media (max-height: 520px) {
             .modal-card { padding: 10px 14px; border-width: 4px; }
             .choice-icon { width: 32px; height: 32px; font-size: 1.1rem; }
